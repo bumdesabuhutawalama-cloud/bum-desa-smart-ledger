@@ -11,7 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUtangRouteImport } from './routes/_app.utang'
 import { Route as AppPiutangRouteImport } from './routes/_app.piutang'
 import { Route as AppPersediaanRouteImport } from './routes/_app.persediaan'
@@ -32,10 +32,10 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
 } as any)
 const AppUtangRoute = AppUtangRouteImport.update({
   id: '/utang',
@@ -89,7 +89,7 @@ const AppJurnalBaruRoute = AppJurnalBaruRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof AppIndexRoute
   '/auth': typeof AuthRoute
   '/akun': typeof AppAkunRoute
   '/aset': typeof AppAsetRoute
@@ -103,7 +103,6 @@ export interface FileRoutesByFullPath {
   '/jurnal/baru': typeof AppJurnalBaruRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/akun': typeof AppAkunRoute
   '/aset': typeof AppAsetRoute
@@ -114,11 +113,11 @@ export interface FileRoutesByTo {
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
   '/utang': typeof AppUtangRoute
+  '/': typeof AppIndexRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
   '/_app/akun': typeof AppAkunRoute
@@ -130,6 +129,7 @@ export interface FileRoutesById {
   '/_app/persediaan': typeof AppPersediaanRoute
   '/_app/piutang': typeof AppPiutangRoute
   '/_app/utang': typeof AppUtangRoute
+  '/_app/': typeof AppIndexRoute
   '/_app/jurnal/baru': typeof AppJurnalBaruRoute
 }
 export interface FileRouteTypes {
@@ -149,7 +149,6 @@ export interface FileRouteTypes {
     | '/jurnal/baru'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/auth'
     | '/akun'
     | '/aset'
@@ -160,10 +159,10 @@ export interface FileRouteTypes {
     | '/persediaan'
     | '/piutang'
     | '/utang'
+    | '/'
     | '/jurnal/baru'
   id:
     | '__root__'
-    | '/'
     | '/_app'
     | '/auth'
     | '/_app/akun'
@@ -175,11 +174,11 @@ export interface FileRouteTypes {
     | '/_app/persediaan'
     | '/_app/piutang'
     | '/_app/utang'
+    | '/_app/'
     | '/_app/jurnal/baru'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
 }
@@ -200,12 +199,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_app/': {
+      id: '/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/utang': {
       id: '/_app/utang'
@@ -302,6 +301,7 @@ interface AppRouteChildren {
   AppPersediaanRoute: typeof AppPersediaanRoute
   AppPiutangRoute: typeof AppPiutangRoute
   AppUtangRoute: typeof AppUtangRoute
+  AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -314,15 +314,24 @@ const AppRouteChildren: AppRouteChildren = {
   AppPersediaanRoute: AppPersediaanRoute,
   AppPiutangRoute: AppPiutangRoute,
   AppUtangRoute: AppUtangRoute,
+  AppIndexRoute: AppIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

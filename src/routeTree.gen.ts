@@ -9,38 +9,197 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppUtangRouteImport } from './routes/_app.utang'
+import { Route as AppPiutangRouteImport } from './routes/_app.piutang'
+import { Route as AppPersediaanRouteImport } from './routes/_app.persediaan'
+import { Route as AppLaporanRouteImport } from './routes/_app.laporan'
+import { Route as AppJurnalRouteImport } from './routes/_app.jurnal'
+import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppBukuBesarRouteImport } from './routes/_app.buku-besar'
+import { Route as AppAsetRouteImport } from './routes/_app.aset'
+import { Route as AppAkunRouteImport } from './routes/_app.akun'
+import { Route as AppJurnalBaruRouteImport } from './routes/_app.jurnal.baru'
 
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppUtangRoute = AppUtangRouteImport.update({
+  id: '/utang',
+  path: '/utang',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPiutangRoute = AppPiutangRouteImport.update({
+  id: '/piutang',
+  path: '/piutang',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPersediaanRoute = AppPersediaanRouteImport.update({
+  id: '/persediaan',
+  path: '/persediaan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLaporanRoute = AppLaporanRouteImport.update({
+  id: '/laporan',
+  path: '/laporan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJurnalRoute = AppJurnalRouteImport.update({
+  id: '/jurnal',
+  path: '/jurnal',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppBukuBesarRoute = AppBukuBesarRouteImport.update({
+  id: '/buku-besar',
+  path: '/buku-besar',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAsetRoute = AppAsetRouteImport.update({
+  id: '/aset',
+  path: '/aset',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAkunRoute = AppAkunRouteImport.update({
+  id: '/akun',
+  path: '/akun',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJurnalBaruRoute = AppJurnalBaruRouteImport.update({
+  id: '/baru',
+  path: '/baru',
+  getParentRoute: () => AppJurnalRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/akun': typeof AppAkunRoute
+  '/aset': typeof AppAsetRoute
+  '/buku-besar': typeof AppBukuBesarRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/jurnal': typeof AppJurnalRouteWithChildren
+  '/laporan': typeof AppLaporanRoute
+  '/persediaan': typeof AppPersediaanRoute
+  '/piutang': typeof AppPiutangRoute
+  '/utang': typeof AppUtangRoute
+  '/jurnal/baru': typeof AppJurnalBaruRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/akun': typeof AppAkunRoute
+  '/aset': typeof AppAsetRoute
+  '/buku-besar': typeof AppBukuBesarRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/jurnal': typeof AppJurnalRouteWithChildren
+  '/laporan': typeof AppLaporanRoute
+  '/persediaan': typeof AppPersediaanRoute
+  '/piutang': typeof AppPiutangRoute
+  '/utang': typeof AppUtangRoute
+  '/jurnal/baru': typeof AppJurnalBaruRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_app/akun': typeof AppAkunRoute
+  '/_app/aset': typeof AppAsetRoute
+  '/_app/buku-besar': typeof AppBukuBesarRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/jurnal': typeof AppJurnalRouteWithChildren
+  '/_app/laporan': typeof AppLaporanRoute
+  '/_app/persediaan': typeof AppPersediaanRoute
+  '/_app/piutang': typeof AppPiutangRoute
+  '/_app/utang': typeof AppUtangRoute
+  '/_app/jurnal/baru': typeof AppJurnalBaruRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/akun'
+    | '/aset'
+    | '/buku-besar'
+    | '/dashboard'
+    | '/jurnal'
+    | '/laporan'
+    | '/persediaan'
+    | '/piutang'
+    | '/utang'
+    | '/jurnal/baru'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/akun'
+    | '/aset'
+    | '/buku-besar'
+    | '/dashboard'
+    | '/jurnal'
+    | '/laporan'
+    | '/persediaan'
+    | '/piutang'
+    | '/utang'
+    | '/jurnal/baru'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/auth'
+    | '/_app/akun'
+    | '/_app/aset'
+    | '/_app/buku-besar'
+    | '/_app/dashboard'
+    | '/_app/jurnal'
+    | '/_app/laporan'
+    | '/_app/persediaan'
+    | '/_app/piutang'
+    | '/_app/utang'
+    | '/_app/jurnal/baru'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppRoute: typeof AppRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +207,121 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_app/utang': {
+      id: '/_app/utang'
+      path: '/utang'
+      fullPath: '/utang'
+      preLoaderRoute: typeof AppUtangRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/piutang': {
+      id: '/_app/piutang'
+      path: '/piutang'
+      fullPath: '/piutang'
+      preLoaderRoute: typeof AppPiutangRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/persediaan': {
+      id: '/_app/persediaan'
+      path: '/persediaan'
+      fullPath: '/persediaan'
+      preLoaderRoute: typeof AppPersediaanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/laporan': {
+      id: '/_app/laporan'
+      path: '/laporan'
+      fullPath: '/laporan'
+      preLoaderRoute: typeof AppLaporanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/jurnal': {
+      id: '/_app/jurnal'
+      path: '/jurnal'
+      fullPath: '/jurnal'
+      preLoaderRoute: typeof AppJurnalRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/buku-besar': {
+      id: '/_app/buku-besar'
+      path: '/buku-besar'
+      fullPath: '/buku-besar'
+      preLoaderRoute: typeof AppBukuBesarRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/aset': {
+      id: '/_app/aset'
+      path: '/aset'
+      fullPath: '/aset'
+      preLoaderRoute: typeof AppAsetRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/akun': {
+      id: '/_app/akun'
+      path: '/akun'
+      fullPath: '/akun'
+      preLoaderRoute: typeof AppAkunRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/jurnal/baru': {
+      id: '/_app/jurnal/baru'
+      path: '/baru'
+      fullPath: '/jurnal/baru'
+      preLoaderRoute: typeof AppJurnalBaruRouteImport
+      parentRoute: typeof AppJurnalRoute
+    }
   }
 }
 
+interface AppJurnalRouteChildren {
+  AppJurnalBaruRoute: typeof AppJurnalBaruRoute
+}
+
+const AppJurnalRouteChildren: AppJurnalRouteChildren = {
+  AppJurnalBaruRoute: AppJurnalBaruRoute,
+}
+
+const AppJurnalRouteWithChildren = AppJurnalRoute._addFileChildren(
+  AppJurnalRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAkunRoute: typeof AppAkunRoute
+  AppAsetRoute: typeof AppAsetRoute
+  AppBukuBesarRoute: typeof AppBukuBesarRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppJurnalRoute: typeof AppJurnalRouteWithChildren
+  AppLaporanRoute: typeof AppLaporanRoute
+  AppPersediaanRoute: typeof AppPersediaanRoute
+  AppPiutangRoute: typeof AppPiutangRoute
+  AppUtangRoute: typeof AppUtangRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAkunRoute: AppAkunRoute,
+  AppAsetRoute: AppAsetRoute,
+  AppBukuBesarRoute: AppBukuBesarRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppJurnalRoute: AppJurnalRouteWithChildren,
+  AppLaporanRoute: AppLaporanRoute,
+  AppPersediaanRoute: AppPersediaanRoute,
+  AppPiutangRoute: AppPiutangRoute,
+  AppUtangRoute: AppUtangRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppRoute: AppRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -14,16 +14,447 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      accounts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          is_header: boolean
+          kode_akun: string
+          level: number
+          nama_akun: string
+          normal_balance: Database["public"]["Enums"]["normal_balance"]
+          parent_id: string | null
+          tipe_akun: Database["public"]["Enums"]["account_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_header?: boolean
+          kode_akun: string
+          level?: number
+          nama_akun: string
+          normal_balance: Database["public"]["Enums"]["normal_balance"]
+          parent_id?: string | null
+          tipe_akun: Database["public"]["Enums"]["account_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_header?: boolean
+          kode_akun?: string
+          level?: number
+          nama_akun?: string
+          normal_balance?: Database["public"]["Enums"]["normal_balance"]
+          parent_id?: string | null
+          tipe_akun?: Database["public"]["Enums"]["account_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assets: {
+        Row: {
+          accum_depr_account_id: string | null
+          akumulasi_penyusutan: number
+          asset_account_id: string | null
+          created_at: string
+          depr_expense_account_id: string | null
+          harga_perolehan: number
+          id: string
+          is_active: boolean
+          kategori: string | null
+          masa_manfaat_bulan: number
+          nama: string
+          nilai_residu: number
+          tanggal_perolehan: string
+          updated_at: string
+        }
+        Insert: {
+          accum_depr_account_id?: string | null
+          akumulasi_penyusutan?: number
+          asset_account_id?: string | null
+          created_at?: string
+          depr_expense_account_id?: string | null
+          harga_perolehan: number
+          id?: string
+          is_active?: boolean
+          kategori?: string | null
+          masa_manfaat_bulan: number
+          nama: string
+          nilai_residu?: number
+          tanggal_perolehan: string
+          updated_at?: string
+        }
+        Update: {
+          accum_depr_account_id?: string | null
+          akumulasi_penyusutan?: number
+          asset_account_id?: string | null
+          created_at?: string
+          depr_expense_account_id?: string | null
+          harga_perolehan?: number
+          id?: string
+          is_active?: boolean
+          kategori?: string | null
+          masa_manfaat_bulan?: number
+          nama?: string
+          nilai_residu?: number
+          tanggal_perolehan?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_accum_depr_account_id_fkey"
+            columns: ["accum_depr_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_asset_account_id_fkey"
+            columns: ["asset_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_depr_expense_account_id_fkey"
+            columns: ["depr_expense_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          created_at: string
+          harga_jual: number
+          harga_perolehan: number
+          id: string
+          kode: string
+          nama: string
+          satuan: string | null
+          stok: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          harga_jual?: number
+          harga_perolehan?: number
+          id?: string
+          kode: string
+          nama: string
+          satuan?: string | null
+          stok?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          harga_jual?: number
+          harga_perolehan?: number
+          id?: string
+          kode?: string
+          nama?: string
+          satuan?: string | null
+          stok?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string
+          harga: number
+          id: string
+          item_id: string
+          keterangan: string | null
+          qty: number
+          tanggal: string
+          tipe: string
+        }
+        Insert: {
+          created_at?: string
+          harga?: number
+          id?: string
+          item_id: string
+          keterangan?: string | null
+          qty: number
+          tanggal: string
+          tipe: string
+        }
+        Update: {
+          created_at?: string
+          harga?: number
+          id?: string
+          item_id?: string
+          keterangan?: string | null
+          qty?: number
+          tanggal?: string
+          tipe?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_lines: {
+        Row: {
+          account_id: string
+          created_at: string
+          debit: number
+          id: string
+          journal_id: string
+          keterangan: string | null
+          kredit: number
+          line_order: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          debit?: number
+          id?: string
+          journal_id: string
+          keterangan?: string | null
+          kredit?: number
+          line_order?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          debit?: number
+          id?: string
+          journal_id?: string
+          keterangan?: string | null
+          kredit?: number
+          line_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_lines_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "journals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journals: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          keterangan: string
+          nomor_jurnal: string
+          source: string
+          source_ref: string | null
+          status: Database["public"]["Enums"]["journal_status"]
+          tanggal: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keterangan: string
+          nomor_jurnal: string
+          source?: string
+          source_ref?: string | null
+          status?: Database["public"]["Enums"]["journal_status"]
+          tanggal: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          keterangan?: string
+          nomor_jurnal?: string
+          source?: string
+          source_ref?: string | null
+          status?: Database["public"]["Enums"]["journal_status"]
+          tanggal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payables: {
+        Row: {
+          created_at: string
+          id: string
+          is_paid: boolean
+          jatuh_tempo: string | null
+          jumlah: number
+          keterangan: string | null
+          klasifikasi: string
+          nama_kreditur: string
+          tanggal: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_paid?: boolean
+          jatuh_tempo?: string | null
+          jumlah: number
+          keterangan?: string | null
+          klasifikasi?: string
+          nama_kreditur: string
+          tanggal: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_paid?: boolean
+          jatuh_tempo?: string | null
+          jumlah?: number
+          keterangan?: string | null
+          klasifikasi?: string
+          nama_kreditur?: string
+          tanggal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      receivables: {
+        Row: {
+          created_at: string
+          id: string
+          jatuh_tempo: string | null
+          jumlah: number
+          keterangan: string | null
+          nama_debitur: string
+          penyisihan: number
+          status: Database["public"]["Enums"]["receivable_status"]
+          tanggal: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jatuh_tempo?: string | null
+          jumlah: number
+          keterangan?: string | null
+          nama_debitur: string
+          penyisihan?: number
+          status?: Database["public"]["Enums"]["receivable_status"]
+          tanggal: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jatuh_tempo?: string | null
+          jumlah?: number
+          keterangan?: string | null
+          nama_debitur?: string
+          penyisihan?: number
+          status?: Database["public"]["Enums"]["receivable_status"]
+          tanggal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      account_type:
+        | "ASET"
+        | "KEWAJIBAN"
+        | "EKUITAS"
+        | "PENDAPATAN"
+        | "BEBAN"
+        | "HPP"
+        | "PENDAPATAN_LAIN"
+        | "BEBAN_LAIN"
+      app_role: "admin" | "bendahara" | "auditor"
+      journal_status: "draft" | "posted"
+      normal_balance: "DEBIT" | "KREDIT"
+      receivable_status: "lancar" | "kurang_lancar" | "diragukan" | "macet"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +581,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      account_type: [
+        "ASET",
+        "KEWAJIBAN",
+        "EKUITAS",
+        "PENDAPATAN",
+        "BEBAN",
+        "HPP",
+        "PENDAPATAN_LAIN",
+        "BEBAN_LAIN",
+      ],
+      app_role: ["admin", "bendahara", "auditor"],
+      journal_status: ["draft", "posted"],
+      normal_balance: ["DEBIT", "KREDIT"],
+      receivable_status: ["lancar", "kurang_lancar", "diragukan", "macet"],
+    },
   },
 } as const

@@ -279,25 +279,141 @@ function TotalRow({ label, value, strong }: any) {
 }
 
 function ArusKas({ accounts, lines }: any) {
-  const kasIds = new Set(
-    accounts
-      .filter((a: any) => /kas|bank/i.test(a.nama_akun))
-      .map((a: any) => a.id)
+  const getSaldo = (filterFn: (a: any) => boolean) => {
+    const ids = new Set(accounts.filter(filterFn).map((a: any) => a.id));
+
+    const masuk = lines
+      .filter((l: any) => ids.has(l.account_id))
+      .reduce((s: number, l: any) => s + l.debit, 0);
+
+    const keluar = lines
+      .filter((l: any) => ids.has(l.account_id))
+      .reduce((s: number, l: any) => s + l.kredit, 0);
+
+    return { masuk, keluar, total: masuk - keluar };
+  };
+
+  // 🔥 KLASIFIKASI (INI BISA KAMU SESUAIKAN DENGAN KODE AKUN)
+  const operasi = getSaldo((a) =>
+    /pendapatan|beban|hpp/i.test(a.tipe_akun)
   );
 
-  const masuk = lines
-    .filter((l: any) => kasIds.has(l.account_id))
-    .reduce((s: number, l: any) => s + l.debit, 0);
+  const investasi = getSaldo((a) =>
+    /aset/i.test(a.tipe_akun) && !/kas|bank/i.test(a.nama_akun)
+  );
 
-  const keluar = lines
-    .filter((l: any) => kasIds.has(l.account_id))
-    .reduce((s: number, l: any) => s + l.kredit, 0);
+  const pendanaan = getSaldo((a) =>
+    /ekuitas|kewajiban/i.test(a.tipe_akun)
+  );
+
+  const totalBersih =
+    operasi.total + investasi.total + pendanaan.total;
 
   return (
-    <Card className="p-6">
-      <Row label="Kas Masuk" value={masuk} />
-      <Row label="Kas Keluar" value={-keluar} />
-      <TotalRow label="Saldo Bersih" value={masuk - keluar} strong />
-    </Card>
+    <div className="bg-[#f5e6c8] p-6 text-sm font-serif">
+      <h2 className="text-center font-bold text-lg">
+        LAPORAN ARUS KAS
+      </h2>
+
+      <table className="w-full mt-4 border border-black">
+        <thead>
+          <tr className="border-b border-black">
+            <th className="text-left p-2">Uraian</th>
+            <th className="text-right p-2">Jumlah (Rp)</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {/* OPERASI */}
+          <tr className="font-bold text-red-600">
+            <td className="p-2">ARUS KAS DARI AKTIVITAS OPERASI</td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td className="pl-4">Kas Masuk</td>
+            <td className="text-right">
+              {formatRp(operasi.masuk)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="pl-4">Kas Keluar</td>
+            <td className="text-right">
+              ({formatRp(operasi.keluar)})
+            </td>
+          </tr>
+
+          <tr className="border-t font-semibold">
+            <td className="p-2">Arus Kas Bersih Operasi</td>
+            <td className="text-right">
+              {formatRp(operasi.total)}
+            </td>
+          </tr>
+
+          {/* INVESTASI */}
+          <tr className="font-bold text-red-600">
+            <td className="p-2">ARUS KAS DARI AKTIVITAS INVESTASI</td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td className="pl-4">Kas Masuk</td>
+            <td className="text-right">
+              {formatRp(investasi.masuk)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="pl-4">Kas Keluar</td>
+            <td className="text-right">
+              ({formatRp(investasi.keluar)})
+            </td>
+          </tr>
+
+          <tr className="border-t font-semibold">
+            <td className="p-2">Arus Kas Bersih Investasi</td>
+            <td className="text-right">
+              {formatRp(investasi.total)}
+            </td>
+          </tr>
+
+          {/* PENDANAAN */}
+          <tr className="font-bold text-red-600">
+            <td className="p-2">ARUS KAS DARI AKTIVITAS PENDANAAN</td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td className="pl-4">Kas Masuk</td>
+            <td className="text-right">
+              {formatRp(pendanaan.masuk)}
+            </td>
+          </tr>
+
+          <tr>
+            <td className="pl-4">Kas Keluar</td>
+            <td className="text-right">
+              ({formatRp(pendanaan.keluar)})
+            </td>
+          </tr>
+
+          <tr className="border-t font-semibold">
+            <td className="p-2">Arus Kas Bersih Pendanaan</td>
+            <td className="text-right">
+              {formatRp(pendanaan.total)}
+            </td>
+          </tr>
+
+          {/* TOTAL */}
+          <tr className="border-t-2 font-bold">
+            <td className="p-2">KENAIKAN (PENURUNAN) KAS</td>
+            <td className="text-right">
+              {formatRp(totalBersih)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }

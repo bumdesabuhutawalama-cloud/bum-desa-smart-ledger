@@ -279,35 +279,56 @@ function TotalRow({ label, value, strong }: any) {
 }
 
 function ArusKas({ accounts, lines }: any) {
-  const getSaldo = (filterFn: (a: any) => boolean) => {
-    const ids = new Set(accounts.filter(filterFn).map((a: any) => a.id));
-
-    const masuk = lines
-      .filter((l: any) => ids.has(l.account_id))
-      .reduce((s: number, l: any) => s + l.debit, 0);
-
-    const keluar = lines
-      .filter((l: any) => ids.has(l.account_id))
-      .reduce((s: number, l: any) => s + l.kredit, 0);
-
-    return { masuk, keluar, total: masuk - keluar };
-  };
-
-  // 🔥 KLASIFIKASI (INI BISA KAMU SESUAIKAN DENGAN KODE AKUN)
-  const operasi = getSaldo((a) =>
-    /pendapatan|beban|hpp/i.test(a.tipe_akun)
+  // 🔥 Ambil akun kas/bank saja
+  const kasIds = new Set(
+    accounts
+      .filter(
+        (a: any) =>
+          /^1\.1\.01/.test(a.kode_akun) || /kas|bank/i.test(a.nama_akun)
+      )
+      .map((a: any) => a.id)
   );
 
-  const investasi = getSaldo((a) =>
-    /aset/i.test(a.tipe_akun) && !/kas|bank/i.test(a.nama_akun)
-  );
+  let masukOperasi = 0;
+  let keluarOperasi = 0;
+  let masukInvestasi = 0;
+  let keluarInvestasi = 0;
+  let masukPendanaan = 0;
+  let keluarPendanaan = 0;
 
-  const pendanaan = getSaldo((a) =>
-    /ekuitas|kewajiban/i.test(a.tipe_akun)
-  );
+  for (const l of lines) {
+    if (!kasIds.has(l.account_id)) continue;
 
-  const totalBersih =
-    operasi.total + investasi.total + pendanaan.total;
+    // 🔥 Ambil lawan akun (penting!)
+    const jurnalLines = lines.filter((x: any) => x.tanggal === l.tanggal);
+
+    const lawan = jurnalLines.find((x: any) => x.account_id !== l.account_id);
+    const accLawan = accounts.find((a: any) => a.id === lawan?.account_id);
+
+    if (!accLawan) continue;
+
+    const isMasuk = l.debit > 0;
+
+    // 🔥 KLASIFIKASI BERDASARKAN LAWAN AKUN
+    if (["PENDAPATAN", "BEBAN", "HPP"].includes(accLawan.tipe_akun)) {
+      if (isMasuk) masukOperasi += l.debit;
+      else keluarOperasi += l.kredit;
+    } else if (accLawan.tipe_akun === "ASET") {
+      if (isMasuk) masukInvestasi += l.debit;
+      else keluarInvestasi += l.kredit;
+    } else if (
+      ["EKUITAS", "KEWAJIBAN"].includes(accLawan.tipe_akun)
+    ) {
+      if (isMasuk) masukPendanaan += l.debit;
+      else keluarPendanaan += l.kredit;
+    }
+  }
+
+  const operasi = masukOperasi - keluarOperasi;
+  const investasi = masukInvestasi - keluarInvestasi;
+  const pendanaan = masukPendanaan - keluarPendanaan;
+
+  const totalBersih = operasi + investasi + pendanaan;
 
   return (
     <div className="bg-[#f5e6c8] p-6 text-sm font-serif">
@@ -316,102 +337,31 @@ function ArusKas({ accounts, lines }: any) {
       </h2>
 
       <table className="w-full mt-4 border border-black">
-        <thead>
-          <tr className="border-b border-black">
-            <th className="text-left p-2">Uraian</th>
-            <th className="text-right p-2">Jumlah (Rp)</th>
-          </tr>
-        </thead>
-
         <tbody>
           {/* OPERASI */}
-          <tr className="font-bold text-red-600">
-            <td className="p-2">ARUS KAS DARI AKTIVITAS OPERASI</td>
-            <td></td>
-          </tr>
-
-          <tr>
-            <td className="pl-4">Kas Masuk</td>
-            <td className="text-right">
-              {formatRp(operasi.masuk)}
-            </td>
-          </tr>
-
-          <tr>
-            <td className="pl-4">Kas Keluar</td>
-            <td className="text-right">
-              ({formatRp(operasi.keluar)})
-            </td>
-          </tr>
-
-          <tr className="border-t font-semibold">
-            <td className="p-2">Arus Kas Bersih Operasi</td>
-            <td className="text-right">
-              {formatRp(operasi.total)}
-            </td>
-          </tr>
+          <Row title="ARUS KAS DARI OPERASI" />
+          <Item label="Kas Masuk" value={masukOperasi} />
+          <Item label="Kas Keluar" value={-keluarOperasi} />
+          <Total label="Arus Kas Bersih Operasi" value={operasi} />
 
           {/* INVESTASI */}
-          <tr className="font-bold text-red-600">
-            <td className="p-2">ARUS KAS DARI AKTIVITAS INVESTASI</td>
-            <td></td>
-          </tr>
-
-          <tr>
-            <td className="pl-4">Kas Masuk</td>
-            <td className="text-right">
-              {formatRp(investasi.masuk)}
-            </td>
-          </tr>
-
-          <tr>
-            <td className="pl-4">Kas Keluar</td>
-            <td className="text-right">
-              ({formatRp(investasi.keluar)})
-            </td>
-          </tr>
-
-          <tr className="border-t font-semibold">
-            <td className="p-2">Arus Kas Bersih Investasi</td>
-            <td className="text-right">
-              {formatRp(investasi.total)}
-            </td>
-          </tr>
+          <Row title="ARUS KAS DARI INVESTASI" />
+          <Item label="Kas Masuk" value={masukInvestasi} />
+          <Item label="Kas Keluar" value={-keluarInvestasi} />
+          <Total label="Arus Kas Bersih Investasi" value={investasi} />
 
           {/* PENDANAAN */}
-          <tr className="font-bold text-red-600">
-            <td className="p-2">ARUS KAS DARI AKTIVITAS PENDANAAN</td>
-            <td></td>
-          </tr>
-
-          <tr>
-            <td className="pl-4">Kas Masuk</td>
-            <td className="text-right">
-              {formatRp(pendanaan.masuk)}
-            </td>
-          </tr>
-
-          <tr>
-            <td className="pl-4">Kas Keluar</td>
-            <td className="text-right">
-              ({formatRp(pendanaan.keluar)})
-            </td>
-          </tr>
-
-          <tr className="border-t font-semibold">
-            <td className="p-2">Arus Kas Bersih Pendanaan</td>
-            <td className="text-right">
-              {formatRp(pendanaan.total)}
-            </td>
-          </tr>
+          <Row title="ARUS KAS DARI PENDANAAN" />
+          <Item label="Kas Masuk" value={masukPendanaan} />
+          <Item label="Kas Keluar" value={-keluarPendanaan} />
+          <Total label="Arus Kas Bersih Pendanaan" value={pendanaan} />
 
           {/* TOTAL */}
-          <tr className="border-t-2 font-bold">
-            <td className="p-2">KENAIKAN (PENURUNAN) KAS</td>
-            <td className="text-right">
-              {formatRp(totalBersih)}
-            </td>
-          </tr>
+          <Total
+            label="KENAIKAN (PENURUNAN) KAS"
+            value={totalBersih}
+            strong
+          />
         </tbody>
       </table>
     </div>

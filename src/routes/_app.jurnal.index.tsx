@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { formatRp, formatDate } from "@/lib/format";
 import { Plus } from "lucide-react";
 
-export const Route = createFileRoute("/_app/jurnal")({ component: JurnalList });
+export const Route = createFileRoute("/_app/jurnal/")({ component: JurnalList });
 
 function JurnalList() {
   const [rows, setRows] = useState<any[]>([]);

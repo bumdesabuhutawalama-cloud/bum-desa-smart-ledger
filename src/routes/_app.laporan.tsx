@@ -42,13 +42,10 @@ function Laporan() {
   const [lines, setLines] = useState<Line[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 DETEKSI CONTRA ACCOUNT
-  const isContraAccount = (acc: { kode_akun: string; nama_akun: string }) => {
-    return (
-      acc.kode_akun.startsWith("1.1.04") || // penyisihan piutang
-      /penyisihan|akumulasi/i.test(acc.nama_akun)
-    );
-  };
+  // 🔥 CONTRA ACCOUNT DETECTOR
+  const isContra = (acc: { kode_akun: string; nama_akun: string }) =>
+    acc.kode_akun.startsWith("1.1.04") ||
+    /penyisihan|akumulasi/i.test(acc.nama_akun);
 
   useEffect(() => {
     setLoading(true);
@@ -57,15 +54,11 @@ function Laporan() {
         await Promise.all([
           supabase
             .from("accounts")
-            .select(
-              "id,kode_akun,nama_akun,tipe_akun,normal_balance"
-            )
+            .select("id,kode_akun,nama_akun,tipe_akun,normal_balance")
             .eq("is_header", false),
           supabase
             .from("journal_lines")
-            .select(
-              "account_id,debit,kredit,journals!inner(tanggal,status)"
-            )
+            .select("account_id,debit,kredit,journals!inner(tanggal,status)")
             .lte("journals.tanggal", to)
             .gte("journals.tanggal", from)
             .eq("journals.status", "posted"),
@@ -75,16 +68,8 @@ function Laporan() {
       if (el) toast.error(el.message);
 
       setAccounts((a as Acc[]) ?? []);
-
       setLines(
-        (
-          (l as unknown as Array<{
-            account_id: string;
-            debit: number;
-            kredit: number;
-            journals: { tanggal: string };
-          }>) ?? []
-        ).map((x) => ({
+        ((l as any[]) ?? []).map((x) => ({
           account_id: x.account_id,
           debit: Number(x.debit),
           kredit: Number(x.kredit),
@@ -96,7 +81,7 @@ function Laporan() {
     })();
   }, [from, to]);
 
-  // 🔥 HITUNG SALDO
+  // 🔥 SALDO
   const saldoMap = useMemo(() => {
     const m = new Map<string, number>();
     for (const a of accounts) m.set(a.id, 0);
@@ -116,9 +101,8 @@ function Laporan() {
     return m;
   }, [accounts, lines]);
 
-  // 🔥 GROUPING
   const grouped = useMemo(() => {
-    const groups: Record<string, Array<Acc & { saldo: number }>> = {
+    const g: Record<string, any[]> = {
       ASET: [],
       KEWAJIBAN: [],
       EKUITAS: [],
@@ -132,214 +116,188 @@ function Laporan() {
     for (const a of accounts) {
       const saldo = saldoMap.get(a.id) ?? 0;
       if (Math.abs(saldo) < 0.005) continue;
-
-      groups[a.tipe_akun]?.push({ ...a, saldo });
+      g[a.tipe_akun].push({ ...a, saldo });
     }
 
-    for (const k of Object.keys(groups)) {
-      groups[k].sort((x, y) =>
-        x.kode_akun.localeCompare(y.kode_akun)
-      );
-    }
+    Object.keys(g).forEach((k) =>
+      g[k].sort((a, b) => a.kode_akun.localeCompare(b.kode_akun))
+    );
 
-    return groups;
+    return g;
   }, [accounts, saldoMap]);
 
-  const sumNormal = (arr: Array<{ saldo: number }>) =>
-    arr.reduce((s, x) => s + x.saldo, 0);
+  const sum = (arr: any[]) => arr.reduce((s, x) => s + x.saldo, 0);
 
-  // 🔥 FIX TOTAL ASET (HANDLE CONTRA)
-  const totalAset = grouped.ASET.reduce((s, acc) => {
-    return isContraAccount(acc) ? s - acc.saldo : s + acc.saldo;
+  // 🔥 TOTAL (FIX CONTRA)
+  const totalAset = grouped.ASET.reduce((s, a) => {
+    return isContra(a) ? s - a.saldo : s + a.saldo;
   }, 0);
 
-  const totalKewajiban = sumNormal(grouped.KEWAJIBAN);
-  const totalPendapatan = sumNormal(grouped.PENDAPATAN);
-  const totalPendapatanLain = sumNormal(grouped.PENDAPATAN_LAIN);
-  const totalHPP = sumNormal(grouped.HPP);
-  const totalBeban = sumNormal(grouped.BEBAN);
-  const totalBebanLain = sumNormal(grouped.BEBAN_LAIN);
+  const totalKewajiban = sum(grouped.KEWAJIBAN);
+  const totalPendapatan = sum(grouped.PENDAPATAN);
+  const totalHPP = sum(grouped.HPP);
+  const totalBeban = sum(grouped.BEBAN);
+  const totalPendapatanLain = sum(grouped.PENDAPATAN_LAIN);
+  const totalBebanLain = sum(grouped.BEBAN_LAIN);
 
   const labaKotor = totalPendapatan - totalHPP;
   const labaOperasi = labaKotor - totalBeban;
   const labaBersih =
     labaOperasi + totalPendapatanLain - totalBebanLain;
 
-  const totalEkuitas = sumNormal(grouped.EKUITAS) + labaBersih;
+  const totalEkuitas = sum(grouped.EKUITAS) + labaBersih;
 
   if (loading) {
     return (
-      <div className="p-10 grid place-items-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin" />
+      <div className="p-10 grid place-items-center">
+        <Loader2 className="animate-spin" />
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Laporan Keuangan
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Dihitung otomatis dari jurnal terposting
-        </p>
-      </div>
+      <h1 className="text-2xl font-bold">Laporan Keuangan</h1>
 
       <Card className="p-4 grid md:grid-cols-2 gap-3 max-w-xl">
         <div>
-          <Label>Periode dari</Label>
-          <Input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className="mt-1"
-          />
+          <Label>Dari</Label>
+          <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
         </div>
         <div>
-          <Label>sampai</Label>
-          <Input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className="mt-1"
-          />
+          <Label>Sampai</Label>
+          <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
         </div>
       </Card>
 
-      <Tabs defaultValue="neraca">
+      <Tabs defaultValue="lr">
         <TabsList>
           <TabsTrigger value="lr">Laba Rugi</TabsTrigger>
           <TabsTrigger value="neraca">Neraca</TabsTrigger>
-          <TabsTrigger value="ekuitas">
-            Perubahan Ekuitas
-          </TabsTrigger>
+          <TabsTrigger value="ekuitas">Perubahan Ekuitas</TabsTrigger>
           <TabsTrigger value="arus">Arus Kas</TabsTrigger>
         </TabsList>
+
+        {/* LABA RUGI */}
+        <TabsContent value="lr">
+          <Card className="p-6 space-y-3">
+            <Section title="Pendapatan" items={grouped.PENDAPATAN} />
+            <Section title="HPP" items={grouped.HPP} />
+            <TotalRow label="Laba Kotor" value={labaKotor} />
+            <Section title="Beban" items={grouped.BEBAN} />
+            <TotalRow label="Laba Operasi" value={labaOperasi} />
+            <TotalRow label="LABA BERSIH" value={labaBersih} strong />
+          </Card>
+        </TabsContent>
 
         {/* NERACA */}
         <TabsContent value="neraca">
           <div className="grid md:grid-cols-2 gap-4">
             <Card className="p-6">
-              <h3 className="font-semibold mb-3">ASET</h3>
-              <Section items={grouped.ASET} compact />
+              <h3>ASET</h3>
+              <Section items={grouped.ASET} />
             </Card>
 
             <Card className="p-6 space-y-3">
-              <div>
-                <h3 className="font-semibold mb-3">
-                  KEWAJIBAN
-                </h3>
-                <Section items={grouped.KEWAJIBAN} compact />
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-3">
-                  EKUITAS
-                </h3>
-                <Section items={grouped.EKUITAS} compact />
-                <TotalRow label="Laba Berjalan" value={labaBersih} />
-                <TotalRow
-                  label="Total Ekuitas"
-                  value={totalEkuitas}
-                  accent
-                />
-              </div>
+              <h3>KEWAJIBAN</h3>
+              <Section items={grouped.KEWAJIBAN} />
+              <h3>EKUITAS</h3>
+              <Section items={grouped.EKUITAS} />
+              <TotalRow label="Laba Berjalan" value={labaBersih} />
+              <TotalRow label="Total Ekuitas" value={totalEkuitas} />
 
               <TotalRow
                 label="TOTAL KEWAJIBAN + EKUITAS"
                 value={totalKewajiban + totalEkuitas}
-                accent
                 strong
               />
 
-              {Math.abs(
-                totalAset - (totalKewajiban + totalEkuitas)
-              ) > 1 && (
-                <div className="text-sm text-destructive">
-                  ⚠ Tidak balance:{" "}
-                  {formatRp(
-                    totalAset - (totalKewajiban + totalEkuitas)
-                  )}
+              {Math.abs(totalAset - (totalKewajiban + totalEkuitas)) > 1 && (
+                <div className="text-red-500">
+                  Tidak balance: {formatRp(totalAset - (totalKewajiban + totalEkuitas))}
                 </div>
               )}
             </Card>
           </div>
+        </TabsContent>
+
+        {/* EKUITAS */}
+        <TabsContent value="ekuitas">
+          <Card className="p-6 space-y-2">
+            <Row label="Modal Awal" value={sum(grouped.EKUITAS)} />
+            <Row label="Laba Bersih" value={labaBersih} />
+            <TotalRow label="Saldo Akhir Ekuitas" value={totalEkuitas} strong />
+          </Card>
+        </TabsContent>
+
+        {/* ARUS KAS */}
+        <TabsContent value="arus">
+          <ArusKas accounts={accounts} lines={lines} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-// 🔥 SECTION FIXED
-function Section({
-  items,
-  compact,
-}: {
-  items: Array<{
-    id: string;
-    kode_akun: string;
-    nama_akun: string;
-    saldo: number;
-  }>;
-  compact?: boolean;
-}) {
+// 🔥 COMPONENTS
+function Section({ title, items }: any) {
   const isContra = (it: any) =>
     it.kode_akun.startsWith("1.1.04") ||
     /penyisihan|akumulasi/i.test(it.nama_akun);
 
-  const total = items.reduce((s, it) => {
-    return isContra(it) ? s - it.saldo : s + it.saldo;
-  }, 0);
-
   return (
     <div>
-      <div className="space-y-1">
-        {items.map((it) => (
-          <div key={it.id} className="flex justify-between text-sm">
-            <span>
-              <span className="font-mono text-xs mr-2">
-                {it.kode_akun}
-              </span>
-              {it.nama_akun}
-            </span>
-
-            <span className="font-mono">
-              {isContra(it)
-                ? `(${formatRp(it.saldo)})`
-                : formatRp(it.saldo)}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex justify-between font-semibold border-t mt-2 pt-2">
-        <span>Total</span>
-        <span className="font-mono">{formatRp(total)}</span>
-      </div>
+      {title && <h4>{title}</h4>}
+      {items.map((it: any) => (
+        <div key={it.id} className="flex justify-between">
+          <span>{it.nama_akun}</span>
+          <span>
+            {isContra(it) ? `(${formatRp(it.saldo)})` : formatRp(it.saldo)}
+          </span>
+        </div>
+      ))}
     </div>
   );
 }
 
-function TotalRow({
-  label,
-  value,
-  accent,
-  strong,
-}: {
-  label: string;
-  value: number;
-  accent?: boolean;
-  strong?: boolean;
-}) {
+function Row({ label, value }: any) {
   return (
-    <div
-      className={`flex justify-between border-t pt-2 ${
-        accent ? "text-primary" : ""
-      } ${strong ? "font-bold" : ""}`}
-    >
+    <div className="flex justify-between">
       <span>{label}</span>
-      <span className="font-mono">{formatRp(value)}</span>
+      <span>{formatRp(value)}</span>
     </div>
+  );
+}
+
+function TotalRow({ label, value, strong }: any) {
+  return (
+    <div className={`flex justify-between border-t pt-2 ${strong ? "font-bold" : ""}`}>
+      <span>{label}</span>
+      <span>{formatRp(value)}</span>
+    </div>
+  );
+}
+
+function ArusKas({ accounts, lines }: any) {
+  const kasIds = new Set(
+    accounts
+      .filter((a: any) => /kas|bank/i.test(a.nama_akun))
+      .map((a: any) => a.id)
+  );
+
+  const masuk = lines
+    .filter((l: any) => kasIds.has(l.account_id))
+    .reduce((s: number, l: any) => s + l.debit, 0);
+
+  const keluar = lines
+    .filter((l: any) => kasIds.has(l.account_id))
+    .reduce((s: number, l: any) => s + l.kredit, 0);
+
+  return (
+    <Card className="p-6">
+      <Row label="Kas Masuk" value={masuk} />
+      <Row label="Kas Keluar" value={-keluar} />
+      <TotalRow label="Saldo Bersih" value={masuk - keluar} strong />
+    </Card>
   );
 }

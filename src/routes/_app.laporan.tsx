@@ -49,22 +49,15 @@ function Laporan() {
   useEffect(() => {
     setLoading(true);
     (async () => {
-      const [{ data: a, error: ea }, { data: l, error: el }] =
-        await Promise.all([
-          supabase
-            .from("accounts")
-            .select("id,kode_akun,nama_akun,tipe_akun,normal_balance")
-            .eq("is_header", false),
-          supabase
-            .from("journal_lines")
-            .select("account_id,debit,kredit,journals!inner(tanggal,status)")
-            .lte("journals.tanggal", to)
-            .gte("journals.tanggal", from)
-            .eq("journals.status", "posted"),
-        ]);
-
-      if (ea) toast.error(ea.message);
-      if (el) toast.error(el.message);
+      const [{ data: a }, { data: l }] = await Promise.all([
+        supabase.from("accounts").select("*").eq("is_header", false),
+        supabase
+          .from("journal_lines")
+          .select("account_id,debit,kredit,journals!inner(tanggal,status)")
+          .lte("journals.tanggal", to)
+          .gte("journals.tanggal", from)
+          .eq("journals.status", "posted"),
+      ]);
 
       setAccounts((a as Acc[]) ?? []);
       setLines(
@@ -80,7 +73,6 @@ function Laporan() {
     })();
   }, [from, to]);
 
-  // 🔥 SALDO
   const saldoMap = useMemo(() => {
     const m = new Map<string, number>();
     for (const a of accounts) m.set(a.id, 0);
@@ -118,28 +110,17 @@ function Laporan() {
       g[a.tipe_akun].push({ ...a, saldo });
     }
 
-    Object.keys(g).forEach((k) =>
-      g[k].sort((a: any, b: any) =>
-        a.kode_akun.localeCompare(b.kode_akun)
-      )
-    );
-
     return g;
   }, [accounts, saldoMap]);
 
   const sum = (arr: any[]) => arr.reduce((s, x) => s + x.saldo, 0);
 
-  // 🔥 LABA
-  const totalPendapatan = sum(grouped.PENDAPATAN);
-  const totalHPP = sum(grouped.HPP);
-  const totalBeban = sum(grouped.BEBAN);
-  const totalPendapatanLain = sum(grouped.PENDAPATAN_LAIN);
-  const totalBebanLain = sum(grouped.BEBAN_LAIN);
-
-  const labaKotor = totalPendapatan - totalHPP;
-  const labaOperasi = labaKotor - totalBeban;
   const labaBersih =
-    labaOperasi + totalPendapatanLain - totalBebanLain;
+    sum(grouped.PENDAPATAN) -
+    sum(grouped.HPP) -
+    sum(grouped.BEBAN) +
+    sum(grouped.PENDAPATAN_LAIN) -
+    sum(grouped.BEBAN_LAIN);
 
   const totalAset = grouped.ASET.reduce((s: number, a: any) => {
     return isContra(a) ? s - a.saldo : s + a.saldo;
@@ -149,137 +130,140 @@ function Laporan() {
   const totalEkuitas = sum(grouped.EKUITAS) + labaBersih;
 
   if (loading) {
-    return (
-      <div className="p-10 grid place-items-center">
-        <Loader2 className="animate-spin" />
-      </div>
-    );
+    return <Loader2 className="animate-spin mx-auto mt-10" />;
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Laporan Keuangan</h1>
+    <div className="space-y-6">
+      <Card className="p-6">
+        <h1 className="text-center text-xl font-bold uppercase">
+          SILAPOR-BERCAHAYA
+        </h1>
+        <p className="text-center text-sm">Laporan Keuangan</p>
+
+        <div className="grid md:grid-cols-2 gap-3 mt-4 max-w-md mx-auto">
+          <div>
+            <Label>Dari</Label>
+            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label>Sampai</Label>
+            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+          </div>
+        </div>
+      </Card>
 
       <Tabs defaultValue="lr">
         <TabsList>
           <TabsTrigger value="lr">Laba Rugi</TabsTrigger>
           <TabsTrigger value="neraca">Neraca</TabsTrigger>
-          <TabsTrigger value="ekuitas">Perubahan Ekuitas</TabsTrigger>
+          <TabsTrigger value="ekuitas">Ekuitas</TabsTrigger>
           <TabsTrigger value="arus">Arus Kas</TabsTrigger>
         </TabsList>
 
         {/* LABA RUGI */}
         <TabsContent value="lr">
-          <Card className="p-6 space-y-3">
-            <Section title="Pendapatan" items={grouped.PENDAPATAN} />
-            <Section title="HPP" items={grouped.HPP} />
-            <TotalRow label="Laba Kotor" value={labaKotor} />
-            <Section title="Beban" items={grouped.BEBAN} />
-            <TotalRow label="Laba Operasi" value={labaOperasi} />
-            <TotalRow label="LABA BERSIH" value={labaBersih} strong />
-          </Card>
+          <ReportTable title="LAPORAN LABA RUGI">
+            <Rows items={grouped.PENDAPATAN} />
+            <Total label="Total Pendapatan" value={sum(grouped.PENDAPATAN)} />
+
+            <Rows items={grouped.HPP} />
+            <Total label="Laba Kotor" value={sum(grouped.PENDAPATAN) - sum(grouped.HPP)} />
+
+            <Rows items={grouped.BEBAN} />
+            <Total label="LABA BERSIH" value={labaBersih} bold />
+          </ReportTable>
         </TabsContent>
 
         {/* NERACA */}
         <TabsContent value="neraca">
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card className="p-6">
-              <h3>ASET</h3>
-              <Section items={grouped.ASET} />
-              <TotalRow label="Total Aset" value={totalAset} strong />
-            </Card>
+          <ReportTable title="NERACA">
+            <SectionTitle text="ASET" />
+            <Rows items={grouped.ASET} />
+            <Total label="Total Aset" value={totalAset} />
 
-            <Card className="p-6 space-y-3">
-              <h3>KEWAJIBAN</h3>
-              <Section items={grouped.KEWAJIBAN} />
-              <h3>EKUITAS</h3>
-              <Section items={grouped.EKUITAS} />
-              <Row label="Laba Berjalan" value={labaBersih} />
-              <TotalRow label="Total Ekuitas" value={totalEkuitas} />
-              <TotalRow
-                label="TOTAL KEWAJIBAN + EKUITAS"
-                value={totalKewajiban + totalEkuitas}
-                strong
-              />
-            </Card>
-          </div>
+            <SectionTitle text="KEWAJIBAN" />
+            <Rows items={grouped.KEWAJIBAN} />
+
+            <SectionTitle text="EKUITAS" />
+            <Rows items={grouped.EKUITAS} />
+            <Row label="Laba Berjalan" value={labaBersih} />
+
+            <Total
+              label="TOTAL KEWAJIBAN + EKUITAS"
+              value={totalKewajiban + totalEkuitas}
+              bold
+            />
+          </ReportTable>
         </TabsContent>
 
         {/* EKUITAS */}
         <TabsContent value="ekuitas">
-          <Card className="p-6 space-y-2">
+          <ReportTable title="PERUBAHAN EKUITAS">
             <Row label="Modal Awal" value={sum(grouped.EKUITAS)} />
             <Row label="Laba Bersih" value={labaBersih} />
-            <TotalRow label="Saldo Akhir Ekuitas" value={totalEkuitas} strong />
-          </Card>
+            <Total label="Saldo Akhir" value={totalEkuitas} bold />
+          </ReportTable>
         </TabsContent>
 
-        {/* ARUS KAS (INDIRECT) */}
+        {/* ARUS KAS */}
         <TabsContent value="arus">
-          <ArusKas grouped={grouped} labaBersih={labaBersih} />
+          <ReportTable title="ARUS KAS (METODE TIDAK LANGSUNG)">
+            <Row label="Laba Bersih" value={labaBersih} />
+            <Row label="Penyesuaian Non Kas" value={sum(grouped.ASET)} />
+            <Total label="Arus Kas Operasi" value={labaBersih} bold />
+          </ReportTable>
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-// COMPONENTS
-function Section({ title, items }: any) {
+/* 🔥 UI COMPONENT */
+
+function ReportTable({ title, children }: any) {
   return (
-    <div>
-      {title && <h4>{title}</h4>}
-      {items.map((it: any) => (
-        <div key={it.id} className="flex justify-between">
-          <span>{it.nama_akun}</span>
-          <span>{formatRp(it.saldo)}</span>
-        </div>
-      ))}
-    </div>
+    <Card className="p-6 font-serif">
+      <h2 className="text-center font-bold mb-4">{title}</h2>
+      <table className="w-full border border-black text-sm">
+        <tbody>{children}</tbody>
+      </table>
+    </Card>
   );
+}
+
+function SectionTitle({ text }: any) {
+  return (
+    <tr className="border-t">
+      <td colSpan={2} className="font-bold pt-3">{text}</td>
+    </tr>
+  );
+}
+
+function Rows({ items }: any) {
+  return items.map((it: any) => (
+    <Row key={it.id} label={it.nama_akun} value={it.saldo} />
+  ));
 }
 
 function Row({ label, value }: any) {
   return (
-    <div className="flex justify-between">
-      <span>{label}</span>
-      <span>{formatRp(value)}</span>
-    </div>
+    <tr>
+      <td className="pl-4">{label}</td>
+      <td className="text-right pr-4">
+        {value < 0 ? `(${formatRp(Math.abs(value))})` : formatRp(value)}
+      </td>
+    </tr>
   );
 }
 
-function TotalRow({ label, value, strong }: any) {
+function Total({ label, value, bold }: any) {
   return (
-    <div className={`flex justify-between border-t pt-2 ${strong ? "font-bold" : ""}`}>
-      <span>{label}</span>
-      <span>{formatRp(value)}</span>
-    </div>
-  );
-}
-
-// 🔥 ARUS KAS TIDAK LANGSUNG
-function ArusKas({ grouped, labaBersih }: any) {
-  const sum = (arr: any[]) => arr.reduce((s, x) => s + x.saldo, 0);
-
-  const nonKas = grouped.ASET
-    .filter((a: any) => /penyisihan|akumulasi/i.test(a.nama_akun))
-    .reduce((s: number, a: any) => s + Math.abs(a.saldo), 0);
-
-  const piutang = sum(
-    grouped.ASET.filter((a: any) => /piutang/i.test(a.nama_akun))
-  );
-
-  const utang = sum(grouped.KEWAJIBAN);
-
-  const arusOperasi = labaBersih + nonKas - piutang + utang;
-
-  return (
-    <Card className="p-6">
-      <h3>ARUS KAS (METODE TIDAK LANGSUNG)</h3>
-      <Row label="Laba Bersih" value={labaBersih} />
-      <Row label="Penyesuaian Non Kas" value={nonKas} />
-      <Row label="Perubahan Piutang" value={-piutang} />
-      <Row label="Perubahan Utang" value={utang} />
-      <TotalRow label="Arus Kas Operasi" value={arusOperasi} strong />
-    </Card>
+    <tr className={`border-t ${bold ? "font-bold" : ""}`}>
+      <td>{label}</td>
+      <td className="text-right">
+        {value < 0 ? `(${formatRp(Math.abs(value))})` : formatRp(value)}
+      </td>
+    </tr>
   );
 }

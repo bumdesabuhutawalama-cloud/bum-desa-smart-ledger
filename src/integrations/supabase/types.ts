@@ -77,8 +77,10 @@ export type Database = {
           harga_perolehan: number
           id: string
           is_active: boolean
+          journal_id: string | null
           kategori: string | null
           masa_manfaat_bulan: number
+          metode: string
           nama: string
           nilai_residu: number
           tanggal_perolehan: string
@@ -93,8 +95,10 @@ export type Database = {
           harga_perolehan: number
           id?: string
           is_active?: boolean
+          journal_id?: string | null
           kategori?: string | null
           masa_manfaat_bulan: number
+          metode?: string
           nama: string
           nilai_residu?: number
           tanggal_perolehan: string
@@ -109,8 +113,10 @@ export type Database = {
           harga_perolehan?: number
           id?: string
           is_active?: boolean
+          journal_id?: string | null
           kategori?: string | null
           masa_manfaat_bulan?: number
+          metode?: string
           nama?: string
           nilai_residu?: number
           tanggal_perolehan?: string
@@ -136,6 +142,13 @@ export type Database = {
             columns: ["depr_expense_account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "journals"
             referencedColumns: ["id"]
           },
         ]

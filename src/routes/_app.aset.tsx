@@ -253,7 +253,7 @@ function AsetPage() {
       {/* Calon Aset */}
       <Card className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
+          <AlertCircle className="h-4 w-4 text-primary" />
           <h2 className="font-semibold">Calon Aset Tetap dari Jurnal</h2>
           <Badge variant="secondary">{candidates.length}</Badge>
         </div>

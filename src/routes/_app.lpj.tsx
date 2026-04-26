@@ -32,6 +32,9 @@ type Line = {
   debit: number;
   kredit: number;
   tanggal: string;
+  journal_id: string;
+  nomor_jurnal: string;
+  keterangan: string;
 };
 
 const fmt = (n: number) =>
@@ -41,6 +44,13 @@ const fmtTgl = (s: string) =>
   new Date(s).toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
+    year: "numeric",
+  });
+
+const fmtTglShort = (s: string) =>
+  new Date(s).toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "2-digit",
     year: "numeric",
   });
 
@@ -59,7 +69,9 @@ function LPJ() {
         supabase.from("accounts").select("*").eq("is_header", false),
         supabase
           .from("journal_lines")
-          .select("account_id,debit,kredit,journals!inner(tanggal,status)")
+          .select(
+            "account_id,debit,kredit,journal_id,journals!inner(tanggal,status,nomor_jurnal,keterangan)"
+          )
           .lte("journals.tanggal", to)
           .gte("journals.tanggal", from)
           .eq("journals.status", "posted"),
@@ -72,6 +84,9 @@ function LPJ() {
           debit: Number(x.debit),
           kredit: Number(x.kredit),
           tanggal: x.journals.tanggal,
+          journal_id: x.journal_id,
+          nomor_jurnal: x.journals.nomor_jurnal,
+          keterangan: x.journals.keterangan,
         }))
       );
       setLoading(false);
@@ -96,7 +111,6 @@ function LPJ() {
       const acc = accMap.get(ln.account_id);
       if (!acc) continue;
 
-      // OPERASI
       if (acc.tipe_akun === "PENDAPATAN" || acc.tipe_akun === "PENDAPATAN_LAIN") {
         pendapatan += ln.kredit - ln.debit;
       } else if (acc.tipe_akun === "BEBAN" || acc.tipe_akun === "BEBAN_LAIN") {
@@ -105,7 +119,6 @@ function LPJ() {
         hpp += ln.debit - ln.kredit;
       }
 
-      // INVESTASI: Aset Tetap (kode 1.3)
       if (acc.tipe_akun === "ASET" && acc.kode_akun.startsWith("1.3")) {
         const delta = ln.debit - ln.kredit;
         if (delta > 0) investasiNaik += delta;
@@ -116,7 +129,6 @@ function LPJ() {
         );
       }
 
-      // PENDANAAN: Ekuitas + Kewajiban
       if (acc.tipe_akun === "EKUITAS" || acc.tipe_akun === "KEWAJIBAN") {
         const delta = ln.kredit - ln.debit;
         if (delta > 0) pendanaanNaik += delta;
@@ -130,7 +142,6 @@ function LPJ() {
 
     const labaBersih = pendapatan - beban - hpp;
 
-    // Total Aset & Ekuitas (saldo akhir periode)
     let totalAset = 0;
     let totalEkuitas = 0;
     const saldo = new Map<string, number>();
@@ -163,6 +174,73 @@ function LPJ() {
       .map(([n]) => n.toLowerCase())
       .join(", ");
 
+    // === Rincian transaksi per jurnal ===
+    type Rincian = {
+      journal_id: string;
+      nomor_jurnal: string;
+      tanggal: string;
+      keterangan: string;
+      nilai: number;
+      jenis: "Operasi" | "Investasi" | "Pendanaan";
+    };
+
+    const jurnalMap = new Map<
+      string,
+      {
+        nomor_jurnal: string;
+        tanggal: string;
+        keterangan: string;
+        totalDebit: number;
+        totalKredit: number;
+        hasInvest: boolean;
+        hasFinance: boolean;
+      }
+    >();
+
+    for (const ln of lines) {
+      const acc = accMap.get(ln.account_id);
+      if (!acc) continue;
+      let j = jurnalMap.get(ln.journal_id);
+      if (!j) {
+        j = {
+          nomor_jurnal: ln.nomor_jurnal,
+          tanggal: ln.tanggal,
+          keterangan: ln.keterangan,
+          totalDebit: 0,
+          totalKredit: 0,
+          hasInvest: false,
+          hasFinance: false,
+        };
+        jurnalMap.set(ln.journal_id, j);
+      }
+      j.totalDebit += ln.debit;
+      j.totalKredit += ln.kredit;
+      if (acc.tipe_akun === "ASET" && acc.kode_akun.startsWith("1.3")) {
+        j.hasInvest = true;
+      }
+      if (acc.tipe_akun === "EKUITAS" || acc.tipe_akun === "KEWAJIBAN") {
+        j.hasFinance = true;
+      }
+    }
+
+    const rincian: Rincian[] = Array.from(jurnalMap.entries())
+      .map(([journal_id, j]) => ({
+        journal_id,
+        nomor_jurnal: j.nomor_jurnal,
+        tanggal: j.tanggal,
+        keterangan: j.keterangan,
+        nilai: Math.max(j.totalDebit, j.totalKredit),
+        jenis: (j.hasInvest
+          ? "Investasi"
+          : j.hasFinance
+            ? "Pendanaan"
+            : "Operasi") as "Operasi" | "Investasi" | "Pendanaan",
+      }))
+      .sort((a, b) => {
+        if (a.tanggal !== b.tanggal) return a.tanggal.localeCompare(b.tanggal);
+        return a.nomor_jurnal.localeCompare(b.nomor_jurnal);
+      });
+
     return {
       pendapatan,
       beban,
@@ -177,6 +255,7 @@ function LPJ() {
       totalEkuitas,
       labaBersih,
       adaData: lines.length > 0,
+      rincian,
     };
   }, [accounts, lines]);
 
@@ -195,28 +274,49 @@ function LPJ() {
         ? `Dari sisi pendanaan, terdapat aktivitas pada ${data.deskripsiPendanaan} dengan total nilai sebesar ${fmt(data.totalPendanaan)}.`
         : "Pada periode ini tidak terdapat aktivitas pendanaan yang signifikan.";
 
-    return [
-      `Pada periode ${fmtTgl(from)} sampai dengan ${fmtTgl(to)}, BUMDes telah melaksanakan berbagai kegiatan operasional, investasi, dan pendanaan sebagai bagian dari pelaksanaan program kerja.`,
-      ``,
-      `KEGIATAN OPERASIONAL`,
-      `Selama periode tersebut, kegiatan operasional menghasilkan penerimaan sebesar ${fmt(data.operasiMasuk)} dan pengeluaran sebesar ${fmt(data.operasiKeluar)}. Selisih dari kegiatan operasional ini menghasilkan laba bersih sebesar ${fmt(data.labaBersih)}.`,
-      ``,
-      `KEGIATAN INVESTASI`,
-      investasiTeks,
-      ``,
-      `KEGIATAN PENDANAAN`,
-      pendanaanTeks,
-      ``,
-      `RINGKASAN POSISI KEUANGAN`,
-      `Secara keseluruhan, total aset BUMDes tercatat sebesar ${fmt(data.totalAset)} dengan total ekuitas sebesar ${fmt(data.totalEkuitas)} serta laba bersih periode berjalan sebesar ${fmt(data.labaBersih)}.`,
-      ``,
-      `PENUTUP`,
-      `Demikian Laporan Pertanggungjawaban ini disusun sebagai bentuk akuntabilitas pengelolaan keuangan BUMDes. Seluruh kegiatan telah dilaksanakan dan dicatat sesuai dengan prinsip akuntansi yang berlaku umum.`,
-    ].join("\n");
+    return {
+      pembuka: `Pada periode ${fmtTgl(from)} sampai dengan ${fmtTgl(to)}, BUMDes telah melaksanakan berbagai kegiatan operasional, investasi, dan pendanaan sebagai bagian dari pelaksanaan program kerja.`,
+      operasi: `Selama periode tersebut, kegiatan operasional menghasilkan penerimaan sebesar ${fmt(data.operasiMasuk)} dan pengeluaran sebesar ${fmt(data.operasiKeluar)}. Selisih dari kegiatan operasional ini menghasilkan laba bersih sebesar ${fmt(data.labaBersih)}.`,
+      investasi: investasiTeks,
+      pendanaan: pendanaanTeks,
+      ringkasan: `Secara keseluruhan, total aset BUMDes tercatat sebesar ${fmt(data.totalAset)} dengan total ekuitas sebesar ${fmt(data.totalEkuitas)} serta laba bersih periode berjalan sebesar ${fmt(data.labaBersih)}.`,
+      penutup: `Demikian Laporan Pertanggungjawaban ini disusun sebagai bentuk akuntabilitas pengelolaan keuangan BUMDes. Seluruh kegiatan telah dilaksanakan dan dicatat sesuai dengan prinsip akuntansi yang berlaku umum.`,
+    };
   }, [data, from, to]);
 
   const copy = async () => {
-    await navigator.clipboard.writeText(narasi);
+    if (typeof narasi === "string") {
+      await navigator.clipboard.writeText(narasi);
+    } else {
+      const teks = [
+        `LAPORAN PERTANGGUNGJAWABAN BUM DESA`,
+        `Periode ${fmtTgl(from)} s.d. ${fmtTgl(to)}`,
+        ``,
+        narasi.pembuka,
+        ``,
+        `KEGIATAN OPERASIONAL`,
+        narasi.operasi,
+        ``,
+        `KEGIATAN INVESTASI`,
+        narasi.investasi,
+        ``,
+        `KEGIATAN PENDANAAN`,
+        narasi.pendanaan,
+        ``,
+        `RINGKASAN POSISI KEUANGAN`,
+        narasi.ringkasan,
+        ``,
+        `Ringkasan Aktivitas Keuangan:`,
+        `- Operasi Masuk   : ${fmt(data.operasiMasuk)}`,
+        `- Operasi Keluar  : ${fmt(data.operasiKeluar)}`,
+        `- Investasi       : ${fmt(data.totalInvestasi)}`,
+        `- Pendanaan       : ${fmt(data.totalPendanaan)}`,
+        ``,
+        `PENUTUP`,
+        narasi.penutup,
+      ].join("\n");
+      await navigator.clipboard.writeText(teks);
+    }
     toast.success("Narasi LPJ disalin ke clipboard");
   };
 
@@ -228,6 +328,7 @@ function LPJ() {
 
   return (
     <div className="space-y-6">
+      {/* Filter & aksi */}
       <Card className="p-6 print:hidden">
         <h1 className="text-xl font-bold">Generate LPJ</h1>
         <p className="text-sm text-muted-foreground">
@@ -253,40 +354,176 @@ function LPJ() {
         </div>
       </Card>
 
-      {/* Ringkasan angka */}
-      <div className="grid md:grid-cols-4 gap-3 print:hidden">
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Operasi Masuk</div>
-          <div className="font-semibold">{fmt(data.operasiMasuk)}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Operasi Keluar</div>
-          <div className="font-semibold">{fmt(data.operasiKeluar)}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Investasi</div>
-          <div className="font-semibold">{fmt(data.totalInvestasi)}</div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-xs text-muted-foreground">Pendanaan</div>
-          <div className="font-semibold">{fmt(data.totalPendanaan)}</div>
-        </Card>
-      </div>
-
-      {/* Narasi */}
-      <Card className="p-8 font-serif leading-relaxed">
-        <div className="text-center mb-6">
-          <h2 className="text-lg font-bold uppercase">
+      {/* Dokumen LPJ */}
+      <Card className="p-10 font-serif leading-relaxed bg-card print:shadow-none print:border-0">
+        {/* Kop / Judul */}
+        <div className="text-center border-b-2 border-foreground pb-4 mb-6">
+          <h2 className="text-xl font-bold uppercase tracking-wide">
             Laporan Pertanggungjawaban
           </h2>
-          <p className="text-sm">BUM Desa</p>
-          <p className="text-sm">
+          <p className="text-base font-semibold">Badan Usaha Milik Desa (BUM Desa)</p>
+          <p className="text-sm mt-1">
             Periode {fmtTgl(from)} s.d. {fmtTgl(to)}
           </p>
         </div>
-        <div className="whitespace-pre-line text-justify text-sm">
-          {narasi}
-        </div>
+
+        {typeof narasi === "string" ? (
+          <p className="text-sm text-center italic">{narasi}</p>
+        ) : (
+          <div className="space-y-6 text-sm text-justify">
+            {/* Pembuka */}
+            <section>
+              <p className="indent-8">{narasi.pembuka}</p>
+            </section>
+
+            {/* I. Operasional */}
+            <section>
+              <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
+                I. Kegiatan Operasional
+              </h3>
+              <p className="indent-8">{narasi.operasi}</p>
+            </section>
+
+            {/* II. Investasi */}
+            <section>
+              <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
+                II. Kegiatan Investasi
+              </h3>
+              <p className="indent-8">{narasi.investasi}</p>
+            </section>
+
+            {/* III. Pendanaan */}
+            <section>
+              <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
+                III. Kegiatan Pendanaan
+              </h3>
+              <p className="indent-8">{narasi.pendanaan}</p>
+            </section>
+
+            {/* IV. Ringkasan posisi keuangan */}
+            <section>
+              <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
+                IV. Ringkasan Posisi Keuangan
+              </h3>
+              <p className="indent-8 mb-3">{narasi.ringkasan}</p>
+
+              <div className="border border-foreground/60 rounded-sm p-4 bg-muted/30">
+                <p className="font-semibold mb-2">Ringkasan Aktivitas Keuangan:</p>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr>
+                      <td className="py-1 w-1/2">Operasi Masuk</td>
+                      <td className="py-1 text-right font-mono">{fmt(data.operasiMasuk)}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1">Operasi Keluar</td>
+                      <td className="py-1 text-right font-mono">{fmt(data.operasiKeluar)}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1">Investasi</td>
+                      <td className="py-1 text-right font-mono">{fmt(data.totalInvestasi)}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-1">Pendanaan</td>
+                      <td className="py-1 text-right font-mono">{fmt(data.totalPendanaan)}</td>
+                    </tr>
+                    <tr className="border-t border-foreground/40">
+                      <td className="py-1 font-semibold">Laba Bersih Periode</td>
+                      <td className="py-1 text-right font-mono font-semibold">
+                        {fmt(data.labaBersih)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            {/* V. Rincian Transaksi */}
+            <section>
+              <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
+                V. Rincian Transaksi Keuangan
+              </h3>
+              {data.rincian.length === 0 ? (
+                <p className="italic text-muted-foreground">
+                  Tidak ada transaksi pada periode ini.
+                </p>
+              ) : (
+                <table className="w-full text-xs border-collapse border border-foreground">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th className="border border-foreground p-2 w-10 text-center">No</th>
+                      <th className="border border-foreground p-2 text-left">Nomor Jurnal</th>
+                      <th className="border border-foreground p-2 text-left w-24">Tanggal</th>
+                      <th className="border border-foreground p-2 text-left">Keterangan</th>
+                      <th className="border border-foreground p-2 text-right w-32">Nilai (Rp)</th>
+                      <th className="border border-foreground p-2 text-center w-24">Jenis</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.rincian.map((r, i) => (
+                      <tr key={r.journal_id}>
+                        <td className="border border-foreground p-2 text-center">{i + 1}</td>
+                        <td className="border border-foreground p-2 font-mono">
+                          {r.nomor_jurnal}
+                        </td>
+                        <td className="border border-foreground p-2">
+                          {fmtTglShort(r.tanggal)}
+                        </td>
+                        <td className="border border-foreground p-2">{r.keterangan}</td>
+                        <td className="border border-foreground p-2 text-right font-mono">
+                          {fmt(r.nilai)}
+                        </td>
+                        <td className="border border-foreground p-2 text-center">
+                          {r.jenis}
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="bg-muted font-semibold">
+                      <td
+                        colSpan={4}
+                        className="border border-foreground p-2 text-right"
+                      >
+                        Total
+                      </td>
+                      <td className="border border-foreground p-2 text-right font-mono">
+                        {fmt(data.rincian.reduce((s, r) => s + r.nilai, 0))}
+                      </td>
+                      <td className="border border-foreground p-2"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
+            </section>
+
+            {/* VI. Penutup */}
+            <section>
+              <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
+                VI. Penutup
+              </h3>
+              <p className="indent-8">{narasi.penutup}</p>
+            </section>
+
+            {/* Tanda tangan */}
+            <section className="pt-10 grid grid-cols-2 gap-8 text-center text-sm">
+              <div>
+                <p>Mengetahui,</p>
+                <p className="font-semibold">Kepala Desa</p>
+                <div className="h-20" />
+                <p className="border-t border-foreground inline-block px-8 pt-1">
+                  (....................................)
+                </p>
+              </div>
+              <div>
+                <p>Disusun oleh,</p>
+                <p className="font-semibold">Direktur BUM Desa</p>
+                <div className="h-20" />
+                <p className="border-t border-foreground inline-block px-8 pt-1">
+                  (....................................)
+                </p>
+              </div>
+            </section>
+          </div>
+        )}
       </Card>
     </div>
   );

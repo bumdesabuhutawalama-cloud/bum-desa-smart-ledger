@@ -11,6 +11,7 @@ import {
   LogOut,
   Building2,
   PlusSquare,
+  ScrollText,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const items = [
   { to: "/jurnal/baru", label: "Input Jurnal", icon: PlusSquare },
   { to: "/buku-besar", label: "Buku Besar", icon: ClipboardList },
   { to: "/laporan", label: "Laporan Keuangan", icon: FileText },
+  { to: "/lpj", label: "Generate LPJ", icon: ScrollText },
   { to: "/aset", label: "Aset Tetap", icon: Building2 },
   { to: "/piutang", label: "Piutang", icon: Receipt },
   { to: "/utang", label: "Utang", icon: Wallet },

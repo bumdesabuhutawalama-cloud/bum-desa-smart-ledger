@@ -134,13 +134,13 @@ function JurnalKoreksi() {
         </p>
       </div>
 
-      <div className="flex items-start gap-3 rounded-md border border-amber-300/50 bg-amber-50 dark:bg-amber-950/20 p-3 text-sm">
-        <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+      <div className="flex items-start gap-3 rounded-md border bg-accent/40 p-3 text-sm">
+        <AlertTriangle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <div>
-          <div className="font-medium text-amber-800 dark:text-amber-200">
+          <div className="font-medium">
             Jurnal yang sudah diposting tidak dapat diubah atau dihapus.
           </div>
-          <div className="text-amber-700 dark:text-amber-300">
+          <div className="text-muted-foreground">
             Gunakan fitur koreksi: Reversal, Reklasifikasi, Koreksi Nominal, atau Koreksi Periode.
             Setiap koreksi akan dicatat sebagai jurnal baru dengan referensi ke jurnal asli.
           </div>
@@ -194,7 +194,7 @@ function JurnalKoreksi() {
                       <td className="px-4 py-2 text-right font-medium">{formatRp(total)}</td>
                       <td className="px-4 py-2">
                         {j.is_correction ? (
-                          <Badge className="bg-yellow-200 text-yellow-900 hover:bg-yellow-200 border-transparent">
+                          <Badge className="bg-secondary text-secondary-foreground border border-primary/40">
                             Koreksi {j.correction_type ? `· ${j.correction_type}` : ""}
                           </Badge>
                         ) : (

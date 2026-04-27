@@ -215,9 +215,24 @@ function JurnalBaru() {
     }
   }, [mainAccountChoices, mainAccountId]);
 
+  // Daftar akun pendapatan (untuk bunga piutang)
+  const pendapatanChoices = useMemo(
+    () => accounts.filter((a) => a.tipe_akun === "PENDAPATAN" || a.tipe_akun === "PENDAPATAN_LAIN"),
+    [accounts],
+  );
+
   // === AUTO MODE: derive lines ===
   const autoLines = useMemo<Line[]>(() => {
     if (!mainAccountId || !kasAccountId || nominal <= 0) return [];
+    // Khusus terima pembayaran piutang dengan bunga
+    if (txnKind === "terima_piutang" && bunga > 0) {
+      if (!pendapatanBungaId) return [];
+      return [
+        { account_id: kasAccountId, debit: nominal + bunga, kredit: 0 },
+        { account_id: mainAccountId, debit: 0, kredit: nominal },
+        { account_id: pendapatanBungaId, debit: 0, kredit: bunga, keterangan: "Pendapatan bunga" },
+      ];
+    }
     if (currentRule.mainOnDebit) {
       return [
         { account_id: mainAccountId, debit: nominal, kredit: 0 },
@@ -228,7 +243,7 @@ function JurnalBaru() {
       { account_id: kasAccountId, debit: nominal, kredit: 0 },
       { account_id: mainAccountId, debit: 0, kredit: nominal },
     ];
-  }, [currentRule, mainAccountId, kasAccountId, nominal]);
+  }, [currentRule, mainAccountId, kasAccountId, nominal, txnKind, bunga, pendapatanBungaId]);
 
   // === MANUAL MODE helpers ===
   const totals = useMemo(() => {

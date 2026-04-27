@@ -486,6 +486,7 @@ function JurnalBaru() {
 function AutoForm({
   kasAccounts,
   mainAccountChoices,
+  pendapatanChoices,
   rule,
   txnKind,
   setTxnKind,
@@ -495,6 +496,10 @@ function AutoForm({
   setKasAccountId,
   nominal,
   setNominal,
+  bunga,
+  setBunga,
+  pendapatanBungaId,
+  setPendapatanBungaId,
   loading,
   previewLines,
   resolveAcc,
@@ -502,6 +507,7 @@ function AutoForm({
   accounts: Acc[];
   kasAccounts: Acc[];
   mainAccountChoices: Acc[];
+  pendapatanChoices: Acc[];
   rule: TxnRule;
   txnKind: TxnKind;
   setTxnKind: (k: TxnKind) => void;
@@ -511,10 +517,15 @@ function AutoForm({
   setKasAccountId: (v: string) => void;
   nominal: number;
   setNominal: (n: number) => void;
+  bunga: number;
+  setBunga: (n: number) => void;
+  pendapatanBungaId: string;
+  setPendapatanBungaId: (v: string) => void;
   loading: boolean;
   previewLines: Line[];
   resolveAcc: (id: string) => Acc | undefined;
 }) {
+  const isPiutang = txnKind === "terima_piutang";
   return (
     <div className="space-y-4">
       <div className="grid md:grid-cols-2 gap-4">

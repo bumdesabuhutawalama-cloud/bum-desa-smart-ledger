@@ -99,12 +99,6 @@ const AppJurnalBaruRoute = AppJurnalBaruRouteImport.update({
   path: '/jurnal/baru',
   getParentRoute: () => AppRoute,
 } as any)
-const AppJurnalKoreksiRoute = AppJurnalKoreksiRouteImport.update({
-  id: '/jurnal/koreksi',
-  path: '/jurnal/koreksi',
-  getParentRoute: () => AppRoute,
-} as any)
-
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/auth': typeof AuthRoute

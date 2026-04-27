@@ -158,6 +158,9 @@ function JurnalBaru() {
   const [mainAccountId, setMainAccountId] = useState("");
   const [kasAccountId, setKasAccountId] = useState("");
   const [nominal, setNominal] = useState(0);
+  // Khusus terima_piutang: pisahkan pokok & bunga
+  const [bunga, setBunga] = useState(0);
+  const [pendapatanBungaId, setPendapatanBungaId] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -212,9 +215,24 @@ function JurnalBaru() {
     }
   }, [mainAccountChoices, mainAccountId]);
 
+  // Daftar akun pendapatan (untuk bunga piutang)
+  const pendapatanChoices = useMemo(
+    () => accounts.filter((a) => a.tipe_akun === "PENDAPATAN" || a.tipe_akun === "PENDAPATAN_LAIN"),
+    [accounts],
+  );
+
   // === AUTO MODE: derive lines ===
   const autoLines = useMemo<Line[]>(() => {
     if (!mainAccountId || !kasAccountId || nominal <= 0) return [];
+    // Khusus terima pembayaran piutang dengan bunga
+    if (txnKind === "terima_piutang" && bunga > 0) {
+      if (!pendapatanBungaId) return [];
+      return [
+        { account_id: kasAccountId, debit: nominal + bunga, kredit: 0 },
+        { account_id: mainAccountId, debit: 0, kredit: nominal },
+        { account_id: pendapatanBungaId, debit: 0, kredit: bunga, keterangan: "Pendapatan bunga" },
+      ];
+    }
     if (currentRule.mainOnDebit) {
       return [
         { account_id: mainAccountId, debit: nominal, kredit: 0 },
@@ -225,7 +243,7 @@ function JurnalBaru() {
       { account_id: kasAccountId, debit: nominal, kredit: 0 },
       { account_id: mainAccountId, debit: 0, kredit: nominal },
     ];
-  }, [currentRule, mainAccountId, kasAccountId, nominal]);
+  }, [currentRule, mainAccountId, kasAccountId, nominal, txnKind, bunga, pendapatanBungaId]);
 
   // === MANUAL MODE helpers ===
   const totals = useMemo(() => {
@@ -277,7 +295,10 @@ function JurnalBaru() {
     if (autoMode) {
       if (!mainAccountId) return toast.error(`Pilih ${currentRule.mainAccountLabel} terlebih dahulu`);
       if (!kasAccountId) return toast.error("Pilih akun Kas/Bank");
-      if (nominal <= 0) return toast.error("Nominal harus lebih dari 0");
+      if (nominal <= 0) return toast.error("Nominal pokok harus lebih dari 0");
+      if (txnKind === "terima_piutang" && bunga > 0 && !pendapatanBungaId) {
+        return toast.error("Pilih akun Pendapatan Bunga karena bunga > 0");
+      }
       valid = autoLines;
     } else {
       valid = lines.filter((l) => l.account_id && ((l.debit || 0) > 0 || (l.kredit || 0) > 0));
@@ -383,6 +404,7 @@ function JurnalBaru() {
             accounts={accounts}
             kasAccounts={kasAccounts}
             mainAccountChoices={mainAccountChoices}
+            pendapatanChoices={pendapatanChoices}
             rule={currentRule}
             txnKind={txnKind}
             setTxnKind={setTxnKind}
@@ -392,6 +414,10 @@ function JurnalBaru() {
             setKasAccountId={setKasAccountId}
             nominal={nominal}
             setNominal={setNominal}
+            bunga={bunga}
+            setBunga={setBunga}
+            pendapatanBungaId={pendapatanBungaId}
+            setPendapatanBungaId={setPendapatanBungaId}
             loading={loadingAcc}
             previewLines={autoLines}
             resolveAcc={resolveAcc}
@@ -460,6 +486,7 @@ function JurnalBaru() {
 function AutoForm({
   kasAccounts,
   mainAccountChoices,
+  pendapatanChoices,
   rule,
   txnKind,
   setTxnKind,
@@ -469,6 +496,10 @@ function AutoForm({
   setKasAccountId,
   nominal,
   setNominal,
+  bunga,
+  setBunga,
+  pendapatanBungaId,
+  setPendapatanBungaId,
   loading,
   previewLines,
   resolveAcc,
@@ -476,6 +507,7 @@ function AutoForm({
   accounts: Acc[];
   kasAccounts: Acc[];
   mainAccountChoices: Acc[];
+  pendapatanChoices: Acc[];
   rule: TxnRule;
   txnKind: TxnKind;
   setTxnKind: (k: TxnKind) => void;
@@ -485,10 +517,15 @@ function AutoForm({
   setKasAccountId: (v: string) => void;
   nominal: number;
   setNominal: (n: number) => void;
+  bunga: number;
+  setBunga: (n: number) => void;
+  pendapatanBungaId: string;
+  setPendapatanBungaId: (v: string) => void;
   loading: boolean;
   previewLines: Line[];
   resolveAcc: (id: string) => Acc | undefined;
 }) {
+  const isPiutang = txnKind === "terima_piutang";
   return (
     <div className="space-y-4">
       <div className="grid md:grid-cols-2 gap-4">
@@ -509,7 +546,9 @@ function AutoForm({
         </div>
         <div className="space-y-1.5">
           <Label>
-            Nominal {rule.flow === "masuk" ? "(Uang Masuk)" : "(Uang Keluar)"}
+            {isPiutang
+              ? "Nominal Piutang (Pokok)"
+              : `Nominal ${rule.flow === "masuk" ? "(Uang Masuk)" : "(Uang Keluar)"}`}
           </Label>
           <Input
             inputMode="numeric"
@@ -518,8 +557,62 @@ function AutoForm({
             placeholder="0"
             className="text-right text-lg font-semibold"
           />
+          {isPiutang && (
+            <p className="text-xs text-muted-foreground">
+              Pokok pembayaran piutang (tidak termasuk bunga).
+            </p>
+          )}
         </div>
       </div>
+
+      {isPiutang && (
+        <div className="rounded-md border bg-amber-500/5 border-amber-500/30 p-4 space-y-3">
+          <div className="text-xs">
+            <p className="font-semibold text-amber-700 dark:text-amber-400 mb-1">
+              💡 Pembayaran Piutang dengan Bunga
+            </p>
+            <p className="text-muted-foreground">
+              Jika terdapat bunga dalam pembayaran piutang, isi pada kolom bunga. Sistem akan otomatis
+              memisahkan antara pengurangan piutang dan pendapatan bunga.
+            </p>
+            <p className="text-muted-foreground mt-1">
+              Transaksi ini akan langsung dicatat sebagai pendapatan (bukan jurnal penyesuaian), karena
+              kas sudah diterima.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Bunga (Opsional)</Label>
+              <Input
+                inputMode="numeric"
+                value={bunga ? formatNumberInput(bunga) : ""}
+                onChange={(e) => setBunga(parseLocaleNumber(e.target.value))}
+                placeholder="0"
+                className="text-right"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>
+                Akun Pendapatan {bunga > 0 && <span className="text-destructive">*</span>}
+              </Label>
+              <AccountCombo
+                accounts={pendapatanChoices}
+                value={pendapatanBungaId}
+                onChange={setPendapatanBungaId}
+                loading={loading}
+                placeholder="-- Pilih Akun Pendapatan Bunga --"
+              />
+            </div>
+          </div>
+          {nominal > 0 && (
+            <div className="text-xs text-muted-foreground border-t pt-2">
+              Total kas diterima:{" "}
+              <span className="font-semibold text-foreground">{formatRp(nominal + bunga)}</span>{" "}
+              (pokok {formatRp(nominal)} + bunga {formatRp(bunga)})
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-1.5">

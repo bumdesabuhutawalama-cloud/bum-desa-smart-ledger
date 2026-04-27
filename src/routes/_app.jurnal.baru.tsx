@@ -295,7 +295,10 @@ function JurnalBaru() {
     if (autoMode) {
       if (!mainAccountId) return toast.error(`Pilih ${currentRule.mainAccountLabel} terlebih dahulu`);
       if (!kasAccountId) return toast.error("Pilih akun Kas/Bank");
-      if (nominal <= 0) return toast.error("Nominal harus lebih dari 0");
+      if (nominal <= 0) return toast.error("Nominal pokok harus lebih dari 0");
+      if (txnKind === "terima_piutang" && bunga > 0 && !pendapatanBungaId) {
+        return toast.error("Pilih akun Pendapatan Bunga karena bunga > 0");
+      }
       valid = autoLines;
     } else {
       valid = lines.filter((l) => l.account_id && ((l.debit || 0) > 0 || (l.kredit || 0) > 0));

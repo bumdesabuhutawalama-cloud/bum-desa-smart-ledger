@@ -280,9 +280,12 @@ export type Database = {
       }
       journals: {
         Row: {
+          correction_group_id: string | null
+          correction_type: string | null
           created_at: string
           created_by: string | null
           id: string
+          is_correction: boolean
           keterangan: string
           nomor_jurnal: string
           source: string
@@ -292,9 +295,12 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          correction_group_id?: string | null
+          correction_type?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          is_correction?: boolean
           keterangan: string
           nomor_jurnal: string
           source?: string
@@ -304,9 +310,12 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          correction_group_id?: string | null
+          correction_type?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
+          is_correction?: boolean
           keterangan?: string
           nomor_jurnal?: string
           source?: string

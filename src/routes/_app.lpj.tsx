@@ -35,6 +35,7 @@ type Line = {
   journal_id: string;
   nomor_jurnal: string;
   keterangan: string;
+  is_correction: boolean;
 };
 
 const fmt = (n: number) =>
@@ -70,7 +71,7 @@ function LPJ() {
         supabase
           .from("journal_lines")
           .select(
-            "account_id,debit,kredit,journal_id,journals!inner(tanggal,status,nomor_jurnal,keterangan)"
+            "account_id,debit,kredit,journal_id,journals!inner(tanggal,status,nomor_jurnal,keterangan,is_correction)"
           )
           .lte("journals.tanggal", to)
           .gte("journals.tanggal", from)
@@ -87,6 +88,7 @@ function LPJ() {
           journal_id: x.journal_id,
           nomor_jurnal: x.journals.nomor_jurnal,
           keterangan: x.journals.keterangan,
+          is_correction: !!x.journals.is_correction,
         }))
       );
       setLoading(false);
@@ -182,6 +184,7 @@ function LPJ() {
       keterangan: string;
       nilai: number;
       jenis: "Operasi" | "Investasi" | "Pendanaan";
+      is_correction: boolean;
     };
 
     const jurnalMap = new Map<
@@ -194,6 +197,7 @@ function LPJ() {
         totalKredit: number;
         hasInvest: boolean;
         hasFinance: boolean;
+        is_correction: boolean;
       }
     >();
 
@@ -210,6 +214,7 @@ function LPJ() {
           totalKredit: 0,
           hasInvest: false,
           hasFinance: false,
+          is_correction: ln.is_correction,
         };
         jurnalMap.set(ln.journal_id, j);
       }
@@ -235,6 +240,7 @@ function LPJ() {
           : j.hasFinance
             ? "Pendanaan"
             : "Operasi") as "Operasi" | "Investasi" | "Pendanaan",
+        is_correction: j.is_correction,
       }))
       .sort((a, b) => {
         if (a.tanggal !== b.tanggal) return a.tanggal.localeCompare(b.tanggal);
@@ -475,6 +481,11 @@ function LPJ() {
                         </td>
                         <td className="border border-foreground p-2 text-center">
                           {r.jenis}
+                          {r.is_correction && (
+                            <span className="ml-1 inline-block rounded bg-secondary px-1 py-0.5 text-[10px] font-semibold text-secondary-foreground border border-primary/40">
+                              Koreksi
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}

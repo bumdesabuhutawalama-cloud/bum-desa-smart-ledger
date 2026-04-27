@@ -404,6 +404,7 @@ function JurnalBaru() {
             accounts={accounts}
             kasAccounts={kasAccounts}
             mainAccountChoices={mainAccountChoices}
+            pendapatanChoices={pendapatanChoices}
             rule={currentRule}
             txnKind={txnKind}
             setTxnKind={setTxnKind}
@@ -413,6 +414,10 @@ function JurnalBaru() {
             setKasAccountId={setKasAccountId}
             nominal={nominal}
             setNominal={setNominal}
+            bunga={bunga}
+            setBunga={setBunga}
+            pendapatanBungaId={pendapatanBungaId}
+            setPendapatanBungaId={setPendapatanBungaId}
             loading={loadingAcc}
             previewLines={autoLines}
             resolveAcc={resolveAcc}

@@ -546,7 +546,9 @@ function AutoForm({
         </div>
         <div className="space-y-1.5">
           <Label>
-            Nominal {rule.flow === "masuk" ? "(Uang Masuk)" : "(Uang Keluar)"}
+            {isPiutang
+              ? "Nominal Piutang (Pokok)"
+              : `Nominal ${rule.flow === "masuk" ? "(Uang Masuk)" : "(Uang Keluar)"}`}
           </Label>
           <Input
             inputMode="numeric"
@@ -555,8 +557,62 @@ function AutoForm({
             placeholder="0"
             className="text-right text-lg font-semibold"
           />
+          {isPiutang && (
+            <p className="text-xs text-muted-foreground">
+              Pokok pembayaran piutang (tidak termasuk bunga).
+            </p>
+          )}
         </div>
       </div>
+
+      {isPiutang && (
+        <div className="rounded-md border bg-amber-500/5 border-amber-500/30 p-4 space-y-3">
+          <div className="text-xs">
+            <p className="font-semibold text-amber-700 dark:text-amber-400 mb-1">
+              💡 Pembayaran Piutang dengan Bunga
+            </p>
+            <p className="text-muted-foreground">
+              Jika terdapat bunga dalam pembayaran piutang, isi pada kolom bunga. Sistem akan otomatis
+              memisahkan antara pengurangan piutang dan pendapatan bunga.
+            </p>
+            <p className="text-muted-foreground mt-1">
+              Transaksi ini akan langsung dicatat sebagai pendapatan (bukan jurnal penyesuaian), karena
+              kas sudah diterima.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Bunga (Opsional)</Label>
+              <Input
+                inputMode="numeric"
+                value={bunga ? formatNumberInput(bunga) : ""}
+                onChange={(e) => setBunga(parseLocaleNumber(e.target.value))}
+                placeholder="0"
+                className="text-right"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>
+                Akun Pendapatan {bunga > 0 && <span className="text-destructive">*</span>}
+              </Label>
+              <AccountCombo
+                accounts={pendapatanChoices}
+                value={pendapatanBungaId}
+                onChange={setPendapatanBungaId}
+                loading={loading}
+                placeholder="-- Pilih Akun Pendapatan Bunga --"
+              />
+            </div>
+          </div>
+          {nominal > 0 && (
+            <div className="text-xs text-muted-foreground border-t pt-2">
+              Total kas diterima:{" "}
+              <span className="font-semibold text-foreground">{formatRp(nominal + bunga)}</span>{" "}
+              (pokok {formatRp(nominal)} + bunga {formatRp(bunga)})
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-1.5">

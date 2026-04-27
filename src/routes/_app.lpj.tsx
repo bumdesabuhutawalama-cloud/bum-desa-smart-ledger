@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatRp, todayISO } from "@/lib/format";
-import { Loader2, Copy, Printer } from "lucide-react";
+import { Loader2, Copy, Printer, FileDown } from "lucide-react";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export const Route = createFileRoute("/_app/lpj")({ component: LPJ });
 
@@ -54,6 +56,19 @@ const fmtTglShort = (s: string) =>
     month: "2-digit",
     year: "numeric",
   });
+
+type Jenis = "Operasi" | "Investasi" | "Pendanaan";
+
+type Rincian = {
+  journal_id: string;
+  nomor_jurnal: string;
+  tanggal: string;
+  keterangan: string;
+  nilai: number;
+  jenis: Jenis;
+  is_correction: boolean;
+  arah: "MASUK" | "KELUAR" | "NETRAL";
+};
 
 function LPJ() {
   const year = new Date().getFullYear();
@@ -166,40 +181,23 @@ function LPJ() {
     }
     totalEkuitas += labaBersih;
 
-    const deskripsiAset = Array.from(investasiAkun.entries())
-      .filter(([, v]) => Math.abs(v) > 0.5)
-      .map(([n]) => n.toLowerCase())
-      .join(", ");
-
-    const deskripsiPendanaan = Array.from(pendanaanAkun.entries())
-      .filter(([, v]) => Math.abs(v) > 0.5)
-      .map(([n]) => n.toLowerCase())
-      .join(", ");
-
     // === Rincian transaksi per jurnal ===
-    type Rincian = {
-      journal_id: string;
+    type JAgg = {
       nomor_jurnal: string;
       tanggal: string;
       keterangan: string;
-      nilai: number;
-      jenis: "Operasi" | "Investasi" | "Pendanaan";
+      totalDebit: number;
+      totalKredit: number;
+      hasInvest: boolean;
+      hasFinance: boolean;
+      hasPendapatan: boolean;
+      hasBeban: boolean;
+      hasKas: boolean; // 1.1.01 / 1.1.02
+      kasDelta: number; // debit-kredit pada akun kas
       is_correction: boolean;
     };
 
-    const jurnalMap = new Map<
-      string,
-      {
-        nomor_jurnal: string;
-        tanggal: string;
-        keterangan: string;
-        totalDebit: number;
-        totalKredit: number;
-        hasInvest: boolean;
-        hasFinance: boolean;
-        is_correction: boolean;
-      }
-    >();
+    const jurnalMap = new Map<string, JAgg>();
 
     for (const ln of lines) {
       const acc = accMap.get(ln.account_id);
@@ -214,6 +212,10 @@ function LPJ() {
           totalKredit: 0,
           hasInvest: false,
           hasFinance: false,
+          hasPendapatan: false,
+          hasBeban: false,
+          hasKas: false,
+          kasDelta: 0,
           is_correction: ln.is_correction,
         };
         jurnalMap.set(ln.journal_id, j);
@@ -226,26 +228,59 @@ function LPJ() {
       if (acc.tipe_akun === "EKUITAS" || acc.tipe_akun === "KEWAJIBAN") {
         j.hasFinance = true;
       }
+      if (acc.tipe_akun === "PENDAPATAN" || acc.tipe_akun === "PENDAPATAN_LAIN") {
+        j.hasPendapatan = true;
+      }
+      if (
+        acc.tipe_akun === "BEBAN" ||
+        acc.tipe_akun === "BEBAN_LAIN" ||
+        acc.tipe_akun === "HPP"
+      ) {
+        j.hasBeban = true;
+      }
+      // deteksi kas/bank: kode 1.1.01 (kas) atau 1.1.02 (bank)
+      if (
+        acc.tipe_akun === "ASET" &&
+        (acc.kode_akun.startsWith("1.1.01") || acc.kode_akun.startsWith("1.1.02"))
+      ) {
+        j.hasKas = true;
+        j.kasDelta += ln.debit - ln.kredit;
+      }
     }
 
     const rincian: Rincian[] = Array.from(jurnalMap.entries())
-      .map(([journal_id, j]) => ({
-        journal_id,
-        nomor_jurnal: j.nomor_jurnal,
-        tanggal: j.tanggal,
-        keterangan: j.keterangan,
-        nilai: Math.max(j.totalDebit, j.totalKredit),
-        jenis: (j.hasInvest
+      .map(([journal_id, j]) => {
+        const jenis: Jenis = j.hasInvest
           ? "Investasi"
           : j.hasFinance
             ? "Pendanaan"
-            : "Operasi") as "Operasi" | "Investasi" | "Pendanaan",
-        is_correction: j.is_correction,
-      }))
+            : "Operasi";
+        let arah: "MASUK" | "KELUAR" | "NETRAL" = "NETRAL";
+        if (j.hasKas) {
+          arah = j.kasDelta > 0 ? "MASUK" : j.kasDelta < 0 ? "KELUAR" : "NETRAL";
+        } else if (jenis === "Operasi") {
+          if (j.hasPendapatan && !j.hasBeban) arah = "MASUK";
+          else if (j.hasBeban && !j.hasPendapatan) arah = "KELUAR";
+        }
+        return {
+          journal_id,
+          nomor_jurnal: j.nomor_jurnal,
+          tanggal: j.tanggal,
+          keterangan: j.keterangan,
+          nilai: Math.max(j.totalDebit, j.totalKredit),
+          jenis,
+          is_correction: j.is_correction,
+          arah,
+        };
+      })
       .sort((a, b) => {
         if (a.tanggal !== b.tanggal) return a.tanggal.localeCompare(b.tanggal);
         return a.nomor_jurnal.localeCompare(b.nomor_jurnal);
       });
+
+    const operasi = rincian.filter((r) => r.jenis === "Operasi");
+    const investasi = rincian.filter((r) => r.jenis === "Investasi");
+    const pendanaan = rincian.filter((r) => r.jenis === "Pendanaan");
 
     return {
       pendapatan,
@@ -255,44 +290,92 @@ function LPJ() {
       operasiKeluar: beban + hpp,
       totalInvestasi: investasiNaik - investasiTurun,
       totalPendanaan: pendanaanNaik - pendanaanTurun,
-      deskripsiAset,
-      deskripsiPendanaan,
+      investasiAkun: Array.from(investasiAkun.entries()).filter(
+        ([, v]) => Math.abs(v) > 0.5
+      ),
+      pendanaanAkun: Array.from(pendanaanAkun.entries()).filter(
+        ([, v]) => Math.abs(v) > 0.5
+      ),
       totalAset,
       totalEkuitas,
       labaBersih,
       adaData: lines.length > 0,
       rincian,
+      operasi,
+      investasi,
+      pendanaan,
     };
   }, [accounts, lines]);
 
   const narasi = useMemo(() => {
     if (!data.adaData) {
-      return "Tidak terdapat data transaksi pada periode ini.";
+      return null;
     }
 
-    const investasiTeks =
-      Math.abs(data.totalInvestasi) > 0.5 && data.deskripsiAset
-        ? `Dalam rangka pengembangan usaha, BUMDes melakukan kegiatan investasi berupa ${data.deskripsiAset} dengan total nilai sebesar ${fmt(data.totalInvestasi)}.`
-        : "Pada periode ini tidak terdapat aktivitas investasi yang signifikan.";
+    // Narasi operasi rinci per transaksi
+    const buildRincianText = (items: Rincian[], emptyMsg: string) => {
+      if (items.length === 0) return emptyMsg;
+      const parts = items.map((r, i) => {
+        const arahTeks =
+          r.arah === "MASUK"
+            ? "menerima"
+            : r.arah === "KELUAR"
+              ? "mengeluarkan"
+              : "mencatat";
+        return `(${i + 1}) pada ${fmtTglShort(r.tanggal)} ${arahTeks} ${formatRp(r.nilai)} untuk "${r.keterangan}" (No. ${r.nomor_jurnal})${r.is_correction ? " [koreksi]" : ""}`;
+      });
+      return parts.join("; ") + ".";
+    };
 
-    const pendanaanTeks =
-      Math.abs(data.totalPendanaan) > 0.5 && data.deskripsiPendanaan
-        ? `Dari sisi pendanaan, terdapat aktivitas pada ${data.deskripsiPendanaan} dengan total nilai sebesar ${fmt(data.totalPendanaan)}.`
-        : "Pada periode ini tidak terdapat aktivitas pendanaan yang signifikan.";
+    const operasiIntro = `Selama periode ini, BUMDes melaksanakan ${data.operasi.length} transaksi operasional dengan total penerimaan ${formatRp(data.operasiMasuk)} dan total pengeluaran ${formatRp(data.operasiKeluar)}, menghasilkan laba bersih ${formatRp(data.labaBersih)}.`;
+    const operasiRinci =
+      data.operasi.length > 0
+        ? `Rincian aktivitas operasional: ${buildRincianText(data.operasi, "")}`
+        : "Tidak terdapat aktivitas operasional pada periode ini.";
+
+    const investasiIntro =
+      data.investasi.length > 0
+        ? `Pada sisi investasi, BUMDes melakukan ${data.investasi.length} transaksi dengan total nilai ${formatRp(Math.abs(data.totalInvestasi))}${
+            data.investasiAkun.length > 0
+              ? ` pada ${data.investasiAkun.map(([n]) => n.toLowerCase()).join(", ")}`
+              : ""
+          }.`
+        : "Tidak terdapat aktivitas investasi pada periode ini.";
+    const investasiRinci =
+      data.investasi.length > 0
+        ? `Rincian aktivitas investasi: ${buildRincianText(data.investasi, "")}`
+        : "";
+
+    const pendanaanIntro =
+      data.pendanaan.length > 0
+        ? `Dari sisi pendanaan, terdapat ${data.pendanaan.length} transaksi dengan total nilai ${formatRp(Math.abs(data.totalPendanaan))}${
+            data.pendanaanAkun.length > 0
+              ? ` pada ${data.pendanaanAkun.map(([n]) => n.toLowerCase()).join(", ")}`
+              : ""
+          }.`
+        : "Tidak terdapat aktivitas pendanaan pada periode ini.";
+    const pendanaanRinci =
+      data.pendanaan.length > 0
+        ? `Rincian aktivitas pendanaan: ${buildRincianText(data.pendanaan, "")}`
+        : "";
 
     return {
-      pembuka: `Pada periode ${fmtTgl(from)} sampai dengan ${fmtTgl(to)}, BUMDes telah melaksanakan berbagai kegiatan operasional, investasi, dan pendanaan sebagai bagian dari pelaksanaan program kerja.`,
-      operasi: `Selama periode tersebut, kegiatan operasional menghasilkan penerimaan sebesar ${fmt(data.operasiMasuk)} dan pengeluaran sebesar ${fmt(data.operasiKeluar)}. Selisih dari kegiatan operasional ini menghasilkan laba bersih sebesar ${fmt(data.labaBersih)}.`,
-      investasi: investasiTeks,
-      pendanaan: pendanaanTeks,
-      ringkasan: `Secara keseluruhan, total aset BUMDes tercatat sebesar ${fmt(data.totalAset)} dengan total ekuitas sebesar ${fmt(data.totalEkuitas)} serta laba bersih periode berjalan sebesar ${fmt(data.labaBersih)}.`,
-      penutup: `Demikian Laporan Pertanggungjawaban ini disusun sebagai bentuk akuntabilitas pengelolaan keuangan BUMDes. Seluruh kegiatan telah dilaksanakan dan dicatat sesuai dengan prinsip akuntansi yang berlaku umum.`,
+      pembuka: `Pada periode ${fmtTgl(from)} sampai dengan ${fmtTgl(to)}, BUMDes telah melaksanakan berbagai kegiatan operasional, investasi, dan pendanaan sebagai bagian dari pelaksanaan program kerja, dengan total ${data.rincian.length} transaksi tercatat.`,
+      operasi: operasiIntro,
+      operasiRinci,
+      investasi: investasiIntro,
+      investasiRinci,
+      pendanaan: pendanaanIntro,
+      pendanaanRinci,
+      ringkasan: `Secara keseluruhan, total aset BUMDes tercatat sebesar ${formatRp(data.totalAset)} dengan total ekuitas ${formatRp(data.totalEkuitas)} serta laba bersih periode berjalan ${formatRp(data.labaBersih)}.`,
+      catatan: `Catatan: Seluruh nilai dalam laporan ini dinyatakan dalam Rupiah (Rp). Klasifikasi aktivitas mengikuti standar akuntansi: Operasi (pendapatan & beban operasional), Investasi (perolehan/pelepasan aset tetap), dan Pendanaan (perubahan utang & ekuitas). Transaksi bertanda [Koreksi] merupakan jurnal koreksi atas transaksi sebelumnya dan tetap diperhitungkan dalam saldo akhir.`,
+      penutup: `Demikian Laporan Pertanggungjawaban ini disusun sebagai bentuk akuntabilitas pengelolaan keuangan BUMDes. Seluruh kegiatan telah dilaksanakan dan dicatat sesuai prinsip akuntansi yang berlaku umum (double-entry accrual basis).`,
     };
   }, [data, from, to]);
 
   const copy = async () => {
-    if (typeof narasi === "string") {
-      await navigator.clipboard.writeText(narasi);
+    if (!narasi) {
+      await navigator.clipboard.writeText("Tidak terdapat data transaksi pada periode ini.");
     } else {
       const teks = [
         `LAPORAN PERTANGGUNGJAWABAN BUM DESA`,
@@ -300,16 +383,19 @@ function LPJ() {
         ``,
         narasi.pembuka,
         ``,
-        `KEGIATAN OPERASIONAL`,
+        `I. KEGIATAN OPERASIONAL`,
         narasi.operasi,
+        narasi.operasiRinci,
         ``,
-        `KEGIATAN INVESTASI`,
+        `II. KEGIATAN INVESTASI`,
         narasi.investasi,
+        narasi.investasiRinci,
         ``,
-        `KEGIATAN PENDANAAN`,
+        `III. KEGIATAN PENDANAAN`,
         narasi.pendanaan,
+        narasi.pendanaanRinci,
         ``,
-        `RINGKASAN POSISI KEUANGAN`,
+        `IV. RINGKASAN POSISI KEUANGAN`,
         narasi.ringkasan,
         ``,
         `Ringkasan Aktivitas Keuangan:`,
@@ -317,6 +403,9 @@ function LPJ() {
         `- Operasi Keluar  : ${fmt(data.operasiKeluar)}`,
         `- Investasi       : ${fmt(data.totalInvestasi)}`,
         `- Pendanaan       : ${fmt(data.totalPendanaan)}`,
+        ``,
+        `CATATAN`,
+        narasi.catatan,
         ``,
         `PENUTUP`,
         narasi.penutup,
@@ -327,6 +416,163 @@ function LPJ() {
   };
 
   const cetak = () => window.print();
+
+  const exportPDF = () => {
+    if (!narasi) {
+      toast.error("Tidak ada data untuk diekspor.");
+      return;
+    }
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    const contentW = pageW - margin * 2;
+    let y = margin;
+
+    const addParagraph = (text: string, opts?: { bold?: boolean; size?: number; align?: "left" | "center" | "justify" }) => {
+      const size = opts?.size ?? 10;
+      doc.setFont("times", opts?.bold ? "bold" : "normal");
+      doc.setFontSize(size);
+      const lines = doc.splitTextToSize(text, contentW);
+      for (const line of lines) {
+        if (y > 280) {
+          doc.addPage();
+          y = margin;
+        }
+        if (opts?.align === "center") {
+          doc.text(line, pageW / 2, y, { align: "center" });
+        } else {
+          doc.text(line, margin, y);
+        }
+        y += size * 0.45;
+      }
+      y += 2;
+    };
+
+    const addHeading = (text: string) => {
+      if (y > 270) { doc.addPage(); y = margin; }
+      y += 2;
+      doc.setFont("times", "bold");
+      doc.setFontSize(11);
+      doc.text(text.toUpperCase(), margin, y);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y + 1, pageW - margin, y + 1);
+      y += 6;
+    };
+
+    // Header
+    addParagraph("LAPORAN PERTANGGUNGJAWABAN", { bold: true, size: 14, align: "center" });
+    addParagraph("Badan Usaha Milik Desa (BUM Desa)", { bold: true, size: 11, align: "center" });
+    addParagraph(`Periode ${fmtTgl(from)} s.d. ${fmtTgl(to)}`, { size: 10, align: "center" });
+    doc.setLineWidth(0.5);
+    doc.line(margin, y, pageW - margin, y);
+    y += 5;
+
+    addParagraph(narasi.pembuka);
+
+    addHeading("I. Kegiatan Operasional");
+    addParagraph(narasi.operasi);
+    if (narasi.operasiRinci) addParagraph(narasi.operasiRinci);
+
+    addHeading("II. Kegiatan Investasi");
+    addParagraph(narasi.investasi);
+    if (narasi.investasiRinci) addParagraph(narasi.investasiRinci);
+
+    addHeading("III. Kegiatan Pendanaan");
+    addParagraph(narasi.pendanaan);
+    if (narasi.pendanaanRinci) addParagraph(narasi.pendanaanRinci);
+
+    addHeading("IV. Ringkasan Posisi Keuangan");
+    addParagraph(narasi.ringkasan);
+
+    autoTable(doc, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [["Ringkasan Aktivitas Keuangan", "Nilai (Rp)"]],
+      body: [
+        ["Operasi Masuk", fmt(data.operasiMasuk)],
+        ["Operasi Keluar", fmt(data.operasiKeluar)],
+        ["Investasi", fmt(data.totalInvestasi)],
+        ["Pendanaan", fmt(data.totalPendanaan)],
+        [{ content: "Laba Bersih Periode", styles: { fontStyle: "bold" } }, { content: fmt(data.labaBersih), styles: { fontStyle: "bold" } }],
+      ],
+      theme: "grid",
+      styles: { font: "times", fontSize: 10 },
+      headStyles: { fillColor: [230, 230, 230], textColor: 20 },
+      columnStyles: { 1: { halign: "right" } },
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+
+    addHeading("V. Rincian Transaksi Keuangan");
+    autoTable(doc, {
+      startY: y,
+      margin: { left: margin, right: margin },
+      head: [["No", "Nomor Jurnal", "Tanggal", "Keterangan", "Nilai (Rp)", "Jenis"]],
+      body: data.rincian.map((r, i) => [
+        i + 1,
+        r.nomor_jurnal,
+        fmtTglShort(r.tanggal),
+        r.keterangan + (r.is_correction ? "  [Koreksi]" : ""),
+        fmt(r.nilai),
+        r.jenis,
+      ]),
+      foot: [[
+        { content: "Total", colSpan: 4, styles: { halign: "right", fontStyle: "bold" } },
+        { content: fmt(data.rincian.reduce((s, r) => s + r.nilai, 0)), styles: { halign: "right", fontStyle: "bold" } },
+        "",
+      ]],
+      theme: "grid",
+      styles: { font: "times", fontSize: 9, cellPadding: 1.5 },
+      headStyles: { fillColor: [230, 230, 230], textColor: 20 },
+      columnStyles: {
+        0: { halign: "center", cellWidth: 10 },
+        1: { cellWidth: 32 },
+        2: { cellWidth: 22 },
+        4: { halign: "right", cellWidth: 28 },
+        5: { halign: "center", cellWidth: 22 },
+      },
+    });
+    y = (doc as any).lastAutoTable.finalY + 6;
+
+    addHeading("VI. Catatan Tambahan");
+    addParagraph(narasi.catatan);
+
+    addHeading("VII. Penutup");
+    addParagraph(narasi.penutup);
+
+    // Tanda tangan
+    y += 10;
+    if (y > 240) { doc.addPage(); y = margin; }
+    doc.setFont("times", "normal");
+    doc.setFontSize(10);
+    const colW = contentW / 2;
+    doc.text("Mengetahui,", margin + colW * 0.25, y);
+    doc.text("Disusun oleh,", margin + colW + colW * 0.25, y);
+    y += 5;
+    doc.setFont("times", "bold");
+    doc.text("Kepala Desa", margin + colW * 0.25, y);
+    doc.text("Direktur BUM Desa", margin + colW + colW * 0.25, y);
+    y += 25;
+    doc.setFont("times", "normal");
+    doc.text("(....................................)", margin + colW * 0.25, y);
+    doc.text("(....................................)", margin + colW + colW * 0.25, y);
+
+    // Footer halaman
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFont("times", "italic");
+      doc.setFontSize(8);
+      doc.text(
+        `LPJ BUM Desa — Halaman ${i} dari ${totalPages}`,
+        pageW / 2,
+        290,
+        { align: "center" }
+      );
+    }
+
+    doc.save(`LPJ_BUMDes_${from}_sd_${to}.pdf`);
+    toast.success("PDF berhasil diunduh");
+  };
 
   if (loading) {
     return <Loader2 className="animate-spin mx-auto mt-10" />;
@@ -340,7 +586,7 @@ function LPJ() {
         <p className="text-sm text-muted-foreground">
           Laporan Pertanggungjawaban otomatis berdasarkan data jurnal posted.
         </p>
-        <div className="grid md:grid-cols-3 gap-3 mt-4">
+        <div className="grid md:grid-cols-4 gap-3 mt-4">
           <div>
             <Label>Dari</Label>
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
@@ -353,8 +599,13 @@ function LPJ() {
             <Button onClick={copy} variant="outline" className="flex-1">
               <Copy className="h-4 w-4" /> Salin
             </Button>
-            <Button onClick={cetak} className="flex-1">
+            <Button onClick={cetak} variant="outline" className="flex-1">
               <Printer className="h-4 w-4" /> Cetak
+            </Button>
+          </div>
+          <div className="flex items-end">
+            <Button onClick={exportPDF} className="w-full">
+              <FileDown className="h-4 w-4" /> Export PDF
             </Button>
           </div>
         </div>
@@ -373,11 +624,12 @@ function LPJ() {
           </p>
         </div>
 
-        {typeof narasi === "string" ? (
-          <p className="text-sm text-center italic">{narasi}</p>
+        {!narasi ? (
+          <p className="text-sm text-center italic">
+            Tidak terdapat data transaksi pada periode ini.
+          </p>
         ) : (
           <div className="space-y-6 text-sm text-justify">
-            {/* Pembuka */}
             <section>
               <p className="indent-8">{narasi.pembuka}</p>
             </section>
@@ -387,7 +639,8 @@ function LPJ() {
               <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
                 I. Kegiatan Operasional
               </h3>
-              <p className="indent-8">{narasi.operasi}</p>
+              <p className="indent-8 mb-2">{narasi.operasi}</p>
+              <p className="indent-8">{narasi.operasiRinci}</p>
             </section>
 
             {/* II. Investasi */}
@@ -395,7 +648,10 @@ function LPJ() {
               <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
                 II. Kegiatan Investasi
               </h3>
-              <p className="indent-8">{narasi.investasi}</p>
+              <p className="indent-8 mb-2">{narasi.investasi}</p>
+              {narasi.investasiRinci && (
+                <p className="indent-8">{narasi.investasiRinci}</p>
+              )}
             </section>
 
             {/* III. Pendanaan */}
@@ -403,7 +659,10 @@ function LPJ() {
               <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
                 III. Kegiatan Pendanaan
               </h3>
-              <p className="indent-8">{narasi.pendanaan}</p>
+              <p className="indent-8 mb-2">{narasi.pendanaan}</p>
+              {narasi.pendanaanRinci && (
+                <p className="indent-8">{narasi.pendanaanRinci}</p>
+              )}
             </section>
 
             {/* IV. Ringkasan posisi keuangan */}
@@ -506,10 +765,18 @@ function LPJ() {
               )}
             </section>
 
-            {/* VI. Penutup */}
+            {/* VI. Catatan Tambahan */}
             <section>
               <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
-                VI. Penutup
+                VI. Catatan Tambahan
+              </h3>
+              <p className="indent-8">{narasi.catatan}</p>
+            </section>
+
+            {/* VII. Penutup */}
+            <section>
+              <h3 className="font-bold uppercase border-b border-foreground/40 mb-2 pb-1">
+                VII. Penutup
               </h3>
               <p className="indent-8">{narasi.penutup}</p>
             </section>

@@ -99,6 +99,11 @@ const AppJurnalBaruRoute = AppJurnalBaruRouteImport.update({
   path: '/jurnal/baru',
   getParentRoute: () => AppRoute,
 } as any)
+const AppJurnalKoreksiRoute = AppJurnalKoreksiRouteImport.update({
+  id: '/jurnal/koreksi',
+  path: '/jurnal/koreksi',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -312,6 +317,13 @@ declare module '@tanstack/react-router' {
       path: '/jurnal/baru'
       fullPath: '/jurnal/baru'
       preLoaderRoute: typeof AppJurnalBaruRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/jurnal/koreksi': {
+      id: '/_app/jurnal/koreksi'
+      path: '/jurnal/koreksi'
+      fullPath: '/jurnal/koreksi'
+      preLoaderRoute: typeof AppJurnalKoreksiRouteImport
       parentRoute: typeof AppRoute
     }
   }

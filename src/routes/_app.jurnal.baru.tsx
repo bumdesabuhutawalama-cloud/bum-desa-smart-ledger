@@ -158,6 +158,9 @@ function JurnalBaru() {
   const [mainAccountId, setMainAccountId] = useState("");
   const [kasAccountId, setKasAccountId] = useState("");
   const [nominal, setNominal] = useState(0);
+  // Khusus terima_piutang: pisahkan pokok & bunga
+  const [bunga, setBunga] = useState(0);
+  const [pendapatanBungaId, setPendapatanBungaId] = useState("");
 
   useEffect(() => {
     let mounted = true;

@@ -22,6 +22,7 @@ import { Route as AppBukuBesarRouteImport } from './routes/_app.buku-besar'
 import { Route as AppAsetRouteImport } from './routes/_app.aset'
 import { Route as AppAkunRouteImport } from './routes/_app.akun'
 import { Route as AppJurnalIndexRouteImport } from './routes/_app.jurnal.index'
+import { Route as AppJurnalKoreksiRouteImport } from './routes/_app.jurnal.koreksi'
 import { Route as AppJurnalBaruRouteImport } from './routes/_app.jurnal.baru'
 
 const AuthRoute = AuthRouteImport.update({
@@ -88,6 +89,11 @@ const AppJurnalIndexRoute = AppJurnalIndexRouteImport.update({
   path: '/jurnal/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppJurnalKoreksiRoute = AppJurnalKoreksiRouteImport.update({
+  id: '/jurnal/koreksi',
+  path: '/jurnal/koreksi',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppJurnalBaruRoute = AppJurnalBaruRouteImport.update({
   id: '/jurnal/baru',
   path: '/jurnal/baru',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/piutang': typeof AppPiutangRoute
   '/utang': typeof AppUtangRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
+  '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
   '/jurnal/': typeof AppJurnalIndexRoute
 }
 export interface FileRoutesByTo {
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/utang': typeof AppUtangRoute
   '/': typeof AppIndexRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
+  '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
   '/jurnal': typeof AppJurnalIndexRoute
 }
 export interface FileRoutesById {
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_app/utang': typeof AppUtangRoute
   '/_app/': typeof AppIndexRoute
   '/_app/jurnal/baru': typeof AppJurnalBaruRoute
+  '/_app/jurnal/koreksi': typeof AppJurnalKoreksiRoute
   '/_app/jurnal/': typeof AppJurnalIndexRoute
 }
 export interface FileRouteTypes {
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/piutang'
     | '/utang'
     | '/jurnal/baru'
+    | '/jurnal/koreksi'
     | '/jurnal/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/utang'
     | '/'
     | '/jurnal/baru'
+    | '/jurnal/koreksi'
     | '/jurnal'
   id:
     | '__root__'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_app/utang'
     | '/_app/'
     | '/_app/jurnal/baru'
+    | '/_app/jurnal/koreksi'
     | '/_app/jurnal/'
   fileRoutesById: FileRoutesById
 }
@@ -288,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJurnalIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/jurnal/koreksi': {
+      id: '/_app/jurnal/koreksi'
+      path: '/jurnal/koreksi'
+      fullPath: '/jurnal/koreksi'
+      preLoaderRoute: typeof AppJurnalKoreksiRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/jurnal/baru': {
       id: '/_app/jurnal/baru'
       path: '/jurnal/baru'
@@ -310,6 +329,7 @@ interface AppRouteChildren {
   AppUtangRoute: typeof AppUtangRoute
   AppIndexRoute: typeof AppIndexRoute
   AppJurnalBaruRoute: typeof AppJurnalBaruRoute
+  AppJurnalKoreksiRoute: typeof AppJurnalKoreksiRoute
   AppJurnalIndexRoute: typeof AppJurnalIndexRoute
 }
 
@@ -325,6 +345,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppUtangRoute: AppUtangRoute,
   AppIndexRoute: AppIndexRoute,
   AppJurnalBaruRoute: AppJurnalBaruRoute,
+  AppJurnalKoreksiRoute: AppJurnalKoreksiRoute,
   AppJurnalIndexRoute: AppJurnalIndexRoute,
 }
 

@@ -67,6 +67,96 @@ export type Database = {
           },
         ]
       }
+      activity_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          input_data: Json
+          journal_id: string
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_data?: Json
+          journal_id: string
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_data?: Json
+          journal_id?: string
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_entries_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "journals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_entries_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "activity_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_templates: {
+        Row: {
+          business_type: string
+          code: string
+          created_at: string
+          description: string | null
+          fields: Json
+          icon: string | null
+          id: string
+          is_active: boolean
+          keterangan_template: string
+          lines: Json
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          business_type: string
+          code: string
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          keterangan_template?: string
+          lines?: Json
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          business_type?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          keterangan_template?: string
+          lines?: Json
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           accum_depr_account_id: string | null

@@ -57,8 +57,8 @@ export const Route = createFileRoute("/_app/catat-kegiatan")({
 });
 
 const renderIcon = (name: string, className = "h-6 w-6") => {
-  const I = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[name];
-  return I ? <I className={className} /> : <Icons.Sparkles className={className} />;
+  const I = ICON_MAP[name] ?? Sparkles;
+  return <I className={className} />;
 };
 
 function CatatKegiatanPage() {

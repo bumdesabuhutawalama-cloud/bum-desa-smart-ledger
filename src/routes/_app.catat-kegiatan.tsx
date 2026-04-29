@@ -32,7 +32,7 @@ import {
 import {
   CheckCircle2, Car, XCircle, ShoppingCart, PiggyBank, Building2, Droplets,
   Briefcase, HandCoins, PackagePlus, Receipt, PencilRuler, Users, Landmark,
-  Zap, CalendarClock, Undo2, Coins, Sparkles,
+  Zap, CalendarClock, Undo2, Coins, Sparkles, Eye,
   type LucideIcon,
 } from "lucide-react";
 

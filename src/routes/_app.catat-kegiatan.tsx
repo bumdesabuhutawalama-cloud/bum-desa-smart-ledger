@@ -29,7 +29,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import * as Icons from "lucide-react";
+import {
+  CheckCircle2, Car, XCircle, ShoppingCart, PiggyBank, Building2, Droplets,
+  Briefcase, HandCoins, PackagePlus, Receipt, PencilRuler, Users, Landmark,
+  Zap, CalendarClock, Undo2, Coins, Sparkles,
+  type LucideIcon,
+} from "lucide-react";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  CheckCircle2, Car, XCircle, ShoppingCart, PiggyBank, Building2, Droplets,
+  Briefcase, HandCoins, PackagePlus, Receipt, PencilRuler, Users, Landmark,
+  Zap, CalendarClock, Undo2, Coins, Sparkles,
+};
 import { toast } from "sonner";
 import { formatRp, todayISO } from "@/lib/format";
 import { AccountLite, filterAccountsForField } from "@/lib/account-resolver";

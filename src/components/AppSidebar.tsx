@@ -13,6 +13,7 @@ import {
   PlusSquare,
   ScrollText,
   RotateCcw,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ const items = [
   { to: "/akun", label: "Bagan Akun", icon: ListTree },
   { to: "/jurnal", label: "Jurnal Umum", icon: BookOpen },
   { to: "/jurnal/baru", label: "Input Jurnal", icon: PlusSquare },
+  { to: "/catat-kegiatan", label: "Catat Kegiatan", icon: Sparkles },
   { to: "/jurnal/koreksi", label: "Jurnal Koreksi", icon: RotateCcw },
   { to: "/buku-besar", label: "Buku Besar", icon: ClipboardList },
   { to: "/laporan", label: "Laporan Keuangan", icon: FileText },

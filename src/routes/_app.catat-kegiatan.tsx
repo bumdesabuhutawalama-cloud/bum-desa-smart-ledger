@@ -333,7 +333,7 @@ function ActivityDialog({
           <Card className="p-4 bg-muted/30">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm font-semibold flex items-center gap-2">
-                <Icons.Eye className="h-4 w-4" />
+                <Eye className="h-4 w-4" />
                 Preview Jurnal Otomatis
               </div>
               <Badge variant={built.ok ? "default" : "destructive"}>

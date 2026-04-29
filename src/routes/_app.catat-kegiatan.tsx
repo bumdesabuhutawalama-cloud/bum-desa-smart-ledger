@@ -29,7 +29,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import * as Icons from "lucide-react";
+import {
+  CheckCircle2, Car, XCircle, ShoppingCart, PiggyBank, Building2, Droplets,
+  Briefcase, HandCoins, PackagePlus, Receipt, PencilRuler, Users, Landmark,
+  Zap, CalendarClock, Undo2, Coins, Sparkles, Eye,
+  type LucideIcon,
+} from "lucide-react";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  CheckCircle2, Car, XCircle, ShoppingCart, PiggyBank, Building2, Droplets,
+  Briefcase, HandCoins, PackagePlus, Receipt, PencilRuler, Users, Landmark,
+  Zap, CalendarClock, Undo2, Coins, Sparkles,
+};
 import { toast } from "sonner";
 import { formatRp, todayISO } from "@/lib/format";
 import { AccountLite, filterAccountsForField } from "@/lib/account-resolver";
@@ -46,8 +57,8 @@ export const Route = createFileRoute("/_app/catat-kegiatan")({
 });
 
 const renderIcon = (name: string, className = "h-6 w-6") => {
-  const I = (Icons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[name];
-  return I ? <I className={className} /> : <Icons.Sparkles className={className} />;
+  const I = ICON_MAP[name] ?? Sparkles;
+  return <I className={className} />;
 };
 
 function CatatKegiatanPage() {
@@ -322,7 +333,7 @@ function ActivityDialog({
           <Card className="p-4 bg-muted/30">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm font-semibold flex items-center gap-2">
-                <Icons.Eye className="h-4 w-4" />
+                <Eye className="h-4 w-4" />
                 Preview Jurnal Otomatis
               </div>
               <Badge variant={built.ok ? "default" : "destructive"}>

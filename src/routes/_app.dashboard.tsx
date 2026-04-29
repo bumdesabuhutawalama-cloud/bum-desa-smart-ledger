@@ -12,16 +12,35 @@ function Dashboard() {
   const [stats, setStats] = useState({ akun: 0, jurnal: 0, totalDebit: 0, totalKredit: 0 });
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
-      const [{ count: akun }, { count: jurnal }, { data: lines }] = await Promise.all([
+      const PAGE = 1000;
+      const [{ count: akun }, { count: jurnal }] = await Promise.all([
         supabase.from("accounts").select("*", { count: "exact", head: true }),
         supabase.from("journals").select("*", { count: "exact", head: true }),
-        supabase.from("journal_lines").select("debit,kredit"),
       ]);
-      const td = (lines ?? []).reduce((s, l: any) => s + Number(l.debit), 0);
-      const tk = (lines ?? []).reduce((s, l: any) => s + Number(l.kredit), 0);
-      setStats({ akun: akun ?? 0, jurnal: jurnal ?? 0, totalDebit: td, totalKredit: tk });
+      if (cancelled) return;
+      setStats((s) => ({ ...s, akun: akun ?? 0, jurnal: jurnal ?? 0 }));
+
+      // Stream journal_lines in pages so we don't block render or bust 1000-row cap
+      let from = 0;
+      let td = 0;
+      let tk = 0;
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const { data, error } = await supabase
+          .from("journal_lines")
+          .select("debit,kredit")
+          .range(from, from + PAGE - 1);
+        if (error || !data || data.length === 0) break;
+        for (const l of data as any[]) { td += Number(l.debit); tk += Number(l.kredit); }
+        if (cancelled) return;
+        setStats((s) => ({ ...s, totalDebit: td, totalKredit: tk }));
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
     })();
+    return () => { cancelled = true; };
   }, []);
 
   return (

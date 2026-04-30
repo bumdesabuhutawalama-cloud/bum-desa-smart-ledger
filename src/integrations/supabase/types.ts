@@ -69,6 +69,7 @@ export type Database = {
       }
       activity_entries: {
         Row: {
+          business_unit_id: string
           created_at: string
           created_by: string | null
           id: string
@@ -77,6 +78,7 @@ export type Database = {
           template_id: string
         }
         Insert: {
+          business_unit_id?: string
           created_at?: string
           created_by?: string | null
           id?: string
@@ -85,6 +87,7 @@ export type Database = {
           template_id: string
         }
         Update: {
+          business_unit_id?: string
           created_at?: string
           created_by?: string | null
           id?: string
@@ -111,6 +114,7 @@ export type Database = {
       }
       activity_templates: {
         Row: {
+          applicable_units: string[] | null
           business_type: string
           code: string
           created_at: string
@@ -126,6 +130,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          applicable_units?: string[] | null
           business_type: string
           code: string
           created_at?: string
@@ -141,6 +146,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          applicable_units?: string[] | null
           business_type?: string
           code?: string
           created_at?: string
@@ -162,6 +168,7 @@ export type Database = {
           accum_depr_account_id: string | null
           akumulasi_penyusutan: number
           asset_account_id: string | null
+          business_unit_id: string
           created_at: string
           depr_expense_account_id: string | null
           harga_perolehan: number
@@ -180,6 +187,7 @@ export type Database = {
           accum_depr_account_id?: string | null
           akumulasi_penyusutan?: number
           asset_account_id?: string | null
+          business_unit_id?: string
           created_at?: string
           depr_expense_account_id?: string | null
           harga_perolehan: number
@@ -198,6 +206,7 @@ export type Database = {
           accum_depr_account_id?: string | null
           akumulasi_penyusutan?: number
           asset_account_id?: string | null
+          business_unit_id?: string
           created_at?: string
           depr_expense_account_id?: string | null
           harga_perolehan?: number
@@ -243,8 +252,45 @@ export type Database = {
           },
         ]
       }
+      business_units: {
+        Row: {
+          created_at: string
+          deskripsi: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          jenis: string
+          kode: string
+          nama: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deskripsi?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          jenis?: string
+          kode: string
+          nama: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deskripsi?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          jenis?: string
+          kode?: string
+          nama?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_items: {
         Row: {
+          business_unit_id: string
           created_at: string
           harga_jual: number
           harga_perolehan: number
@@ -256,6 +302,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_unit_id?: string
           created_at?: string
           harga_jual?: number
           harga_perolehan?: number
@@ -267,6 +314,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_unit_id?: string
           created_at?: string
           harga_jual?: number
           harga_perolehan?: number
@@ -281,6 +329,7 @@ export type Database = {
       }
       inventory_movements: {
         Row: {
+          business_unit_id: string
           created_at: string
           harga: number
           id: string
@@ -291,6 +340,7 @@ export type Database = {
           tipe: string
         }
         Insert: {
+          business_unit_id?: string
           created_at?: string
           harga?: number
           id?: string
@@ -301,6 +351,7 @@ export type Database = {
           tipe: string
         }
         Update: {
+          business_unit_id?: string
           created_at?: string
           harga?: number
           id?: string
@@ -370,6 +421,7 @@ export type Database = {
       }
       journals: {
         Row: {
+          business_unit_id: string
           correction_group_id: string | null
           correction_type: string | null
           created_at: string
@@ -385,6 +437,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_unit_id?: string
           correction_group_id?: string | null
           correction_type?: string | null
           created_at?: string
@@ -400,6 +453,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_unit_id?: string
           correction_group_id?: string | null
           correction_type?: string | null
           created_at?: string
@@ -418,6 +472,7 @@ export type Database = {
       }
       payables: {
         Row: {
+          business_unit_id: string
           created_at: string
           id: string
           is_paid: boolean
@@ -430,6 +485,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_unit_id?: string
           created_at?: string
           id?: string
           is_paid?: boolean
@@ -442,6 +498,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_unit_id?: string
           created_at?: string
           id?: string
           is_paid?: boolean
@@ -478,6 +535,7 @@ export type Database = {
       }
       receivables: {
         Row: {
+          business_unit_id: string
           created_at: string
           id: string
           jatuh_tempo: string | null
@@ -490,6 +548,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_unit_id?: string
           created_at?: string
           id?: string
           jatuh_tempo?: string | null
@@ -502,6 +561,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_unit_id?: string
           created_at?: string
           id?: string
           jatuh_tempo?: string | null

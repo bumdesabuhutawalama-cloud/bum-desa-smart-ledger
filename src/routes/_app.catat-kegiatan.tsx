@@ -128,11 +128,28 @@ function CatatKegiatanPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Catat Kegiatan</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pilih jenis kegiatan usaha — sistem akan membuat jurnal akuntansi otomatis sesuai prinsip double-entry.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Catat Kegiatan</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Pilih jenis kegiatan usaha — sistem akan membuat jurnal akuntansi otomatis sesuai prinsip double-entry.
+          </p>
+        </div>
+        <div className="md:min-w-[260px]">
+          <Label className="text-xs text-muted-foreground">Unit Usaha (untuk transaksi ini)</Label>
+          <Select value={txUnitId} onValueChange={setTxUnitId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih unit usaha…" />
+            </SelectTrigger>
+            <SelectContent>
+              {units.filter((u) => u.is_active).map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.kode} — {u.nama}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -151,7 +168,9 @@ function CatatKegiatanPage() {
       {loading ? (
         <div className="text-sm text-muted-foreground">Memuat template…</div>
       ) : filtered.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">Belum ada template untuk kategori ini.</Card>
+        <Card className="p-8 text-center text-muted-foreground">
+          Belum ada template untuk kategori / unit ini.
+        </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((t) => (
@@ -181,6 +200,8 @@ function CatatKegiatanPage() {
         <ActivityDialog
           template={activeTpl}
           accounts={accounts}
+          businessUnitId={txUnitId}
+          businessUnitLabel={activeUnit ? `${activeUnit.kode} — ${activeUnit.nama}` : ""}
           onClose={() => setActiveTpl(null)}
         />
       )}

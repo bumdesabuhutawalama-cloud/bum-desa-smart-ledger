@@ -63,11 +63,20 @@ const renderIcon = (name: string, className = "h-6 w-6") => {
 };
 
 function CatatKegiatanPage() {
+  const { units, currentUnitId, setCurrentUnitId, defaultUnit } = useBusinessUnit();
   const [templates, setTemplates] = useState<ActivityTemplate[]>([]);
   const [accounts, setAccounts] = useState<AccountLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("Semua");
   const [activeTpl, setActiveTpl] = useState<ActivityTemplate | null>(null);
+  // Unit yang dipakai untuk transaksi yang sedang dibuat (default = global selector / default unit)
+  const [txUnitId, setTxUnitId] = useState<string>(
+    () => (currentUnitId !== "ALL" ? currentUnitId : defaultUnit?.id ?? ""),
+  );
+  useEffect(() => {
+    if (currentUnitId !== "ALL") setTxUnitId(currentUnitId);
+    else if (!txUnitId && defaultUnit) setTxUnitId(defaultUnit.id);
+  }, [currentUnitId, defaultUnit, txUnitId]);
 
   useEffect(() => {
     (async () => {
@@ -92,15 +101,29 @@ function CatatKegiatanPage() {
     })();
   }, []);
 
+  // Filter template berdasarkan jenis unit yang dipilih (selain unit umum/default).
+  // applicable_units = null → berlaku semua unit. Selain itu hanya tampil bila jenis unit termasuk.
+  const activeUnit = units.find((u) => u.id === txUnitId);
+  const unitFilteredTemplates = useMemo(() => {
+    if (!activeUnit || activeUnit.jenis === "umum") return templates;
+    return templates.filter((t) => {
+      const apps = (t as any).applicable_units as string[] | null | undefined;
+      return !apps || apps.length === 0 || apps.includes(activeUnit.jenis);
+    });
+  }, [templates, activeUnit]);
+
   const businessTypes = useMemo(() => {
     const set = new Set<string>();
-    templates.forEach((t) => set.add(t.business_type));
+    unitFilteredTemplates.forEach((t) => set.add(t.business_type));
     return ["Semua", ...Array.from(set)];
-  }, [templates]);
+  }, [unitFilteredTemplates]);
 
   const filtered = useMemo(
-    () => (filter === "Semua" ? templates : templates.filter((t) => t.business_type === filter)),
-    [templates, filter],
+    () =>
+      filter === "Semua"
+        ? unitFilteredTemplates
+        : unitFilteredTemplates.filter((t) => t.business_type === filter),
+    [unitFilteredTemplates, filter],
   );
 
   return (

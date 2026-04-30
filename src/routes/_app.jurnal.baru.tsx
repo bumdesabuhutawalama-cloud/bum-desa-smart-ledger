@@ -19,6 +19,7 @@ import { formatRp, todayISO } from "@/lib/format";
 import { toast } from "sonner";
 import { Trash2, Plus, ArrowLeft, Check, ChevronsUpDown, Loader2, Sparkles, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useBusinessUnit } from "@/lib/business-unit-context";
 
 type Acc = {
   id: string;
@@ -143,12 +144,20 @@ const DEFAULT_KAS_NAME = "Kas di Bank BRI";
 
 function JurnalBaru() {
   const nav = useNavigate();
+  const { units, currentUnitId, defaultUnit } = useBusinessUnit();
   const [accounts, setAccounts] = useState<Acc[]>([]);
   const [loadingAcc, setLoadingAcc] = useState(true);
   const [tanggal, setTanggal] = useState(todayISO());
   const [keterangan, setKeterangan] = useState("");
   const [autoMode, setAutoMode] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [businessUnitId, setBusinessUnitId] = useState<string>(
+    () => (currentUnitId !== "ALL" ? currentUnitId : defaultUnit?.id ?? ""),
+  );
+  useEffect(() => {
+    if (currentUnitId !== "ALL") setBusinessUnitId(currentUnitId);
+    else if (!businessUnitId && defaultUnit) setBusinessUnitId(defaultUnit.id);
+  }, [currentUnitId, defaultUnit, businessUnitId]);
 
   // Manual mode state
   const [lines, setLines] = useState<Line[]>([emptyLine(), emptyLine()]);
@@ -316,7 +325,7 @@ function JurnalBaru() {
       const { data: u, error: ue } = await supabase.auth.getUser();
       if (ue || !u.user) throw new Error("Sesi login tidak valid. Silakan login ulang.");
       const nomor = `JU-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}-${Date.now().toString().slice(-6)}`;
-      const { data: j, error: e1 } = await supabase
+      const { data: j, error: e1 } = await (supabase as any)
         .from("journals")
         .insert({
           nomor_jurnal: nomor,
@@ -325,6 +334,7 @@ function JurnalBaru() {
           status: "posted",
           source: autoMode ? "auto" : "manual",
           created_by: u.user.id,
+          business_unit_id: businessUnitId || defaultUnit?.id || null,
         })
         .select("id")
         .single();
@@ -383,10 +393,24 @@ function JurnalBaru() {
       </div>
 
       <Card className="p-6 space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="tgl">Tanggal</Label>
             <Input id="tgl" type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Unit Usaha</Label>
+            <select
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={businessUnitId}
+              onChange={(e) => setBusinessUnitId(e.target.value)}
+            >
+              {units.filter((u) => u.is_active).map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.kode} — {u.nama}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="ket">Keterangan</Label>

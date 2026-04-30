@@ -44,6 +44,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 import { toast } from "sonner";
 import { formatRp, todayISO } from "@/lib/format";
 import { AccountLite, filterAccountsForField } from "@/lib/account-resolver";
+import { useBusinessUnit } from "@/lib/business-unit-context";
 import {
   ActivityTemplate,
   buildJournal,
@@ -62,11 +63,20 @@ const renderIcon = (name: string, className = "h-6 w-6") => {
 };
 
 function CatatKegiatanPage() {
+  const { units, currentUnitId, setCurrentUnitId, defaultUnit } = useBusinessUnit();
   const [templates, setTemplates] = useState<ActivityTemplate[]>([]);
   const [accounts, setAccounts] = useState<AccountLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("Semua");
   const [activeTpl, setActiveTpl] = useState<ActivityTemplate | null>(null);
+  // Unit yang dipakai untuk transaksi yang sedang dibuat (default = global selector / default unit)
+  const [txUnitId, setTxUnitId] = useState<string>(
+    () => (currentUnitId !== "ALL" ? currentUnitId : defaultUnit?.id ?? ""),
+  );
+  useEffect(() => {
+    if (currentUnitId !== "ALL") setTxUnitId(currentUnitId);
+    else if (!txUnitId && defaultUnit) setTxUnitId(defaultUnit.id);
+  }, [currentUnitId, defaultUnit, txUnitId]);
 
   useEffect(() => {
     (async () => {
@@ -91,24 +101,55 @@ function CatatKegiatanPage() {
     })();
   }, []);
 
+  // Filter template berdasarkan jenis unit yang dipilih (selain unit umum/default).
+  // applicable_units = null → berlaku semua unit. Selain itu hanya tampil bila jenis unit termasuk.
+  const activeUnit = units.find((u) => u.id === txUnitId);
+  const unitFilteredTemplates = useMemo(() => {
+    if (!activeUnit || activeUnit.jenis === "umum") return templates;
+    return templates.filter((t) => {
+      const apps = (t as any).applicable_units as string[] | null | undefined;
+      return !apps || apps.length === 0 || apps.includes(activeUnit.jenis);
+    });
+  }, [templates, activeUnit]);
+
   const businessTypes = useMemo(() => {
     const set = new Set<string>();
-    templates.forEach((t) => set.add(t.business_type));
+    unitFilteredTemplates.forEach((t) => set.add(t.business_type));
     return ["Semua", ...Array.from(set)];
-  }, [templates]);
+  }, [unitFilteredTemplates]);
 
   const filtered = useMemo(
-    () => (filter === "Semua" ? templates : templates.filter((t) => t.business_type === filter)),
-    [templates, filter],
+    () =>
+      filter === "Semua"
+        ? unitFilteredTemplates
+        : unitFilteredTemplates.filter((t) => t.business_type === filter),
+    [unitFilteredTemplates, filter],
   );
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Catat Kegiatan</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Pilih jenis kegiatan usaha — sistem akan membuat jurnal akuntansi otomatis sesuai prinsip double-entry.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Catat Kegiatan</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Pilih jenis kegiatan usaha — sistem akan membuat jurnal akuntansi otomatis sesuai prinsip double-entry.
+          </p>
+        </div>
+        <div className="md:min-w-[260px]">
+          <Label className="text-xs text-muted-foreground">Unit Usaha (untuk transaksi ini)</Label>
+          <Select value={txUnitId} onValueChange={setTxUnitId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Pilih unit usaha…" />
+            </SelectTrigger>
+            <SelectContent>
+              {units.filter((u) => u.is_active).map((u) => (
+                <SelectItem key={u.id} value={u.id}>
+                  {u.kode} — {u.nama}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -127,7 +168,9 @@ function CatatKegiatanPage() {
       {loading ? (
         <div className="text-sm text-muted-foreground">Memuat template…</div>
       ) : filtered.length === 0 ? (
-        <Card className="p-8 text-center text-muted-foreground">Belum ada template untuk kategori ini.</Card>
+        <Card className="p-8 text-center text-muted-foreground">
+          Belum ada template untuk kategori / unit ini.
+        </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((t) => (
@@ -157,6 +200,8 @@ function CatatKegiatanPage() {
         <ActivityDialog
           template={activeTpl}
           accounts={accounts}
+          businessUnitId={txUnitId}
+          businessUnitLabel={activeUnit ? `${activeUnit.kode} — ${activeUnit.nama}` : ""}
           onClose={() => setActiveTpl(null)}
         />
       )}
@@ -167,10 +212,14 @@ function CatatKegiatanPage() {
 function ActivityDialog({
   template,
   accounts,
+  businessUnitId,
+  businessUnitLabel,
   onClose,
 }: {
   template: ActivityTemplate;
   accounts: AccountLite[];
+  businessUnitId: string;
+  businessUnitLabel: string;
   onClose: () => void;
 }) {
   const initialValues: InputValues = useMemo(() => {
@@ -207,13 +256,17 @@ function ActivityDialog({
       toast.error(built.errors[0] || "Jurnal tidak valid");
       return;
     }
+    if (!businessUnitId) {
+      toast.error("Pilih unit usaha terlebih dahulu");
+      return;
+    }
     setSubmitting(true);
     try {
       const nomor = await generateNomorJurnal(supabase, tanggal);
       const { data: { user } } = await supabase.auth.getUser();
 
       // Insert journal
-      const { data: jurnal, error: errJ } = await supabase
+      const { data: jurnal, error: errJ } = await (supabase as any)
         .from("journals")
         .insert({
           nomor_jurnal: nomor,
@@ -222,6 +275,7 @@ function ActivityDialog({
           status: "posted",
           source: "activity",
           created_by: user?.id ?? null,
+          business_unit_id: businessUnitId,
         })
         .select("id")
         .single();
@@ -245,13 +299,14 @@ function ActivityDialog({
         journal_id: jurnal.id,
         input_data: values,
         created_by: user?.id ?? null,
+        business_unit_id: businessUnitId,
       });
       if (errE) {
         // jurnal sudah masuk, tetapi entry gagal — beri peringatan ringan
         console.warn("activity_entries insert failed:", errE);
       }
 
-      toast.success(`Jurnal ${nomor} berhasil dicatat`);
+      toast.success(`Jurnal ${nomor} berhasil dicatat untuk ${businessUnitLabel || "unit terpilih"}`);
       onClose();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Terjadi kesalahan";

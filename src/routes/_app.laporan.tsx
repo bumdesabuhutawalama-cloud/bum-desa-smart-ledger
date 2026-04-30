@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { formatRp, todayISO } from "@/lib/format";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useBusinessUnit as useBusinessUnitForReport } from "@/lib/business-unit-context";
 
 export const Route = createFileRoute("/_app/laporan")({ component: Laporan });
 
@@ -41,6 +42,8 @@ function Laporan() {
   const [accounts, setAccounts] = useState<Acc[]>([]);
   const [lines, setLines] = useState<Line[]>([]);
   const [loading, setLoading] = useState(true);
+  // Ambil unit aktif dari context global (di-import di bawah)
+  const { currentUnitId, units } = useBusinessUnitForReport();
 
   const isContra = (acc: any) =>
     acc.kode_akun.startsWith("1.1.04") ||
@@ -49,14 +52,17 @@ function Laporan() {
   useEffect(() => {
     setLoading(true);
     (async () => {
+      let lq: any = supabase
+        .from("journal_lines")
+        .select("account_id,debit,kredit,journals!inner(tanggal,status,business_unit_id)")
+        .lte("journals.tanggal", to)
+        .gte("journals.tanggal", from)
+        .eq("journals.status", "posted");
+      if (currentUnitId !== "ALL") lq = lq.eq("journals.business_unit_id", currentUnitId);
+
       const [{ data: a }, { data: l }] = await Promise.all([
         supabase.from("accounts").select("*").eq("is_header", false),
-        supabase
-          .from("journal_lines")
-          .select("account_id,debit,kredit,journals!inner(tanggal,status)")
-          .lte("journals.tanggal", to)
-          .gte("journals.tanggal", from)
-          .eq("journals.status", "posted"),
+        lq,
       ]);
 
       setAccounts((a as Acc[]) ?? []);
@@ -71,7 +77,11 @@ function Laporan() {
 
       setLoading(false);
     })();
-  }, [from, to]);
+  }, [from, to, currentUnitId]);
+
+  const unitLabel = currentUnitId === "ALL"
+    ? "Semua Unit (Konsolidasi)"
+    : units.find((u) => u.id === currentUnitId)?.nama ?? "—";
 
   const saldoMap = useMemo(() => {
     const m = new Map<string, number>();

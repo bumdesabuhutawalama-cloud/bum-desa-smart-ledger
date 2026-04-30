@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUtangRouteImport } from './routes/_app.utang'
+import { Route as AppUnitUsahaRouteImport } from './routes/_app.unit-usaha'
 import { Route as AppPiutangRouteImport } from './routes/_app.piutang'
 import { Route as AppPersediaanRouteImport } from './routes/_app.persediaan'
 import { Route as AppLpjRouteImport } from './routes/_app.lpj'
@@ -43,6 +44,11 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppUtangRoute = AppUtangRouteImport.update({
   id: '/utang',
   path: '/utang',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUnitUsahaRoute = AppUnitUsahaRouteImport.update({
+  id: '/unit-usaha',
+  path: '/unit-usaha',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPiutangRoute = AppPiutangRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/lpj': typeof AppLpjRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
+  '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
   '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/lpj': typeof AppLpjRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
+  '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
   '/': typeof AppIndexRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/_app/lpj': typeof AppLpjRoute
   '/_app/persediaan': typeof AppPersediaanRoute
   '/_app/piutang': typeof AppPiutangRoute
+  '/_app/unit-usaha': typeof AppUnitUsahaRoute
   '/_app/utang': typeof AppUtangRoute
   '/_app/': typeof AppIndexRoute
   '/_app/jurnal/baru': typeof AppJurnalBaruRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/lpj'
     | '/persediaan'
     | '/piutang'
+    | '/unit-usaha'
     | '/utang'
     | '/jurnal/baru'
     | '/jurnal/koreksi'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/lpj'
     | '/persediaan'
     | '/piutang'
+    | '/unit-usaha'
     | '/utang'
     | '/'
     | '/jurnal/baru'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/_app/lpj'
     | '/_app/persediaan'
     | '/_app/piutang'
+    | '/_app/unit-usaha'
     | '/_app/utang'
     | '/_app/'
     | '/_app/jurnal/baru'
@@ -247,6 +259,13 @@ declare module '@tanstack/react-router' {
       path: '/utang'
       fullPath: '/utang'
       preLoaderRoute: typeof AppUtangRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/unit-usaha': {
+      id: '/_app/unit-usaha'
+      path: '/unit-usaha'
+      fullPath: '/unit-usaha'
+      preLoaderRoute: typeof AppUnitUsahaRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/piutang': {
@@ -346,6 +365,7 @@ interface AppRouteChildren {
   AppLpjRoute: typeof AppLpjRoute
   AppPersediaanRoute: typeof AppPersediaanRoute
   AppPiutangRoute: typeof AppPiutangRoute
+  AppUnitUsahaRoute: typeof AppUnitUsahaRoute
   AppUtangRoute: typeof AppUtangRoute
   AppIndexRoute: typeof AppIndexRoute
   AppJurnalBaruRoute: typeof AppJurnalBaruRoute
@@ -363,6 +383,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLpjRoute: AppLpjRoute,
   AppPersediaanRoute: AppPersediaanRoute,
   AppPiutangRoute: AppPiutangRoute,
+  AppUnitUsahaRoute: AppUnitUsahaRoute,
   AppUtangRoute: AppUtangRoute,
   AppIndexRoute: AppIndexRoute,
   AppJurnalBaruRoute: AppJurnalBaruRoute,

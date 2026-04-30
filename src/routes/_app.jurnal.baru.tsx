@@ -393,10 +393,24 @@ function JurnalBaru() {
       </div>
 
       <Card className="p-6 space-y-4">
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="tgl">Tanggal</Label>
             <Input id="tgl" type="date" value={tanggal} onChange={(e) => setTanggal(e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Unit Usaha</Label>
+            <select
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={businessUnitId}
+              onChange={(e) => setBusinessUnitId(e.target.value)}
+            >
+              {units.filter((u) => u.is_active).map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.kode} — {u.nama}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="ket">Keterangan</Label>

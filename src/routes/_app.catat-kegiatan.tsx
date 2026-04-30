@@ -212,10 +212,14 @@ function CatatKegiatanPage() {
 function ActivityDialog({
   template,
   accounts,
+  businessUnitId,
+  businessUnitLabel,
   onClose,
 }: {
   template: ActivityTemplate;
   accounts: AccountLite[];
+  businessUnitId: string;
+  businessUnitLabel: string;
   onClose: () => void;
 }) {
   const initialValues: InputValues = useMemo(() => {
@@ -252,13 +256,17 @@ function ActivityDialog({
       toast.error(built.errors[0] || "Jurnal tidak valid");
       return;
     }
+    if (!businessUnitId) {
+      toast.error("Pilih unit usaha terlebih dahulu");
+      return;
+    }
     setSubmitting(true);
     try {
       const nomor = await generateNomorJurnal(supabase, tanggal);
       const { data: { user } } = await supabase.auth.getUser();
 
       // Insert journal
-      const { data: jurnal, error: errJ } = await supabase
+      const { data: jurnal, error: errJ } = await (supabase as any)
         .from("journals")
         .insert({
           nomor_jurnal: nomor,
@@ -267,6 +275,7 @@ function ActivityDialog({
           status: "posted",
           source: "activity",
           created_by: user?.id ?? null,
+          business_unit_id: businessUnitId,
         })
         .select("id")
         .single();
@@ -290,13 +299,14 @@ function ActivityDialog({
         journal_id: jurnal.id,
         input_data: values,
         created_by: user?.id ?? null,
+        business_unit_id: businessUnitId,
       });
       if (errE) {
         // jurnal sudah masuk, tetapi entry gagal — beri peringatan ringan
         console.warn("activity_entries insert failed:", errE);
       }
 
-      toast.success(`Jurnal ${nomor} berhasil dicatat`);
+      toast.success(`Jurnal ${nomor} berhasil dicatat untuk ${businessUnitLabel || "unit terpilih"}`);
       onClose();
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Terjadi kesalahan";

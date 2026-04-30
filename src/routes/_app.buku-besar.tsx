@@ -12,6 +12,7 @@ import { formatRp, formatDate, todayISO } from "@/lib/format";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useBusinessUnit } from "@/lib/business-unit-context";
 
 export const Route = createFileRoute("/_app/buku-besar")({ component: BukuBesar });
 
@@ -25,6 +26,7 @@ type Row = {
 };
 
 function BukuBesar() {
+  const { currentUnitId } = useBusinessUnit();
   const [accounts, setAccounts] = useState<Acc[]>([]);
   const [accId, setAccId] = useState<string>("");
   const [open, setOpen] = useState(false);
@@ -57,19 +59,21 @@ function BukuBesar() {
     }
     setLoading(true);
     (async () => {
-      const { data, error } = await supabase
+      let q: any = supabase
         .from("journal_lines")
-        .select("id,debit,kredit,keterangan,journals!inner(tanggal,nomor_jurnal,keterangan,status)")
+        .select("id,debit,kredit,keterangan,journals!inner(tanggal,nomor_jurnal,keterangan,status,business_unit_id)")
         .eq("account_id", accId)
         .gte("journals.tanggal", from)
         .lte("journals.tanggal", to)
         .eq("journals.status", "posted")
         .order("tanggal", { referencedTable: "journals", ascending: true });
+      if (currentUnitId !== "ALL") q = q.eq("journals.business_unit_id", currentUnitId);
+      const { data, error } = await q;
       if (error) toast.error(error.message);
       setRows((data as unknown as Row[]) ?? []);
       setLoading(false);
     })();
-  }, [accId, from, to]);
+  }, [accId, from, to, currentUnitId]);
 
   const computed = useMemo(() => {
     if (!acc) return { items: [] as Array<Row & { saldo: number }>, totalD: 0, totalK: 0, saldo: 0 };

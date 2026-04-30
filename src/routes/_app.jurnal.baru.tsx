@@ -19,6 +19,7 @@ import { formatRp, todayISO } from "@/lib/format";
 import { toast } from "sonner";
 import { Trash2, Plus, ArrowLeft, Check, ChevronsUpDown, Loader2, Sparkles, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useBusinessUnit } from "@/lib/business-unit-context";
 
 type Acc = {
   id: string;
@@ -143,12 +144,20 @@ const DEFAULT_KAS_NAME = "Kas di Bank BRI";
 
 function JurnalBaru() {
   const nav = useNavigate();
+  const { units, currentUnitId, defaultUnit } = useBusinessUnit();
   const [accounts, setAccounts] = useState<Acc[]>([]);
   const [loadingAcc, setLoadingAcc] = useState(true);
   const [tanggal, setTanggal] = useState(todayISO());
   const [keterangan, setKeterangan] = useState("");
   const [autoMode, setAutoMode] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [businessUnitId, setBusinessUnitId] = useState<string>(
+    () => (currentUnitId !== "ALL" ? currentUnitId : defaultUnit?.id ?? ""),
+  );
+  useEffect(() => {
+    if (currentUnitId !== "ALL") setBusinessUnitId(currentUnitId);
+    else if (!businessUnitId && defaultUnit) setBusinessUnitId(defaultUnit.id);
+  }, [currentUnitId, defaultUnit, businessUnitId]);
 
   // Manual mode state
   const [lines, setLines] = useState<Line[]>([emptyLine(), emptyLine()]);

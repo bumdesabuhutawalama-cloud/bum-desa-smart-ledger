@@ -325,7 +325,7 @@ function JurnalBaru() {
       const { data: u, error: ue } = await supabase.auth.getUser();
       if (ue || !u.user) throw new Error("Sesi login tidak valid. Silakan login ulang.");
       const nomor = `JU-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}-${Date.now().toString().slice(-6)}`;
-      const { data: j, error: e1 } = await supabase
+      const { data: j, error: e1 } = await (supabase as any)
         .from("journals")
         .insert({
           nomor_jurnal: nomor,
@@ -334,6 +334,7 @@ function JurnalBaru() {
           status: "posted",
           source: autoMode ? "auto" : "manual",
           created_by: u.user.id,
+          business_unit_id: businessUnitId || defaultUnit?.id || null,
         })
         .select("id")
         .single();

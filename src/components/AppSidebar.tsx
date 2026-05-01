@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Sparkles,
   Store,
+  Bot,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ const items = [
   { to: "/jurnal", label: "Jurnal Umum", icon: BookOpen },
   { to: "/jurnal/baru", label: "Input Jurnal", icon: PlusSquare },
   { to: "/catat-kegiatan", label: "Catat Kegiatan", icon: Sparkles },
+  { to: "/ai-asisten", label: "AI Asisten", icon: Bot },
   { to: "/jurnal/koreksi", label: "Jurnal Koreksi", icon: RotateCcw },
   { to: "/buku-besar", label: "Buku Besar", icon: ClipboardList },
   { to: "/laporan", label: "Laporan Keuangan", icon: FileText },

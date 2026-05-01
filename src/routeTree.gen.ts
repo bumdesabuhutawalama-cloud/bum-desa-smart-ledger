@@ -23,6 +23,7 @@ import { Route as AppCatatKegiatanRouteImport } from './routes/_app.catat-kegiat
 import { Route as AppBukuBesarRouteImport } from './routes/_app.buku-besar'
 import { Route as AppAsetRouteImport } from './routes/_app.aset'
 import { Route as AppAkunRouteImport } from './routes/_app.akun'
+import { Route as AppAiAsistenRouteImport } from './routes/_app.ai-asisten'
 import { Route as AppJurnalIndexRouteImport } from './routes/_app.jurnal.index'
 import { Route as AppJurnalKoreksiRouteImport } from './routes/_app.jurnal.koreksi'
 import { Route as AppJurnalBaruRouteImport } from './routes/_app.jurnal.baru'
@@ -96,6 +97,11 @@ const AppAkunRoute = AppAkunRouteImport.update({
   path: '/akun',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAiAsistenRoute = AppAiAsistenRouteImport.update({
+  id: '/ai-asisten',
+  path: '/ai-asisten',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppJurnalIndexRoute = AppJurnalIndexRouteImport.update({
   id: '/jurnal/',
   path: '/jurnal/',
@@ -115,6 +121,7 @@ const AppJurnalBaruRoute = AppJurnalBaruRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/auth': typeof AuthRoute
+  '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
   '/aset': typeof AppAsetRoute
   '/buku-besar': typeof AppBukuBesarRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
   '/aset': typeof AppAsetRoute
   '/buku-besar': typeof AppBukuBesarRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_app/ai-asisten': typeof AppAiAsistenRoute
   '/_app/akun': typeof AppAkunRoute
   '/_app/aset': typeof AppAsetRoute
   '/_app/buku-besar': typeof AppBukuBesarRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/ai-asisten'
     | '/akun'
     | '/aset'
     | '/buku-besar'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/ai-asisten'
     | '/akun'
     | '/aset'
     | '/buku-besar'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/auth'
+    | '/_app/ai-asisten'
     | '/_app/akun'
     | '/_app/aset'
     | '/_app/buku-besar'
@@ -331,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAkunRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ai-asisten': {
+      id: '/_app/ai-asisten'
+      path: '/ai-asisten'
+      fullPath: '/ai-asisten'
+      preLoaderRoute: typeof AppAiAsistenRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/jurnal/': {
       id: '/_app/jurnal/'
       path: '/jurnal'
@@ -356,6 +375,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAiAsistenRoute: typeof AppAiAsistenRoute
   AppAkunRoute: typeof AppAkunRoute
   AppAsetRoute: typeof AppAsetRoute
   AppBukuBesarRoute: typeof AppBukuBesarRoute
@@ -374,6 +394,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAiAsistenRoute: AppAiAsistenRoute,
   AppAkunRoute: AppAkunRoute,
   AppAsetRoute: AppAsetRoute,
   AppBukuBesarRoute: AppBukuBesarRoute,

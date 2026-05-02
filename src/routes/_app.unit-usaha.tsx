@@ -37,13 +37,10 @@ import { useBusinessUnit } from "@/lib/business-unit-context";
 
 export const Route = createFileRoute("/_app/unit-usaha")({ component: UnitUsahaPage });
 
-const JENIS_OPTIONS = [
+type JenisOption = { value: string; label: string };
+
+const FALLBACK_JENIS: JenisOption[] = [
   { value: "umum", label: "Umum / Konsolidasi" },
-  { value: "simpan_pinjam", label: "Simpan Pinjam" },
-  { value: "perdagangan", label: "Perdagangan" },
-  { value: "jasa", label: "Jasa & Sewa" },
-  { value: "air_bersih", label: "Air Bersih (PAM)" },
-  { value: "aset_modal", label: "Aset & Modal" },
 ];
 
 type Unit = {
@@ -71,6 +68,7 @@ function UnitUsahaPage() {
   const isAdmin = roles.includes("admin");
 
   const [items, setItems] = useState<Unit[]>([]);
+  const [jenisOptions, setJenisOptions] = useState<JenisOption[]>(FALLBACK_JENIS);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty());

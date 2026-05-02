@@ -306,7 +306,7 @@ function DraftPreview({
         draft={draft}
         accounts={accounts}
         onAccountAdded={onAccountAdded}
-        onDone={(kode) => onPosted(`Akun ${kode}`)}
+        onDone={(kode: string) => onPosted(`Akun ${kode}`)}
       />
     );
   }

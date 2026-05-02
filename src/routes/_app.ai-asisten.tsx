@@ -101,10 +101,11 @@ function AIAsistenPage() {
     setMessages(newMsgs);
     setBusy(true);
     try {
-      const ctxAccounts = accounts.filter((a) => !a.is_header).map((a) => ({
+      const ctxAccounts = accounts.map((a) => ({
         kode_akun: a.kode_akun,
         nama_akun: a.nama_akun,
         tipe_akun: a.tipe_akun,
+        is_header: a.is_header,
       }));
       const ctxTemplates = templates.map((t: any) => ({
         code: t.code,

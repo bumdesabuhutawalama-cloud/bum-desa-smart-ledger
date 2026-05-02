@@ -6,10 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, Send, Loader2, CheckCircle2, XCircle, User2, Bot } from "lucide-react";
+import { Sparkles, Send, Loader2, CheckCircle2, XCircle, User2, Bot, ListTree } from "lucide-react";
 import { toast } from "sonner";
 import { useBusinessUnit } from "@/lib/business-unit-context";
 import { AccountLite } from "@/lib/account-resolver";
+import {
+  ACCOUNT_TYPES, AccountType, NormalBalance,
+  defaultNormalBalance, levelFromKode, validateAccountDraft,
+} from "@/lib/account-utils";
 import {
   ActivityTemplate,
   buildJournal,
@@ -35,6 +39,17 @@ type AnyDraft =
       lines: { account_kode: string; debit: number; kredit: number; keterangan?: string }[];
       business_unit_id?: string;
       ringkasan: string;
+    }
+  | {
+      kind: "draft_tambah_akun";
+      kode_akun: string;
+      nama_akun: string;
+      tipe_akun: string;
+      normal_balance?: "DEBIT" | "KREDIT";
+      parent_kode?: string;
+      is_header?: boolean;
+      description?: string;
+      ringkasan: string;
     };
 
 function AIAsistenPage() {
@@ -52,22 +67,24 @@ function AIAsistenPage() {
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const loadAccounts = async () => {
+    const { data } = await supabase
+      .from("accounts")
+      .select("id, kode_akun, nama_akun, normal_balance, is_active, is_header, tipe_akun")
+      .eq("is_active", true)
+      .order("kode_akun");
+    setAccounts((data ?? []) as AccountLite[]);
+  };
+
   useEffect(() => {
     (async () => {
-      const [tpl, acc] = await Promise.all([
-        (supabase as any)
-          .from("activity_templates")
-          .select("*")
-          .eq("is_active", true)
-          .order("sort_order"),
-        supabase
-          .from("accounts")
-          .select("id, kode_akun, nama_akun, normal_balance, is_active, is_header, tipe_akun")
-          .eq("is_active", true)
-          .order("kode_akun"),
-      ]);
+      const tpl = await (supabase as any)
+        .from("activity_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
       setTemplates((tpl.data ?? []) as ActivityTemplate[]);
-      setAccounts((acc.data ?? []) as AccountLite[]);
+      await loadAccounts();
     })();
   }, []);
 
@@ -88,10 +105,11 @@ function AIAsistenPage() {
     setMessages(newMsgs);
     setBusy(true);
     try {
-      const ctxAccounts = accounts.filter((a) => !a.is_header).map((a) => ({
+      const ctxAccounts = accounts.map((a) => ({
         kode_akun: a.kode_akun,
         nama_akun: a.nama_akun,
         tipe_akun: a.tipe_akun,
+        is_header: a.is_header,
       }));
       const ctxTemplates = templates.map((t: any) => ({
         code: t.code,
@@ -163,6 +181,7 @@ function AIAsistenPage() {
                 accounts={accounts}
                 units={units}
                 resolveWriteUnitId={resolveWriteUnitId}
+                onAccountAdded={loadAccounts}
                 onPosted={(label) => {
                   setMessages((prev) => [
                     ...prev,
@@ -207,6 +226,7 @@ function MessageBubble({
   units,
   resolveWriteUnitId,
   onPosted,
+  onAccountAdded,
 }: {
   msg: ChatMsg;
   templates: ActivityTemplate[];
@@ -214,6 +234,7 @@ function MessageBubble({
   units: { id: string; kode: string; nama: string }[];
   resolveWriteUnitId: () => string | null;
   onPosted: (label: string) => void;
+  onAccountAdded: () => Promise<void>;
 }) {
   const isUser = msg.role === "user";
   return (
@@ -242,6 +263,7 @@ function MessageBubble({
               units={units}
               resolveWriteUnitId={resolveWriteUnitId}
               onPosted={onPosted}
+              onAccountAdded={onAccountAdded}
             />
           </div>
         )}
@@ -257,6 +279,7 @@ function DraftPreview({
   units,
   resolveWriteUnitId,
   onPosted,
+  onAccountAdded,
 }: {
   draft: AnyDraft;
   templates: ActivityTemplate[];
@@ -264,13 +287,29 @@ function DraftPreview({
   units: { id: string; kode: string; nama: string }[];
   resolveWriteUnitId: () => string | null;
   onPosted: (label: string) => void;
+  onAccountAdded: () => Promise<void>;
 }) {
   const [posted, setPosted] = useState(false);
   const [posting, setPosting] = useState(false);
 
-  // Resolve unit
-  const unitId = draft.business_unit_id || resolveWriteUnitId() || "";
+  // Resolve unit (tidak relevan untuk draft_tambah_akun)
+  const unitId =
+    draft.kind === "draft_tambah_akun"
+      ? ""
+      : (draft.business_unit_id || resolveWriteUnitId() || "");
   const unit = units.find((u) => u.id === unitId);
+
+  // Early-return: preview tambah akun (bukan jurnal)
+  if (draft.kind === "draft_tambah_akun") {
+    return (
+      <AccountDraftPreview
+        draft={draft}
+        accounts={accounts}
+        onAccountAdded={onAccountAdded}
+        onDone={(kode: string) => onPosted(`Akun ${kode}`)}
+      />
+    );
+  }
 
   // Build preview
   let preview: {
@@ -500,4 +539,114 @@ function makeError(msg: string) {
     label: "Error",
     posted_handler: async () => {},
   };
+}
+
+function AccountDraftPreview({
+  draft,
+  accounts,
+  onAccountAdded,
+  onDone,
+}: {
+  draft: Extract<AnyDraft, { kind: "draft_tambah_akun" }>;
+  accounts: AccountLite[];
+  onAccountAdded: () => Promise<void>;
+  onDone: (kode: string) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const tipe = (ACCOUNT_TYPES.includes(draft.tipe_akun as AccountType)
+    ? draft.tipe_akun
+    : "ASET") as AccountType;
+  const normal = (draft.normal_balance ?? defaultNormalBalance(tipe)) as NormalBalance;
+
+  const errors = validateAccountDraft(
+    {
+      kode_akun: draft.kode_akun,
+      nama_akun: draft.nama_akun,
+      tipe_akun: tipe,
+      normal_balance: normal,
+      parent_kode: draft.parent_kode || undefined,
+      is_header: draft.is_header,
+      description: draft.description,
+    },
+    accounts as any,
+  );
+  const valid = errors.length === 0;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const parent = draft.parent_kode
+        ? accounts.find((a) => a.kode_akun === draft.parent_kode)
+        : null;
+      const payload = {
+        kode_akun: draft.kode_akun.trim(),
+        nama_akun: draft.nama_akun.trim(),
+        tipe_akun: tipe,
+        normal_balance: normal,
+        parent_id: parent?.id ?? null,
+        level: levelFromKode(draft.kode_akun.trim()),
+        is_header: draft.is_header ?? false,
+        is_active: true,
+        description: draft.description ?? null,
+      };
+      const { error } = await (supabase as any).from("accounts").insert(payload);
+      if (error) throw error;
+      await onAccountAdded();
+      setDone(true);
+      toast.success(`Akun ${draft.kode_akun} ditambahkan`);
+      onDone(draft.kode_akun);
+    } catch (e: any) {
+      toast.error(e?.message || "Gagal menambah akun");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="p-3 mt-1 border-primary/30 max-w-2xl">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2 text-xs">
+          <Badge variant="secondary" className="gap-1">
+            <ListTree className="h-3 w-3" /> Tambah Akun
+          </Badge>
+        </div>
+        {valid ? (
+          <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/15">
+            <CheckCircle2 className="h-3 w-3 mr-1" /> Valid
+          </Badge>
+        ) : (
+          <Badge variant="destructive">
+            <XCircle className="h-3 w-3 mr-1" /> {errors.length} masalah
+          </Badge>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+        <div><span className="text-muted-foreground">Kode:</span> <span className="font-mono">{draft.kode_akun}</span></div>
+        <div><span className="text-muted-foreground">Tipe:</span> {tipe}</div>
+        <div className="col-span-2"><span className="text-muted-foreground">Nama:</span> <span className="font-medium">{draft.nama_akun}</span></div>
+        <div><span className="text-muted-foreground">Saldo Normal:</span> {normal}</div>
+        <div><span className="text-muted-foreground">Parent:</span> {draft.parent_kode || "—"}</div>
+        {draft.is_header && <div className="col-span-2"><Badge variant="outline" className="text-[10px]">Akun Header</Badge></div>}
+        {draft.description && <div className="col-span-2 text-muted-foreground">{draft.description}</div>}
+      </div>
+      {errors.length > 0 && (
+        <ul className="mt-2 text-xs text-destructive list-disc pl-5">
+          {errors.map((er, i) => <li key={i}>{er}</li>)}
+        </ul>
+      )}
+      <div className="flex justify-end mt-3">
+        {done ? (
+          <Badge className="bg-emerald-500/15 text-emerald-700">
+            <CheckCircle2 className="h-3 w-3 mr-1" /> Sudah ditambahkan
+          </Badge>
+        ) : (
+          <Button size="sm" disabled={!valid || saving} onClick={handleSave}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tambah Akun"}
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
 }

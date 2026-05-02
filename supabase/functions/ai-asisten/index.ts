@@ -87,6 +87,44 @@ Deno.serve(async (req) => {
       {
         type: "function",
         function: {
+          name: "draft_tambah_akun",
+          description:
+            "Buat draf TAMBAH AKUN baru ke Bagan Akun (COA). Gunakan ini ketika user minta menambah/membuat akun baru, atau ketika user ingin mencatat transaksi tapi akun yang dibutuhkan belum ada di daftar. Sistem akan menampilkan preview, user yang konfirmasi.",
+          parameters: {
+            type: "object",
+            properties: {
+              kode_akun: {
+                type: "string",
+                description:
+                  "Kode akun hierarkis (1-4 segmen, contoh: 1.1.01.06). Sarankan kode berikutnya yang BELUM dipakai dalam grup parent.",
+              },
+              nama_akun: { type: "string" },
+              tipe_akun: {
+                type: "string",
+                enum: ["ASET", "KEWAJIBAN", "EKUITAS", "PENDAPATAN", "BEBAN", "HPP", "PENDAPATAN_LAIN", "BEBAN_LAIN"],
+              },
+              normal_balance: {
+                type: "string",
+                enum: ["DEBIT", "KREDIT"],
+                description:
+                  "Opsional. Default mengikuti tipe (ASET/BEBAN/HPP/BEBAN_LAIN=DEBIT; KEWAJIBAN/EKUITAS/PENDAPATAN/PENDAPATAN_LAIN=KREDIT). Override hanya untuk akun kontra (mis. Penyisihan Piutang yang ASET tapi KREDIT).",
+              },
+              parent_kode: {
+                type: "string",
+                description: "Kode akun header parent. Contoh: '1.1.01.00' untuk subakun Kas.",
+              },
+              is_header: { type: "boolean", description: "True bila akun grouping (tidak dipakai di jurnal)." },
+              description: { type: "string" },
+              ringkasan: { type: "string", description: "1 kalimat penjelasan untuk user." },
+            },
+            required: ["kode_akun", "nama_akun", "tipe_akun", "ringkasan"],
+            additionalProperties: false,
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
           name: "answer",
           description: "Jawab pertanyaan user atau minta klarifikasi. Pakai bila tidak perlu membuat draf transaksi.",
           parameters: {
@@ -142,6 +180,7 @@ Deno.serve(async (req) => {
       }
       if (fn === "draft_kegiatan") action = { kind: "draft_kegiatan", ...args };
       else if (fn === "draft_jurnal_manual") action = { kind: "draft_jurnal_manual", ...args };
+      else if (fn === "draft_tambah_akun") action = { kind: "draft_tambah_akun", ...args };
       else if (fn === "answer") action = { kind: "answer", text: args.text };
     }
 
@@ -184,10 +223,17 @@ function buildSystemPrompt(ctx: any): string {
     .map((a: any) => `- ${a.kode_akun} ${a.nama_akun} [${a.tipe_akun}]`)
     .join("\n");
 
+  // Daftar akun header sebagai kandidat parent untuk tool draft_tambah_akun
+  const headerList = accounts
+    .filter((a: any) => a.is_header)
+    .slice(0, 100)
+    .map((a: any) => `- ${a.kode_akun} ${a.nama_akun}`)
+    .join("\n");
+
   return `Anda adalah AI Asisten Akuntansi BUM Desa. Bahasa: Indonesia, ringkas.
 Tanggal hari ini: ${today}.
 
-ATURAN:
+ATURAN UMUM:
 1. Jika user minta mencatat transaksi → SELALU pakai template (draft_kegiatan) bila ada yang cocok. Pakai draft_jurnal_manual hanya bila tidak ada template yang sesuai.
 2. JANGAN pernah eksekusi langsung. Anda hanya membuat DRAFT — user yang konfirmasi.
 3. Kalau ada field wajib yang tidak disebut user, gunakan asumsi wajar (misal tanggal=hari ini, akun_kas=kas tunai utama). Jelaskan asumsi di "ringkasan".
@@ -195,6 +241,17 @@ ATURAN:
 5. Bila user menyebut nama unit usaha (mis. "PAM", "simpan pinjam"), set business_unit_id sesuai daftar UNITS. Bila tidak menyebut → kosongkan, sistem pakai unit aktif.
 6. Bila informasi terlalu kurang dan asumsi tidak masuk akal → pakai "answer" dengan perlu_klarifikasi=true dan tanyakan secukupnya.
 7. Untuk pertanyaan laporan/saldo → pakai "answer" dengan jawaban informatif.
+
+ATURAN TAMBAH AKUN (draft_tambah_akun):
+- Bila user minta menambah akun baru ke Bagan Akun → gunakan draft_tambah_akun.
+- Bila user mau pakai akun yang belum ada untuk transaksi → tanyakan via "answer" (perlu_klarifikasi=true) apakah mau dibuat dulu, atau langsung saran tambah dengan draft_tambah_akun.
+- Format kode akun: hierarkis 1-4 segmen titik, contoh: 1.1.01.06. Pilih kode BERIKUTNYA yang belum dipakai dalam grup parent (lihat DAFTAR AKUN).
+- Aturan saldo normal default:
+  * ASET, BEBAN, HPP, BEBAN_LAIN → DEBIT
+  * KEWAJIBAN, EKUITAS, PENDAPATAN, PENDAPATAN_LAIN → KREDIT
+  * Override hanya untuk akun kontra (mis. Penyisihan Piutang yang tipe ASET tapi normal KREDIT).
+- parent_kode harus akun HEADER yang sudah ada. Kode anak harus diawali kode parent (tanpa segmen ".00" trailing). Contoh: parent "1.1.01.00" → anak "1.1.01.06".
+- Konvensi prefix umum: 1=Aset, 1.1.01=Kas, 1.1.03=Piutang, 1.1.05=Persediaan, 1.3=Aset Tetap, 2=Kewajiban, 3=Ekuitas, 4=Pendapatan, 5=Beban, 6=HPP.
 
 KONTEKS:
 Unit aktif: ${unit ? `${unit.kode} — ${unit.nama} (jenis: ${unit.jenis})` : "ALL (konsolidasi)"}.
@@ -204,6 +261,9 @@ ${unitsList || "(belum ada)"}
 
 DAFTAR TEMPLATE KEGIATAN (gunakan field key persis):
 ${tplList || "(tidak ada template)"}
+
+DAFTAR AKUN HEADER (kandidat parent untuk akun baru):
+${headerList || "(tidak ada)"}
 
 DAFTAR AKUN (kode | nama | tipe), gunakan kode akun untuk draft_jurnal_manual:
 ${accList || "(tidak ada akun)"}

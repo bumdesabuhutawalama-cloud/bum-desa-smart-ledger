@@ -8,13 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogFooter,
@@ -30,85 +23,68 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Loader2, Star, Pencil } from "lucide-react";
+import { Plus, Loader2, Pencil, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { useBusinessUnit } from "@/lib/business-unit-context";
 
-export const Route = createFileRoute("/_app/unit-usaha")({ component: UnitUsahaPage });
+export const Route = createFileRoute("/_app/jenis-usaha")({ component: JenisUsahaPage });
 
-type JenisOption = { value: string; label: string };
-
-const FALLBACK_JENIS: JenisOption[] = [
-  { value: "umum", label: "Umum / Konsolidasi" },
-];
-
-type Unit = {
+type Jenis = {
   id: string;
   kode: string;
   nama: string;
-  jenis: string;
   deskripsi: string | null;
+  icon: string;
   is_active: boolean;
-  is_default: boolean;
+  is_system: boolean;
+  sort_order: number;
 };
 
 const empty = () => ({
   id: "",
   kode: "",
   nama: "",
-  jenis: "umum",
   deskripsi: "",
+  icon: "Briefcase",
   is_active: true,
+  sort_order: 100,
 });
 
-function UnitUsahaPage() {
+function JenisUsahaPage() {
   const { roles } = useAuth();
-  const { reload } = useBusinessUnit();
   const isAdmin = roles.includes("admin");
 
-  const [items, setItems] = useState<Unit[]>([]);
-  const [jenisOptions, setJenisOptions] = useState<JenisOption[]>(FALLBACK_JENIS);
+  const [items, setItems] = useState<Jenis[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty());
-  const [editing, setEditing] = useState<Unit | null>(null);
+  const [editing, setEditing] = useState<Jenis | null>(null);
 
   const load = async () => {
     setLoading(true);
     const { data, error } = await (supabase as any)
-      .from("business_units")
+      .from("business_unit_types")
       .select("*")
-      .order("is_default", { ascending: false })
+      .order("sort_order")
       .order("nama");
     if (error) toast.error(error.message);
-    setItems((data ?? []) as Unit[]);
+    setItems((data ?? []) as Jenis[]);
     setLoading(false);
-  };
-  const loadJenis = async () => {
-    const { data } = await (supabase as any)
-      .from("business_unit_types")
-      .select("kode, nama")
-      .eq("is_active", true)
-      .order("sort_order");
-    if (data && data.length > 0) {
-      setJenisOptions(data.map((d: any) => ({ value: d.kode, label: d.nama })));
-    }
   };
   useEffect(() => {
     load();
-    loadJenis();
   }, []);
 
-  const startEdit = (u: Unit) => {
-    setEditing(u);
+  const startEdit = (j: Jenis) => {
+    setEditing(j);
     setForm({
-      id: u.id,
-      kode: u.kode,
-      nama: u.nama,
-      jenis: u.jenis,
-      deskripsi: u.deskripsi ?? "",
-      is_active: u.is_active,
+      id: j.id,
+      kode: j.kode,
+      nama: j.nama,
+      deskripsi: j.deskripsi ?? "",
+      icon: j.icon,
+      is_active: j.is_active,
+      sort_order: j.sort_order,
     });
     setOpen(true);
   };
@@ -125,45 +101,47 @@ function UnitUsahaPage() {
       return;
     }
     const payload = {
-      kode: form.kode.trim().toUpperCase(),
+      kode: form.kode.trim().toLowerCase().replace(/\s+/g, "_"),
       nama: form.nama.trim(),
-      jenis: form.jenis,
       deskripsi: form.deskripsi || null,
+      icon: form.icon || "Briefcase",
       is_active: form.is_active,
+      sort_order: form.sort_order || 100,
     };
     const { error } = editing
-      ? await (supabase as any).from("business_units").update(payload).eq("id", editing.id)
-      : await (supabase as any).from("business_units").insert(payload);
+      ? await (supabase as any).from("business_unit_types").update(payload).eq("id", editing.id)
+      : await (supabase as any).from("business_unit_types").insert(payload);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success(editing ? "Unit diperbarui" : "Unit ditambahkan");
+    toast.success(editing ? "Jenis usaha diperbarui" : "Jenis usaha ditambahkan");
     setOpen(false);
     await load();
-    await reload();
   };
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold">Unit Usaha</h1>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Layers className="h-6 w-6" /> Jenis Usaha
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Kelola unit usaha BUMDes (Simpan Pinjam, PAM, Perdagangan, dll). Setiap transaksi akan di-tag ke unit yang
-            dipilih.
+            Kelola kategori jenis unit usaha BUM Desa. Jenis ini dipakai pada saat membuat unit usaha baru dan
+            menentukan template kegiatan yang relevan.
           </p>
         </div>
         {isAdmin && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={startCreate}>
-                <Plus className="h-4 w-4" /> Tambah Unit
+                <Plus className="h-4 w-4" /> Tambah Jenis
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>{editing ? "Ubah Unit Usaha" : "Tambah Unit Usaha"}</DialogTitle>
+                <DialogTitle>{editing ? "Ubah Jenis Usaha" : "Tambah Jenis Usaha"}</DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -172,24 +150,21 @@ function UnitUsahaPage() {
                     <Input
                       value={form.kode}
                       onChange={(e) => setForm({ ...form, kode: e.target.value })}
-                      placeholder="SP / PAM / DAGANG"
-                      maxLength={20}
+                      placeholder="simpan_pinjam"
+                      maxLength={40}
+                      disabled={!!editing?.is_system}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Otomatis lowercase + underscore. Tidak bisa diubah untuk jenis bawaan sistem.
+                    </p>
                   </div>
                   <div>
-                    <Label>Jenis</Label>
-                    <Select value={form.jenis} onValueChange={(v) => setForm({ ...form, jenis: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {jenisOptions.map((j: JenisOption) => (
-                          <SelectItem key={j.value} value={j.value}>
-                            {j.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Urutan</Label>
+                    <Input
+                      type="number"
+                      value={form.sort_order}
+                      onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
+                    />
                   </div>
                 </div>
                 <div>
@@ -197,7 +172,7 @@ function UnitUsahaPage() {
                   <Input
                     value={form.nama}
                     onChange={(e) => setForm({ ...form, nama: e.target.value })}
-                    placeholder="Unit Simpan Pinjam"
+                    placeholder="Simpan Pinjam"
                   />
                 </div>
                 <div>
@@ -207,20 +182,20 @@ function UnitUsahaPage() {
                     onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
                   />
                 </div>
+                <div>
+                  <Label>Ikon (Lucide)</Label>
+                  <Input
+                    value={form.icon}
+                    onChange={(e) => setForm({ ...form, icon: e.target.value })}
+                    placeholder="Briefcase"
+                  />
+                </div>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={form.is_active}
-                    onCheckedChange={(v) =>
-                      setForm({
-                        ...form,
-                        is_active: editing?.is_default ? true : v,
-                      })
-                    }
-                    disabled={editing?.is_default}
+                    onCheckedChange={(v) => setForm({ ...form, is_active: v })}
                   />
-                  <Label className="text-sm">
-                    Aktif {editing?.is_default && "(unit default tidak dapat dinonaktifkan)"}
-                  </Label>
+                  <Label className="text-sm">Aktif</Label>
                 </div>
               </div>
               <DialogFooter>
@@ -242,7 +217,6 @@ function UnitUsahaPage() {
               <TableRow>
                 <TableHead>Kode</TableHead>
                 <TableHead>Nama</TableHead>
-                <TableHead>Jenis</TableHead>
                 <TableHead>Deskripsi</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead></TableHead>
@@ -251,40 +225,31 @@ function UnitUsahaPage() {
             <TableBody>
               {items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                    Belum ada unit usaha.
+                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                    Belum ada jenis usaha.
                   </TableCell>
                 </TableRow>
               )}
-              {items.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell className="font-mono font-medium">
-                    {u.kode}
-                    {u.is_default && (
-                      <Badge variant="secondary" className="ml-2 gap-1">
-                        <Star className="h-3 w-3" /> Default
-                      </Badge>
+              {items.map((j) => (
+                <TableRow key={j.id}>
+                  <TableCell className="font-mono text-xs">
+                    {j.kode}
+                    {j.is_system && (
+                      <Badge variant="secondary" className="ml-2 text-[10px]">Sistem</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="font-medium">{u.nama}</TableCell>
+                  <TableCell className="font-medium">{j.nama}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{j.deskripsi ?? "-"}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {jenisOptions.find((j: JenisOption) => j.value === u.jenis)?.label ?? u.jenis}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{u.deskripsi ?? "-"}</TableCell>
-                  <TableCell>
-                    {u.is_active ? (
-                      <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-700">
-                        Aktif
-                      </Badge>
+                    {j.is_active ? (
+                      <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-700">Aktif</Badge>
                     ) : (
                       <Badge variant="secondary">Nonaktif</Badge>
                     )}
                   </TableCell>
                   <TableCell>
                     {isAdmin && (
-                      <Button size="sm" variant="ghost" onClick={() => startEdit(u)}>
+                      <Button size="sm" variant="ghost" onClick={() => startEdit(j)}>
                         <Pencil className="h-3 w-3" />
                       </Button>
                     )}

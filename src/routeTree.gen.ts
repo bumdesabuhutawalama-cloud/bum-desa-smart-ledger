@@ -18,6 +18,7 @@ import { Route as AppPiutangRouteImport } from './routes/_app.piutang'
 import { Route as AppPersediaanRouteImport } from './routes/_app.persediaan'
 import { Route as AppLpjRouteImport } from './routes/_app.lpj'
 import { Route as AppLaporanRouteImport } from './routes/_app.laporan'
+import { Route as AppJenisUsahaRouteImport } from './routes/_app.jenis-usaha'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCatatKegiatanRouteImport } from './routes/_app.catat-kegiatan'
 import { Route as AppBukuBesarRouteImport } from './routes/_app.buku-besar'
@@ -70,6 +71,11 @@ const AppLpjRoute = AppLpjRouteImport.update({
 const AppLaporanRoute = AppLaporanRouteImport.update({
   id: '/laporan',
   path: '/laporan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJenisUsahaRoute = AppJenisUsahaRouteImport.update({
+  id: '/jenis-usaha',
+  path: '/jenis-usaha',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/buku-besar': typeof AppBukuBesarRoute
   '/catat-kegiatan': typeof AppCatatKegiatanRoute
   '/dashboard': typeof AppDashboardRoute
+  '/jenis-usaha': typeof AppJenisUsahaRoute
   '/laporan': typeof AppLaporanRoute
   '/lpj': typeof AppLpjRoute
   '/persediaan': typeof AppPersediaanRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/buku-besar': typeof AppBukuBesarRoute
   '/catat-kegiatan': typeof AppCatatKegiatanRoute
   '/dashboard': typeof AppDashboardRoute
+  '/jenis-usaha': typeof AppJenisUsahaRoute
   '/laporan': typeof AppLaporanRoute
   '/lpj': typeof AppLpjRoute
   '/persediaan': typeof AppPersediaanRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_app/buku-besar': typeof AppBukuBesarRoute
   '/_app/catat-kegiatan': typeof AppCatatKegiatanRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/jenis-usaha': typeof AppJenisUsahaRoute
   '/_app/laporan': typeof AppLaporanRoute
   '/_app/lpj': typeof AppLpjRoute
   '/_app/persediaan': typeof AppPersediaanRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/buku-besar'
     | '/catat-kegiatan'
     | '/dashboard'
+    | '/jenis-usaha'
     | '/laporan'
     | '/lpj'
     | '/persediaan'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
     | '/buku-besar'
     | '/catat-kegiatan'
     | '/dashboard'
+    | '/jenis-usaha'
     | '/laporan'
     | '/lpj'
     | '/persediaan'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/_app/buku-besar'
     | '/_app/catat-kegiatan'
     | '/_app/dashboard'
+    | '/_app/jenis-usaha'
     | '/_app/laporan'
     | '/_app/lpj'
     | '/_app/persediaan'
@@ -308,6 +320,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLaporanRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/jenis-usaha': {
+      id: '/_app/jenis-usaha'
+      path: '/jenis-usaha'
+      fullPath: '/jenis-usaha'
+      preLoaderRoute: typeof AppJenisUsahaRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
@@ -381,6 +400,7 @@ interface AppRouteChildren {
   AppBukuBesarRoute: typeof AppBukuBesarRoute
   AppCatatKegiatanRoute: typeof AppCatatKegiatanRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppJenisUsahaRoute: typeof AppJenisUsahaRoute
   AppLaporanRoute: typeof AppLaporanRoute
   AppLpjRoute: typeof AppLpjRoute
   AppPersediaanRoute: typeof AppPersediaanRoute
@@ -400,6 +420,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBukuBesarRoute: AppBukuBesarRoute,
   AppCatatKegiatanRoute: AppCatatKegiatanRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppJenisUsahaRoute: AppJenisUsahaRoute,
   AppLaporanRoute: AppLaporanRoute,
   AppLpjRoute: AppLpjRoute,
   AppPersediaanRoute: AppPersediaanRoute,

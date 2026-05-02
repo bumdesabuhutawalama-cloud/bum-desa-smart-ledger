@@ -85,8 +85,19 @@ function UnitUsahaPage() {
     setItems((data ?? []) as Unit[]);
     setLoading(false);
   };
+  const loadJenis = async () => {
+    const { data } = await (supabase as any)
+      .from("business_unit_types")
+      .select("kode, nama")
+      .eq("is_active", true)
+      .order("sort_order");
+    if (data && data.length > 0) {
+      setJenisOptions(data.map((d: any) => ({ value: d.kode, label: d.nama })));
+    }
+  };
   useEffect(() => {
     load();
+    loadJenis();
   }, []);
 
   const startEdit = (u: Unit) => {
@@ -172,7 +183,7 @@ function UnitUsahaPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {JENIS_OPTIONS.map((j) => (
+                        {jenisOptions.map((j: JenisOption) => (
                           <SelectItem key={j.value} value={j.value}>
                             {j.label}
                           </SelectItem>
@@ -258,7 +269,7 @@ function UnitUsahaPage() {
                   <TableCell className="font-medium">{u.nama}</TableCell>
                   <TableCell>
                     <Badge variant="outline">
-                      {JENIS_OPTIONS.find((j) => j.value === u.jenis)?.label ?? u.jenis}
+                      {jenisOptions.find((j: JenisOption) => j.value === u.jenis)?.label ?? u.jenis}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{u.deskripsi ?? "-"}</TableCell>

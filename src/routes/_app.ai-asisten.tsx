@@ -177,6 +177,7 @@ function AIAsistenPage() {
                 accounts={accounts}
                 units={units}
                 resolveWriteUnitId={resolveWriteUnitId}
+                onAccountAdded={loadAccounts}
                 onPosted={(label) => {
                   setMessages((prev) => [
                     ...prev,

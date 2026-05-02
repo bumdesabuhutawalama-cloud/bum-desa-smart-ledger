@@ -295,6 +295,18 @@ function DraftPreview({
       : (draft.business_unit_id || resolveWriteUnitId() || "");
   const unit = units.find((u) => u.id === unitId);
 
+  // Early-return: preview tambah akun (bukan jurnal)
+  if (draft.kind === "draft_tambah_akun") {
+    return (
+      <AccountDraftPreview
+        draft={draft}
+        accounts={accounts}
+        onAccountAdded={onAccountAdded}
+        onDone={(kode) => onPosted(`Akun ${kode}`)}
+      />
+    );
+  }
+
   // Build preview
   let preview: {
     tanggal: string;

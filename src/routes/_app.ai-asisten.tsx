@@ -35,6 +35,17 @@ type AnyDraft =
       lines: { account_kode: string; debit: number; kredit: number; keterangan?: string }[];
       business_unit_id?: string;
       ringkasan: string;
+    }
+  | {
+      kind: "draft_tambah_akun";
+      kode_akun: string;
+      nama_akun: string;
+      tipe_akun: string;
+      normal_balance?: "DEBIT" | "KREDIT";
+      parent_kode?: string;
+      is_header?: boolean;
+      description?: string;
+      ringkasan: string;
     };
 
 function AIAsistenPage() {

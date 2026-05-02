@@ -16,6 +16,7 @@ import {
   Sparkles,
   Store,
   Bot,
+  Layers,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/unit-usaha", label: "Unit Usaha", icon: Store },
+  { to: "/jenis-usaha", label: "Jenis Usaha", icon: Layers },
   { to: "/akun", label: "Bagan Akun", icon: ListTree },
   { to: "/jurnal", label: "Jurnal Umum", icon: BookOpen },
   { to: "/jurnal/baru", label: "Input Jurnal", icon: PlusSquare },

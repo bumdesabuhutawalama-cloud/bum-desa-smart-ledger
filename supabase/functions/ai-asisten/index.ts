@@ -87,6 +87,44 @@ Deno.serve(async (req) => {
       {
         type: "function",
         function: {
+          name: "draft_tambah_akun",
+          description:
+            "Buat draf TAMBAH AKUN baru ke Bagan Akun (COA). Gunakan ini ketika user minta menambah/membuat akun baru, atau ketika user ingin mencatat transaksi tapi akun yang dibutuhkan belum ada di daftar. Sistem akan menampilkan preview, user yang konfirmasi.",
+          parameters: {
+            type: "object",
+            properties: {
+              kode_akun: {
+                type: "string",
+                description:
+                  "Kode akun hierarkis (1-4 segmen, contoh: 1.1.01.06). Sarankan kode berikutnya yang BELUM dipakai dalam grup parent.",
+              },
+              nama_akun: { type: "string" },
+              tipe_akun: {
+                type: "string",
+                enum: ["ASET", "KEWAJIBAN", "EKUITAS", "PENDAPATAN", "BEBAN", "HPP", "PENDAPATAN_LAIN", "BEBAN_LAIN"],
+              },
+              normal_balance: {
+                type: "string",
+                enum: ["DEBIT", "KREDIT"],
+                description:
+                  "Opsional. Default mengikuti tipe (ASET/BEBAN/HPP/BEBAN_LAIN=DEBIT; KEWAJIBAN/EKUITAS/PENDAPATAN/PENDAPATAN_LAIN=KREDIT). Override hanya untuk akun kontra (mis. Penyisihan Piutang yang ASET tapi KREDIT).",
+              },
+              parent_kode: {
+                type: "string",
+                description: "Kode akun header parent. Contoh: '1.1.01.00' untuk subakun Kas.",
+              },
+              is_header: { type: "boolean", description: "True bila akun grouping (tidak dipakai di jurnal)." },
+              description: { type: "string" },
+              ringkasan: { type: "string", description: "1 kalimat penjelasan untuk user." },
+            },
+            required: ["kode_akun", "nama_akun", "tipe_akun", "ringkasan"],
+            additionalProperties: false,
+          },
+        },
+      },
+      {
+        type: "function",
+        function: {
           name: "answer",
           description: "Jawab pertanyaan user atau minta klarifikasi. Pakai bila tidak perlu membuat draf transaksi.",
           parameters: {

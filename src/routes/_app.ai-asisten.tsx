@@ -279,8 +279,11 @@ function DraftPreview({
   const [posted, setPosted] = useState(false);
   const [posting, setPosting] = useState(false);
 
-  // Resolve unit
-  const unitId = draft.business_unit_id || resolveWriteUnitId() || "";
+  // Resolve unit (tidak relevan untuk draft_tambah_akun)
+  const unitId =
+    draft.kind === "draft_tambah_akun"
+      ? ""
+      : (draft.business_unit_id || resolveWriteUnitId() || "");
   const unit = units.find((u) => u.id === unitId);
 
   // Build preview

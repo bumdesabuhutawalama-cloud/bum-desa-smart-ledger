@@ -540,3 +540,113 @@ function makeError(msg: string) {
     posted_handler: async () => {},
   };
 }
+
+function AccountDraftPreview({
+  draft,
+  accounts,
+  onAccountAdded,
+  onDone,
+}: {
+  draft: Extract<AnyDraft, { kind: "draft_tambah_akun" }>;
+  accounts: AccountLite[];
+  onAccountAdded: () => Promise<void>;
+  onDone: (kode: string) => void;
+}) {
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const tipe = (ACCOUNT_TYPES.includes(draft.tipe_akun as AccountType)
+    ? draft.tipe_akun
+    : "ASET") as AccountType;
+  const normal = (draft.normal_balance ?? defaultNormalBalance(tipe)) as NormalBalance;
+
+  const errors = validateAccountDraft(
+    {
+      kode_akun: draft.kode_akun,
+      nama_akun: draft.nama_akun,
+      tipe_akun: tipe,
+      normal_balance: normal,
+      parent_kode: draft.parent_kode || undefined,
+      is_header: draft.is_header,
+      description: draft.description,
+    },
+    accounts as any,
+  );
+  const valid = errors.length === 0;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const parent = draft.parent_kode
+        ? accounts.find((a) => a.kode_akun === draft.parent_kode)
+        : null;
+      const payload = {
+        kode_akun: draft.kode_akun.trim(),
+        nama_akun: draft.nama_akun.trim(),
+        tipe_akun: tipe,
+        normal_balance: normal,
+        parent_id: parent?.id ?? null,
+        level: levelFromKode(draft.kode_akun.trim()),
+        is_header: draft.is_header ?? false,
+        is_active: true,
+        description: draft.description ?? null,
+      };
+      const { error } = await (supabase as any).from("accounts").insert(payload);
+      if (error) throw error;
+      await onAccountAdded();
+      setDone(true);
+      toast.success(`Akun ${draft.kode_akun} ditambahkan`);
+      onDone(draft.kode_akun);
+    } catch (e: any) {
+      toast.error(e?.message || "Gagal menambah akun");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="p-3 mt-1 border-primary/30 max-w-2xl">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2 text-xs">
+          <Badge variant="secondary" className="gap-1">
+            <ListTree className="h-3 w-3" /> Tambah Akun
+          </Badge>
+        </div>
+        {valid ? (
+          <Badge className="bg-emerald-500/15 text-emerald-700 hover:bg-emerald-500/15">
+            <CheckCircle2 className="h-3 w-3 mr-1" /> Valid
+          </Badge>
+        ) : (
+          <Badge variant="destructive">
+            <XCircle className="h-3 w-3 mr-1" /> {errors.length} masalah
+          </Badge>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+        <div><span className="text-muted-foreground">Kode:</span> <span className="font-mono">{draft.kode_akun}</span></div>
+        <div><span className="text-muted-foreground">Tipe:</span> {tipe}</div>
+        <div className="col-span-2"><span className="text-muted-foreground">Nama:</span> <span className="font-medium">{draft.nama_akun}</span></div>
+        <div><span className="text-muted-foreground">Saldo Normal:</span> {normal}</div>
+        <div><span className="text-muted-foreground">Parent:</span> {draft.parent_kode || "—"}</div>
+        {draft.is_header && <div className="col-span-2"><Badge variant="outline" className="text-[10px]">Akun Header</Badge></div>}
+        {draft.description && <div className="col-span-2 text-muted-foreground">{draft.description}</div>}
+      </div>
+      {errors.length > 0 && (
+        <ul className="mt-2 text-xs text-destructive list-disc pl-5">
+          {errors.map((er, i) => <li key={i}>{er}</li>)}
+        </ul>
+      )}
+      <div className="flex justify-end mt-3">
+        {done ? (
+          <Badge className="bg-emerald-500/15 text-emerald-700">
+            <CheckCircle2 className="h-3 w-3 mr-1" /> Sudah ditambahkan
+          </Badge>
+        ) : (
+          <Button size="sm" disabled={!valid || saving} onClick={handleSave}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Tambah Akun"}
+          </Button>
+        )}
+      </div>
+    </Card>
+  );
+}

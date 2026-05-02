@@ -252,6 +252,45 @@ export type Database = {
           },
         ]
       }
+      business_unit_types: {
+        Row: {
+          created_at: string
+          deskripsi: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          is_system: boolean
+          kode: string
+          nama: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deskripsi?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          kode: string
+          nama: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deskripsi?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          is_system?: boolean
+          kode?: string
+          nama?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_units: {
         Row: {
           created_at: string

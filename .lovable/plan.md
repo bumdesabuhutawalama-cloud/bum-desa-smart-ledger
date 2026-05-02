@@ -1,205 +1,128 @@
-## Tujuan
+## Rencana: AI Bisa Tambah COA + Database Jenis Usaha
+
+### Konteks Alur (hasil pengecekan)
+
+Alur akun saat ini terhubung di banyak titik:
+
+1. **Tabel `accounts`** (Bagan Akun / COA) — sumber kebenaran. Kolom: `kode_akun`, `nama_akun`, `tipe_akun` (enum: ASET, KEWAJIBAN, EKUITAS, PENDAPATAN, BEBAN, HPP, PENDAPATAN_LAIN, BEBAN_LAIN), `normal_balance` (DEBIT/KREDIT), `is_header`, `level`, `parent_id`, `is_active`. Format kode hierarkis 4 segmen: `1.1.01.01`.
+2. **Catat Kegiatan** (`_app.catat-kegiatan.tsx`) — load akun aktif → kirim ke `buildJournal()` → resolve via `account-resolver.ts` (lookup symbol KAS, BANK, PIUTANG_USAHA, dll berdasarkan **prefix kode akun**) → bentuk baris jurnal double-entry → insert ke `journals` + `journal_lines` + `activity_entries`.
+3. **AI Asisten** (`_app.ai-asisten.tsx` + `functions/ai-asisten/index.ts`) — menerima kode akun, mencari `accounts.find(a => a.kode_akun === kode)` untuk `draft_jurnal_manual`. Untuk `draft_kegiatan` pakai engine sama dengan Catat Kegiatan.
+4. **Jurnal Manual** (`_app.jurnal.baru.tsx`) — pilih akun via dropdown.
+
+**Implikasi**: akun baru otomatis muncul di seluruh modul **asalkan** kode_akun mengikuti pola prefix yang sudah dipakai resolver (mis. kas baru harus berawalan `1.1.01.` agar lookup KAS bekerja). Kalau tidak, akun tetap bisa dipakai manual tapi tidak di-pick template otomatis.
+
+### 1. Database — Tabel `business_unit_types` (Jenis Usaha)
+
+Saat ini `jenis` di `business_units` hanya kolom text bebas + dropdown hardcoded di UI. Akan dibuat tabel:
+
+```sql
+CREATE TABLE business_unit_types (
+  id uuid PK,
+  kode text UNIQUE NOT NULL,        -- 'simpan_pinjam', 'air_bersih', dll
+  nama text NOT NULL,                -- 'Simpan Pinjam'
+  deskripsi text,
+  icon text DEFAULT 'Briefcase',
+  is_active boolean DEFAULT true,
+  is_system boolean DEFAULT false,   -- jenis bawaan tidak bisa dihapus
+  sort_order int DEFAULT 0,
+  created_at, updated_at
+);
+```
+
+Seed dengan 6 jenis existing: `umum`, `simpan_pinjam`, `perdagangan`, `jasa`, `air_bersih`, `aset_modal`. RLS: read all authenticated, manage admin only. Kolom `business_units.jenis` tetap text (FK soft via kode) supaya backward-compatible — tidak migrasi data.
+
+UI: halaman `/jenis-usaha` (admin) untuk CRUD; halaman `/unit-usaha` ganti dropdown jenis dari hardcoded → load dari tabel.
+
+### 2. Halaman COA Manual (Tambah/Edit Akun)
+
+Upgrade `_app.akun.tsx` (sekarang read-only) jadi bisa CRUD untuk admin/bendahara:
+- Tombol **Tambah Akun** → dialog dengan field: kode_akun, nama_akun, tipe_akun (select enum), normal_balance (auto dari tipe, override-able), parent_id (pilih dari akun header), level (auto dari jumlah segmen kode), is_header, is_active, deskripsi.
+- Validasi: kode unik, format `\d+(\.\d+){0,3}`, parent_id konsisten (kode anak harus diawali kode parent + ".").
+- Tombol Edit per baris (non-system).
+
+### 3. Tool AI: `tambah_akun` (Draft → Konfirmasi)
+
+Tambah tool ke edge function `ai-asisten`:
+
+```ts
+{
+  name: "draft_tambah_akun",
+  parameters: {
+    kode_akun: string,           // mis "1.1.01.06"
+    nama_akun: string,           // mis "Kas di Bank Jago"
+    tipe_akun: enum,             // ASET | KEWAJIBAN | ...
+    normal_balance?: enum,       // opsional, AI bisa infer dari tipe
+    parent_kode?: string,        // mis "1.1.01.00"
+    is_header?: boolean,
+    deskripsi?: string,
+    ringkasan: string
+  }
+}
+```
+
+System prompt diperluas:
+- AI diberi daftar tipe_akun + aturan saldo normal (ASET/BEBAN/HPP=DEBIT; KEWAJIBAN/EKUITAS/PENDAPATAN=KREDIT).
+- AI diberi konvensi kode 4-segmen hierarkis dan contoh prefix penting (1.1.01=Kas, 1.1.03=Piutang, 4=Pendapatan, 5=Beban).
+- Aturan: "Bila user minta tambah akun, gunakan `draft_tambah_akun`. Bila user mau pakai akun untuk transaksi tapi belum ada, sarankan tambah dulu via `answer` dengan `perlu_klarifikasi=true` ATAU langsung buat draft dua langkah (tambah akun → minta user posting → minta lagi untuk transaksinya)."
+- AI **wajib** sarankan kode berikutnya yang belum dipakai dalam grup parent.
+
+UI Chat: `DraftPreview` dapat varian baru `draft_tambah_akun` → tampilkan kartu preview akun (kode, nama, tipe, saldo normal, parent), tombol **Tambah Akun**. Setelah berhasil, refresh `accounts` cache supaya akun baru langsung tersedia untuk perintah selanjutnya di session yang sama.
+
+### 4. Validasi Konsistensi (Penting)
+
+Sebelum insert (baik dari halaman manual maupun dari AI):
+- Cek kode unik (case-sensitive di DB).
+- Validasi format kode regex `^\d+(\.\d+){1,3}$`.
+- Hitung `level` dari jumlah segmen.
+- Bila `parent_kode` diisi: cari `parent_id`, pastikan `is_header=true`, dan kode anak harus berawalan `parent.kode_akun.replace(/\.00+$/, "") + "."`.
+- `normal_balance` default mengikuti tipe (ASET/BEBAN/HPP→DEBIT; KEWAJIBAN/EKUITAS/PENDAPATAN/PENDAPATAN_LAIN→KREDIT; BEBAN_LAIN→DEBIT). Bisa override (untuk akun kontra seperti penyisihan piutang yang tipe=ASET tapi normal=KREDIT).
+- `is_header=true` → akun tidak bisa dipakai di journal_lines (sudah dijaga di resolver via filter `!a.is_header`).
+
+### 5. Dampak ke Modul Lain
+
+- **Catat Kegiatan**: tidak berubah — load `accounts.is_active=true` tetap menarik akun baru. Bila akun baru kode-nya cocok dengan prefix lookup (mis. `1.1.01.06`), template kas otomatis bisa pakai.
+- **Jurnal Manual**: dropdown akun otomatis menampilkan akun baru.
+- **AI Asisten draft_jurnal_manual**: setelah akun di-insert, refresh state `accounts` di halaman → AI di pesan berikutnya sudah lihat akun baru di context.
+- **Laporan/Buku Besar**: query agregasi via `journal_lines.account_id` → otomatis ikut.
+- **Resolver lookup**: tidak ada perubahan kode. Bila user tambah jenis akun baru di luar prefix yang dikenal (mis. dompet digital di `1.1.08.xx`), template lama tidak otomatis pick — itu desain (resolver berbasis aturan tetap, bukan auto-discovery). Tidak ada risiko regresi.
+
+### 6. Migrasi Database
+
+Satu migration:
+```sql
+-- Tabel jenis usaha + seed + RLS
+CREATE TABLE business_unit_types (...);
+INSERT INTO business_unit_types(kode,nama,is_system,sort_order) VALUES (...) x6;
+ALTER TABLE business_unit_types ENABLE RLS;
+CREATE POLICY ... USING (true) FOR SELECT;
+CREATE POLICY ... USING (has_role(auth.uid(),'admin')) FOR ALL;
+```
+
+Tidak ada perubahan tabel `accounts` (struktur sudah memadai).
 
-Menambahkan dukungan **Multi Unit Usaha (Business Unit)** ke seluruh sistem akuntansi BUMDes — dari pondasi data, modul transaksi, hingga laporan — tanpa merusak data existing dan modul yang sudah berjalan.
+### 7. File yang Diubah / Dibuat
 
----
+Baru:
+- `supabase/migrations/<ts>_business_unit_types.sql`
+- `src/routes/_app.jenis-usaha.tsx` — CRUD jenis usaha (admin)
+- `src/lib/account-utils.ts` — helper validasi & inferensi (level, normal_balance default, kode berikutnya)
 
-## Strategi Aman (Prinsip Utama)
+Diubah:
+- `src/routes/_app.akun.tsx` — tambah Tambah/Edit dialog
+- `src/routes/_app.unit-usaha.tsx` — load `JENIS_OPTIONS` dari DB
+- `src/components/AppSidebar.tsx` — menu "Jenis Usaha" (admin)
+- `supabase/functions/ai-asisten/index.ts` — tambah tool `draft_tambah_akun` + perluas system prompt (sertakan enum tipe_akun, aturan kode, daftar parent header)
+- `src/routes/_app.ai-asisten.tsx` — tipe `AnyDraft` tambah varian akun, render kartu preview akun + handler insert + reload accounts setelah sukses
 
-1. **Backward compatible**: kolom `business_unit_id` dibuat **nullable** dulu. Data lama otomatis di-assign ke unit "Unit Umum / Konsolidasi" via backfill, baru kemudian di-set `NOT NULL`.
-2. **Filter di level database** lewat index `(business_unit_id, tanggal)` untuk performa.
-3. **Tidak menyentuh logika double-entry** — hanya menambahkan dimensi unit.
-4. **Modul lama tetap jalan**: kalau filter unit = "Semua", behavior identik dengan sekarang.
+### 8. Yang TIDAK Saya Ubah (Justifikasi Aman)
 
----
+- Engine `activity-engine.ts` & `account-resolver.ts` — sudah tahan akun baru karena dasar prefix.
+- Schema `accounts` & `business_units` — backward-compatible.
+- Semua route laporan & buku besar — query tidak terpengaruh.
 
-## FASE 1 — Pondasi Multi Unit (Aman, Tidak Mengubah UI Lama)
+### Ringkasan Manfaat
 
-### 1.1 Skema Database Baru
-
-**Tabel `business_units`** (master unit usaha):
-- `id` uuid PK
-- `kode` text unique (mis. `UMUM`, `SP`, `PAM`, `DAGANG`)
-- `nama` text (mis. "Simpan Pinjam", "PAM Desa")
-- `jenis` text — kategori: `simpan_pinjam` / `perdagangan` / `jasa` / `air_bersih` / `aset_modal` / `umum`
-- `deskripsi` text nullable
-- `is_active` boolean default true
-- `is_default` boolean default false (penanda Unit Umum/Konsolidasi)
-- `created_at`, `updated_at`
-
-**Seed awal**: 1 baris `UMUM — Unit Umum / Konsolidasi` dengan `is_default = true`. Ini target backfill data lama.
-
-**RLS**: read untuk authenticated, manage untuk admin.
-
-### 1.2 Penambahan Kolom `business_unit_id`
-
-Tambahkan kolom **nullable** ke tabel-tabel transaksi:
-- `journals.business_unit_id` — sumber kebenaran untuk filter laporan
-- `activity_entries.business_unit_id` — opsional (sudah terhubung lewat journal, tapi memudahkan query)
-- `receivables.business_unit_id`
-- `payables.business_unit_id`
-- `assets.business_unit_id`
-- `inventory_items.business_unit_id`
-- `inventory_movements.business_unit_id`
-
-**Catatan**: tidak menambahkan ke `accounts` (CoA tetap satu untuk seluruh BUMDes — best practice untuk konsolidasi).
-
-### 1.3 Backfill Data Existing
-
-Migrasi SQL:
-1. Insert default unit `UMUM` jika belum ada.
-2. `UPDATE` semua tabel di atas → set `business_unit_id` = id default unit untuk semua baris yang masih `NULL`.
-3. Ubah kolom menjadi `NOT NULL DEFAULT <id-default>` agar insert baru tanpa unit tetap aman.
-
-### 1.4 Index Performa
-
-- `idx_journals_unit_tanggal` ON `journals(business_unit_id, tanggal)`
-- `idx_journal_lines_journal` ON `journal_lines(journal_id)` (kalau belum ada)
-- Index serupa pada `receivables`, `payables`, `assets`.
-
-### 1.5 Halaman Manajemen Unit Usaha
-
-Route baru `src/routes/_app.unit-usaha.tsx`:
-- Tabel CRUD unit usaha (admin only).
-- Field: kode, nama, jenis, deskripsi, status aktif.
-- Validasi: tidak boleh menonaktifkan unit default.
-
-### 1.6 Sidebar
-
-Tambah menu **"Unit Usaha"** (icon `Store`) di `src/components/AppSidebar.tsx` di bawah "Bagan Akun".
-
-### 1.7 Global Unit Selector (Context)
-
-File baru `src/lib/business-unit-context.tsx`:
-- React Context yang menyediakan `currentUnitId`, `setCurrentUnitId`, `units[]`.
-- Disimpan di `localStorage` (`bumdes:active_unit`) agar persist antar reload.
-- Dimuat sekali di `_app.tsx` (root layout) lewat `<BusinessUnitProvider>`.
-
-**UI Selector** di header `_app.tsx`:
-- `<Select>` dropdown dengan opsi `Semua Unit (Konsolidasi)` + daftar unit aktif.
-- Selalu terlihat di topbar — menjadi filter global untuk semua halaman.
-
----
-
-## FASE 2 — Refactor Modul Transaksi
-
-### 2.1 Catat Kegiatan (`_app.catat-kegiatan.tsx`)
-
-**Flow baru**: Pilih Unit → Pilih Template → Isi Form → Preview → Posting.
-
-- Tambah step "Pilih Unit Usaha" di awal (default ikut global selector, bisa override per transaksi).
-- Saat insert ke `journals` dan `activity_entries`, sertakan `business_unit_id`.
-- **Filter template berdasarkan jenis unit**: kalau unit = `simpan_pinjam`, hanya tampilkan template `business_type = "Simpan Pinjam"` + template umum (Operasional, Aset & Modal). Field baru di `activity_templates.applicable_units` (text[] nullable; null = berlaku semua).
-
-### 2.2 Input Jurnal Manual (`_app.jurnal.baru.tsx`)
-
-- Tambah field **Unit Usaha** (Select) di form, default = global unit aktif.
-- Insert `business_unit_id` ke `journals`.
-
-### 2.3 Jurnal Koreksi (`_app.jurnal.koreksi.tsx`)
-
-- Jurnal koreksi otomatis mewarisi `business_unit_id` dari jurnal yang dikoreksi.
-
-### 2.4 Modul Piutang, Utang, Aset, Persediaan
-
-Pada masing-masing form CRUD:
-- Tambah field "Unit Usaha" (Select), default global selector.
-- Insert/update sertakan `business_unit_id`.
-- Tabel list menampilkan kolom Unit (badge).
-- Auto-filter berdasarkan global selector (kalau "Semua", tampilkan semua).
-
-### 2.5 Helper Query
-
-File baru `src/lib/unit-filter.ts`:
-- Util `applyUnitFilter(query, unitId)` — meng-chain `.eq("business_unit_id", id)` kalau bukan "Semua".
-- Dipakai konsisten di semua halaman list/laporan.
-
----
-
-## FASE 3 — Laporan Per Unit + Konsolidasi
-
-### 3.1 Laporan Keuangan (`_app.laporan.tsx`)
-
-- Tambah filter **Unit Usaha** di toolbar (default ikut global selector).
-- Query Laba Rugi, Neraca, Arus Kas:
-  - Jika unit dipilih → filter `journals.business_unit_id = ?`
-  - Jika "Semua" → tidak ada filter (= konsolidasi seperti sekarang).
-- **Tab "Per Unit"** baru: side-by-side comparison kolom per unit (mis. Laba Rugi: kolom Simpan Pinjam | PAM | Dagang | Total).
-
-### 3.2 Buku Besar (`_app.buku-besar.tsx`)
-
-- Tambah filter Unit Usaha di toolbar.
-- Saldo akun bisa di-breakdown per unit (opsional collapse).
-
-### 3.3 Generate LPJ (`_app.lpj.tsx`)
-
-- Pilihan: LPJ per Unit atau LPJ Konsolidasi.
-- PDF header menampilkan nama unit yang dipilih.
-
-### 3.4 Dashboard (`_app.dashboard.tsx`)
-
-- Stats card mengikuti global unit selector.
-- Tambah widget "Ringkasan Per Unit" (bar chart kontribusi laba per unit).
-
----
-
-## Detail Teknis
-
-### Urutan Eksekusi Migrasi (penting agar tidak break)
-
-1. **Migrasi 1**: `CREATE TABLE business_units` + RLS + seed default `UMUM`.
-2. **Migrasi 2**: `ALTER TABLE` tambah `business_unit_id` (nullable) ke semua tabel transaksi + index.
-3. **Migrasi 3 (Backfill)**: `UPDATE ... SET business_unit_id = <default>` lalu `ALTER ... SET NOT NULL DEFAULT <default>`.
-4. **Migrasi 4**: Tambah `activity_templates.applicable_units text[]`.
-5. Setelah semua migrasi sukses → deploy code Fase 1, 2, 3 secara bertahap.
-
-### Filter Strategy
-
-- **Database-level**: WHERE clause + index — tercepat, jadi sumber utama.
-- **Service layer**: helper `applyUnitFilter()` untuk konsistensi.
-- **UI state**: hanya menyimpan `currentUnitId` aktif (Context + localStorage).
-
-### Risiko Performa & Mitigasi
-
-| Risiko | Mitigasi |
-|---|---|
-| Query laporan lebih lambat karena filter tambahan | Composite index `(business_unit_id, tanggal)` |
-| Aggregasi konsolidasi (semua unit) baca banyak baris | Sudah ada paginated streaming di dashboard; pertahankan pola yang sama untuk laporan besar |
-| Banyak rerender UI karena context global | `useMemo` units list + selector pakai `useState` lokal yang hanya commit ke context saat berubah |
-
-### File yang Akan Dibuat
-
-- `src/lib/business-unit-context.tsx`
-- `src/lib/unit-filter.ts`
-- `src/components/UnitSelector.tsx` (topbar + dropdown reusable)
-- `src/routes/_app.unit-usaha.tsx`
-- 4 file migrasi SQL (sesuai urutan di atas)
-
-### File yang Akan Diedit
-
-- `src/routes/_app.tsx` (header + provider)
-- `src/components/AppSidebar.tsx` (menu baru)
-- `src/components/MobileNav.tsx` (menu baru)
-- `src/routes/_app.catat-kegiatan.tsx` (Fase 2)
-- `src/routes/_app.jurnal.baru.tsx` (Fase 2)
-- `src/routes/_app.jurnal.koreksi.tsx` (Fase 2)
-- `src/routes/_app.piutang.tsx`, `_app.utang.tsx`, `_app.aset.tsx`, `_app.persediaan.tsx` (Fase 2)
-- `src/routes/_app.laporan.tsx`, `_app.buku-besar.tsx`, `_app.lpj.tsx`, `_app.dashboard.tsx` (Fase 3)
-
-### Verifikasi Pasca-Implementasi
-
-1. Data lama tetap muncul di laporan (terlabel `Unit Umum`).
-2. Total Laba Rugi konsolidasi = jumlah Laba Rugi semua unit.
-3. Switch unit di topbar langsung memfilter dashboard, jurnal, laporan.
-4. RLS tetap menjaga akses hanya admin/bendahara.
-
----
-
-## Hasil Akhir
-
-- BUMDes bisa mencatat & melihat laporan per unit usaha.
-- Konsolidasi tetap bisa diakses (default behavior lama).
-- Tidak ada migrasi destruktif — semua reversible kecuali penambahan kolom.
-- Sidebar bertambah 1 menu "Unit Usaha", topbar bertambah 1 dropdown selector.
-
-Setelah Anda **Approve**, saya akan eksekusi Fase 1 → 2 → 3 berurutan dalam sesi build.
+- AI bisa tambah akun via percakapan (mis. *"tambahkan akun Kas di Bank Jago"*) → preview → user posting.
+- Admin bisa tambah akun manual via halaman Bagan Akun (sebelumnya read-only).
+- Jenis usaha jadi data terkelola, bisa ditambah tanpa edit kode.
+- Tidak ada perubahan breaking pada modul Catat Kegiatan, Jurnal, atau Laporan.

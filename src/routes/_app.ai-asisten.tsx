@@ -63,22 +63,24 @@ function AIAsistenPage() {
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const loadAccounts = async () => {
+    const { data } = await supabase
+      .from("accounts")
+      .select("id, kode_akun, nama_akun, normal_balance, is_active, is_header, tipe_akun")
+      .eq("is_active", true)
+      .order("kode_akun");
+    setAccounts((data ?? []) as AccountLite[]);
+  };
+
   useEffect(() => {
     (async () => {
-      const [tpl, acc] = await Promise.all([
-        (supabase as any)
-          .from("activity_templates")
-          .select("*")
-          .eq("is_active", true)
-          .order("sort_order"),
-        supabase
-          .from("accounts")
-          .select("id, kode_akun, nama_akun, normal_balance, is_active, is_header, tipe_akun")
-          .eq("is_active", true)
-          .order("kode_akun"),
-      ]);
+      const tpl = await (supabase as any)
+        .from("activity_templates")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order");
       setTemplates((tpl.data ?? []) as ActivityTemplate[]);
-      setAccounts((acc.data ?? []) as AccountLite[]);
+      await loadAccounts();
     })();
   }, []);
 

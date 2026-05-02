@@ -222,6 +222,7 @@ function MessageBubble({
   units,
   resolveWriteUnitId,
   onPosted,
+  onAccountAdded,
 }: {
   msg: ChatMsg;
   templates: ActivityTemplate[];
@@ -229,6 +230,7 @@ function MessageBubble({
   units: { id: string; kode: string; nama: string }[];
   resolveWriteUnitId: () => string | null;
   onPosted: (label: string) => void;
+  onAccountAdded: () => Promise<void>;
 }) {
   const isUser = msg.role === "user";
   return (
@@ -257,6 +259,7 @@ function MessageBubble({
               units={units}
               resolveWriteUnitId={resolveWriteUnitId}
               onPosted={onPosted}
+              onAccountAdded={onAccountAdded}
             />
           </div>
         )}
@@ -272,6 +275,7 @@ function DraftPreview({
   units,
   resolveWriteUnitId,
   onPosted,
+  onAccountAdded,
 }: {
   draft: AnyDraft;
   templates: ActivityTemplate[];
@@ -279,6 +283,7 @@ function DraftPreview({
   units: { id: string; kode: string; nama: string }[];
   resolveWriteUnitId: () => string | null;
   onPosted: (label: string) => void;
+  onAccountAdded: () => Promise<void>;
 }) {
   const [posted, setPosted] = useState(false);
   const [posting, setPosting] = useState(false);

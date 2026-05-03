@@ -91,6 +91,7 @@ function CatatKegiatanPage() {
           .from("accounts")
           .select("id, kode_akun, nama_akun, normal_balance, is_active, is_header, tipe_akun")
           .eq("is_active", true)
+          .eq("is_manual_input", true)
           .order("kode_akun"),
       ]);
       if (tplRes.error) toast.error("Gagal memuat template: " + tplRes.error.message);

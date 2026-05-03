@@ -17,6 +17,7 @@ import {
   Store,
   Bot,
   Layers,
+  ArrowRightLeft,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,7 @@ const items = [
   { to: "/akun", label: "Bagan Akun", icon: ListTree },
   { to: "/jurnal", label: "Jurnal Umum", icon: BookOpen },
   { to: "/jurnal/baru", label: "Input Jurnal", icon: PlusSquare },
+  { to: "/transfer", label: "Transfer Antar Unit", icon: ArrowRightLeft },
   { to: "/catat-kegiatan", label: "Catat Kegiatan", icon: Sparkles },
   { to: "/ai-asisten", label: "AI Asisten", icon: Bot },
   { to: "/jurnal/koreksi", label: "Jurnal Koreksi", icon: RotateCcw },

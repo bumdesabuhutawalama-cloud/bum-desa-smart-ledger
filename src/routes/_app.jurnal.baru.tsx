@@ -179,6 +179,7 @@ function JurnalBaru() {
         .select("id,kode_akun,nama_akun,normal_balance,is_header,tipe_akun")
         .eq("is_header", false)
         .eq("is_active", true)
+        .eq("is_manual_input", true)
         .order("kode_akun");
       if (!mounted) return;
       if (error) toast.error("Gagal memuat akun: " + error.message);
@@ -322,6 +323,18 @@ function JurnalBaru() {
 
     setSaving(true);
     try {
+      // Sabuk pengaman: tolak akun sistem (RK) di jurnal manual
+      const ids = Array.from(new Set(valid.map((l) => l.account_id)));
+      const { data: sysAccs } = await (supabase as any)
+        .from("accounts")
+        .select("id,kode_akun,nama_akun,is_system_account,is_manual_input")
+        .in("id", ids);
+      const blocked = (sysAccs ?? []).find((a: any) => a.is_system_account || a.is_manual_input === false);
+      if (blocked) {
+        throw new Error(
+          `Akun "${blocked.kode_akun} ${blocked.nama_akun}" hanya dapat digunakan melalui transaksi transfer otomatis`,
+        );
+      }
       const { data: u, error: ue } = await supabase.auth.getUser();
       if (ue || !u.user) throw new Error("Sesi login tidak valid. Silakan login ulang.");
       const nomor = `JU-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}-${Date.now().toString().slice(-6)}`;

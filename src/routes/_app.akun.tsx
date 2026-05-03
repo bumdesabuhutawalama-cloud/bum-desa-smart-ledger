@@ -32,6 +32,8 @@ type Acc = {
   level: number;
   parent_id: string | null;
   description: string | null;
+  is_system_account?: boolean;
+  is_manual_input?: boolean;
 };
 
 export const Route = createFileRoute("/_app/akun")({ component: AkunPage });
@@ -381,6 +383,7 @@ function AkunPage() {
                     >
                       {r.kode_akun}
                       {!r.is_active && <Badge variant="secondary" className="ml-2 text-[10px]">Nonaktif</Badge>}
+                      {r.is_system_account && <Badge variant="outline" className="ml-2 text-[10px]">Sistem (RK)</Badge>}
                     </td>
                     <td className="px-4 py-2">{r.nama_akun}</td>
                     <td className="px-4 py-2"><Badge variant="secondary">{r.tipe_akun}</Badge></td>

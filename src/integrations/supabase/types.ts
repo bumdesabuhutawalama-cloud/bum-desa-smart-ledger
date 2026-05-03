@@ -21,6 +21,8 @@ export type Database = {
           id: string
           is_active: boolean
           is_header: boolean
+          is_manual_input: boolean
+          is_system_account: boolean
           kode_akun: string
           level: number
           nama_akun: string
@@ -35,6 +37,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_header?: boolean
+          is_manual_input?: boolean
+          is_system_account?: boolean
           kode_akun: string
           level?: number
           nama_akun: string
@@ -49,6 +53,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_header?: boolean
+          is_manual_input?: boolean
+          is_system_account?: boolean
           kode_akun?: string
           level?: number
           nama_akun?: string
@@ -467,12 +473,16 @@ export type Database = {
           created_by: string | null
           id: string
           is_correction: boolean
+          is_transfer_transaction: boolean
           keterangan: string
           nomor_jurnal: string
           source: string
           source_ref: string | null
+          source_unit_id: string | null
           status: Database["public"]["Enums"]["journal_status"]
           tanggal: string
+          target_unit_id: string | null
+          transfer_group_id: string | null
           updated_at: string
         }
         Insert: {
@@ -483,12 +493,16 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_correction?: boolean
+          is_transfer_transaction?: boolean
           keterangan: string
           nomor_jurnal: string
           source?: string
           source_ref?: string | null
+          source_unit_id?: string | null
           status?: Database["public"]["Enums"]["journal_status"]
           tanggal: string
+          target_unit_id?: string | null
+          transfer_group_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -499,12 +513,16 @@ export type Database = {
           created_by?: string | null
           id?: string
           is_correction?: boolean
+          is_transfer_transaction?: boolean
           keterangan?: string
           nomor_jurnal?: string
           source?: string
           source_ref?: string | null
+          source_unit_id?: string | null
           status?: Database["public"]["Enums"]["journal_status"]
           tanggal?: string
+          target_unit_id?: string | null
+          transfer_group_id?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -89,7 +89,7 @@ function JurnalKoreksi() {
         .order("tanggal", { ascending: false })
         .order("nomor_jurnal", { ascending: false })
         .limit(200),
-      supabase.from("accounts").select("id,kode_akun,nama_akun,normal_balance,is_header").eq("is_active", true),
+      supabase.from("accounts").select("id,kode_akun,nama_akun,normal_balance,is_header").eq("is_active", true).eq("is_manual_input", true),
     ]);
 
     const journals = (js as Journal[]) ?? [];

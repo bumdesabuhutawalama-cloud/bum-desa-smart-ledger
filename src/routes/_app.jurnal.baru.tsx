@@ -179,6 +179,7 @@ function JurnalBaru() {
         .select("id,kode_akun,nama_akun,normal_balance,is_header,tipe_akun")
         .eq("is_header", false)
         .eq("is_active", true)
+        .eq("is_manual_input", true)
         .order("kode_akun");
       if (!mounted) return;
       if (error) toast.error("Gagal memuat akun: " + error.message);

@@ -195,12 +195,12 @@ function AkunPage() {
         : null;
 
       const payload = {
-        kode_akun: form.kode_akun.trim(),
+        kode_akun: kodeFinal,
         nama_akun: form.nama_akun.trim(),
         tipe_akun: form.tipe_akun,
         normal_balance: form.normal_balance,
         parent_id: parent?.id ?? null,
-        level: levelFromKode(form.kode_akun.trim()),
+        level: levelFromKode(kodeFinal),
         is_header: form.is_header,
         is_active: form.is_active,
         description: form.description || null,

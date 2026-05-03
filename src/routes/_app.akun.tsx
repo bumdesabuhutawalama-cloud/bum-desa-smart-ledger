@@ -285,14 +285,15 @@ function AkunPage() {
                       </p>
                     </div>
                     <div>
-                      <Label>Parent (opsional)</Label>
+                      <Label>Parent Akun *</Label>
                       <Select
                         value={form.parent_kode || "__none__"}
                         onValueChange={(v) => onParentChange(v === "__none__" ? "" : v)}
+                        disabled={!!editing}
                       >
-                        <SelectTrigger><SelectValue placeholder="(tanpa parent)" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Pilih parent…" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__none__">(tanpa parent)</SelectItem>
+                          <SelectItem value="__none__">(tanpa parent — golongan)</SelectItem>
                           {parentCandidates.map((h) => (
                             <SelectItem key={h.id} value={h.kode_akun}>
                               {h.kode_akun} — {h.nama_akun}
@@ -301,7 +302,7 @@ function AkunPage() {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Daftar parent otomatis menyesuaikan tipe akun. Memilih parent akan menyarankan kode berikutnya.
+                        Memilih parent otomatis men-generate kode anak.
                       </p>
                     </div>
                   </div>

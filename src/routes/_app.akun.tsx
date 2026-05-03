@@ -332,7 +332,7 @@ function AkunPage() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Batal</Button>
-                  <Button onClick={save} disabled={saving}>
+                  <Button onClick={save} disabled={saving || !form.kode_akun}>
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
                   </Button>
                 </DialogFooter>

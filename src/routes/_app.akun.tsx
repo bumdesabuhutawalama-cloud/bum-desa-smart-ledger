@@ -145,23 +145,6 @@ function AkunPage() {
     setOpen(true);
   };
 
-  const startEdit = (a: Acc) => {
-    setEditing(a);
-    const parent = rows.find((r) => r.id === a.parent_id);
-    setForm({
-      id: a.id,
-      kode_akun: a.kode_akun,
-      nama_akun: a.nama_akun,
-      tipe_akun: a.tipe_akun as AccountType,
-      normal_balance: a.normal_balance as NormalBalance,
-      parent_kode: parent?.kode_akun ?? "",
-      is_header: a.is_header,
-      is_active: a.is_active,
-      description: a.description ?? "",
-    });
-    setOpen(true);
-  };
-
   const save = async () => {
     setSaving(true);
     try {

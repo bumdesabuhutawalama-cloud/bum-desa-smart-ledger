@@ -148,7 +148,23 @@ function AkunPage() {
   const save = async () => {
     setSaving(true);
     try {
-      // Validasi
+      let kodeFinal = form.kode_akun.trim();
+
+      // Server-side re-validation: re-generate kode dari data terbaru (anti race condition)
+      if (!editing && form.parent_kode) {
+        const { data: fresh } = await supabase
+          .from("accounts")
+          .select("kode_akun")
+          .like("kode_akun", `${form.parent_kode.split(".").slice(0, levelFromKode(form.parent_kode)).join(".")}%`);
+        const allKodes = [...rows.map((r) => r.kode_akun), ...((fresh as any) ?? []).map((x: any) => x.kode_akun)];
+        try {
+          kodeFinal = generateKodeAkun(form.parent_kode, Array.from(new Set(allKodes)));
+        } catch (e: any) {
+          toast.error(e.message);
+          return;
+        }
+      }
+
       const accountsLite = rows.map((r) => ({
         id: r.id, kode_akun: r.kode_akun, nama_akun: r.nama_akun,
         normal_balance: r.normal_balance as NormalBalance,
@@ -159,7 +175,7 @@ function AkunPage() {
         : accountsLite;
       const errs = validateAccountDraft(
         {
-          kode_akun: form.kode_akun,
+          kode_akun: kodeFinal,
           nama_akun: form.nama_akun,
           tipe_akun: form.tipe_akun,
           normal_balance: form.normal_balance,

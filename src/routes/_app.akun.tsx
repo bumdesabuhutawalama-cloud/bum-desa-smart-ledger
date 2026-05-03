@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import {
   ACCOUNT_TYPES, AccountType, NormalBalance,
-  defaultNormalBalance, levelFromKode, validateAccountDraft, suggestNextKode,
+  defaultNormalBalance, levelFromKode, validateAccountDraft, generateKodeAkun, isLeafLevel,
 } from "@/lib/account-utils";
 
 type Acc = {

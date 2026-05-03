@@ -77,51 +77,71 @@ function AkunPage() {
     [rows, q],
   );
 
-  const headers = useMemo(() => rows.filter((r) => r.is_header), [rows]);
-  // Hanya parent dengan tipe akun yang sama (mis. ASET → parent ASET saja)
+  const headers = useMemo(() => rows.filter((r) => r.is_header && !isLeafLevel(r.kode_akun)), [rows]);
+  // Parent candidates: header non-leaf, dengan filter tipe akun (kecuali saat tipe belum dipilih untuk level 1)
   const parentCandidates = useMemo(
     () => headers.filter((h) => h.tipe_akun === form.tipe_akun),
     [headers, form.tipe_akun],
   );
 
-  // Auto sync normal balance when tipe changes (kecuali sedang edit & user override)
+  // Saat tipe akun berubah → reset parent (kode di-clear, harus pilih parent lagi)
   const onTipeChange = (t: AccountType) => {
     setForm((f) => ({
       ...f,
       tipe_akun: t,
       normal_balance: defaultNormalBalance(t),
-      // Reset parent jika tipe berbeda
       parent_kode: "",
+      kode_akun: editing ? f.kode_akun : "",
     }));
   };
 
-  // Saat parent dipilih → otomatis sarankan kode & turunkan tipe/saldo normal dari parent
+  // Saat parent dipilih → otomatis generate kode (READONLY untuk user)
   const onParentChange = (kode: string) => {
     if (!kode) {
-      setForm((f) => ({ ...f, parent_kode: "" }));
+      setForm((f) => ({ ...f, parent_kode: "", kode_akun: editing ? f.kode_akun : "" }));
       return;
     }
     const parent = rows.find((r) => r.kode_akun === kode);
     if (!parent) return;
-    const accountsLite = rows.map((r) => ({
-      id: r.id, kode_akun: r.kode_akun, nama_akun: r.nama_akun,
-      normal_balance: r.normal_balance as NormalBalance,
-      is_active: r.is_active, is_header: r.is_header, tipe_akun: r.tipe_akun,
-    }));
-    const nextKode = suggestNextKode(parent.kode_akun, accountsLite as any);
-    const inheritedTipe = parent.tipe_akun as AccountType;
-    setForm((f) => ({
-      ...f,
-      parent_kode: kode,
-      kode_akun: editing ? f.kode_akun : nextKode,
-      tipe_akun: inheritedTipe,
-      normal_balance: defaultNormalBalance(inheritedTipe),
-    }));
+    if (isLeafLevel(parent.kode_akun)) {
+      toast.error("Akun level terakhir tidak bisa memiliki turunan");
+      return;
+    }
+    try {
+      const nextKode = generateKodeAkun(parent.kode_akun, rows.map((r) => r.kode_akun));
+      const inheritedTipe = parent.tipe_akun as AccountType;
+      setForm((f) => ({
+        ...f,
+        parent_kode: kode,
+        kode_akun: editing ? f.kode_akun : nextKode,
+        tipe_akun: inheritedTipe,
+        normal_balance: defaultNormalBalance(inheritedTipe),
+      }));
+    } catch (e: any) {
+      toast.error(e.message ?? "Gagal generate kode");
+    }
   };
 
   const startCreate = () => {
     setEditing(null);
     setForm(emptyForm());
+    setOpen(true);
+  };
+
+  const startEdit = (a: Acc) => {
+    setEditing(a);
+    const parent = rows.find((r) => r.id === a.parent_id);
+    setForm({
+      id: a.id,
+      kode_akun: a.kode_akun,
+      nama_akun: a.nama_akun,
+      tipe_akun: a.tipe_akun as AccountType,
+      normal_balance: a.normal_balance as NormalBalance,
+      parent_kode: parent?.kode_akun ?? "",
+      is_header: a.is_header,
+      is_active: a.is_active,
+      description: a.description ?? "",
+    });
     setOpen(true);
   };
 

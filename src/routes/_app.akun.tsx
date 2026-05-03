@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import {
   ACCOUNT_TYPES, AccountType, NormalBalance,
-  defaultNormalBalance, levelFromKode, validateAccountDraft,
+  defaultNormalBalance, levelFromKode, validateAccountDraft, suggestNextKode,
 } from "@/lib/account-utils";
 
 type Acc = {
@@ -78,10 +78,45 @@ function AkunPage() {
   );
 
   const headers = useMemo(() => rows.filter((r) => r.is_header), [rows]);
+  // Hanya parent dengan tipe akun yang sama (mis. ASET → parent ASET saja)
+  const parentCandidates = useMemo(
+    () => headers.filter((h) => h.tipe_akun === form.tipe_akun),
+    [headers, form.tipe_akun],
+  );
 
   // Auto sync normal balance when tipe changes (kecuali sedang edit & user override)
   const onTipeChange = (t: AccountType) => {
-    setForm((f) => ({ ...f, tipe_akun: t, normal_balance: defaultNormalBalance(t) }));
+    setForm((f) => ({
+      ...f,
+      tipe_akun: t,
+      normal_balance: defaultNormalBalance(t),
+      // Reset parent jika tipe berbeda
+      parent_kode: "",
+    }));
+  };
+
+  // Saat parent dipilih → otomatis sarankan kode & turunkan tipe/saldo normal dari parent
+  const onParentChange = (kode: string) => {
+    if (!kode) {
+      setForm((f) => ({ ...f, parent_kode: "" }));
+      return;
+    }
+    const parent = rows.find((r) => r.kode_akun === kode);
+    if (!parent) return;
+    const accountsLite = rows.map((r) => ({
+      id: r.id, kode_akun: r.kode_akun, nama_akun: r.nama_akun,
+      normal_balance: r.normal_balance as NormalBalance,
+      is_active: r.is_active, is_header: r.is_header, tipe_akun: r.tipe_akun,
+    }));
+    const nextKode = suggestNextKode(parent.kode_akun, accountsLite as any);
+    const inheritedTipe = parent.tipe_akun as AccountType;
+    setForm((f) => ({
+      ...f,
+      parent_kode: kode,
+      kode_akun: editing ? f.kode_akun : nextKode,
+      tipe_akun: inheritedTipe,
+      normal_balance: defaultNormalBalance(inheritedTipe),
+    }));
   };
 
   const startCreate = () => {
@@ -244,18 +279,21 @@ function AkunPage() {
                       <Label>Parent (opsional)</Label>
                       <Select
                         value={form.parent_kode || "__none__"}
-                        onValueChange={(v) => setForm({ ...form, parent_kode: v === "__none__" ? "" : v })}
+                        onValueChange={(v) => onParentChange(v === "__none__" ? "" : v)}
                       >
                         <SelectTrigger><SelectValue placeholder="(tanpa parent)" /></SelectTrigger>
                         <SelectContent>
                           <SelectItem value="__none__">(tanpa parent)</SelectItem>
-                          {headers.map((h) => (
+                          {parentCandidates.map((h) => (
                             <SelectItem key={h.id} value={h.kode_akun}>
                               {h.kode_akun} — {h.nama_akun}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Daftar parent otomatis menyesuaikan tipe akun. Memilih parent akan menyarankan kode berikutnya.
+                      </p>
                     </div>
                   </div>
                   <div>

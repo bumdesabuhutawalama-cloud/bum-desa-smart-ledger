@@ -233,13 +233,19 @@ function AkunPage() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label>Kode Akun *</Label>
+                      <Label>Kode Akun (otomatis)</Label>
                       <Input
                         value={form.kode_akun}
-                        onChange={(e) => setForm({ ...form, kode_akun: e.target.value })}
-                        placeholder="1.1.01.06"
+                        readOnly
+                        disabled
+                        placeholder="Pilih parent dulu…"
+                        className="font-mono bg-muted/40"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">Format hierarkis: 1-4 segmen.</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {form.kode_akun
+                          ? `Kode otomatis: ${form.kode_akun} (Level ${levelFromKode(form.kode_akun)})`
+                          : "Kode di-generate otomatis berdasarkan parent."}
+                      </p>
                     </div>
                     <div>
                       <Label>Tipe Akun *</Label>

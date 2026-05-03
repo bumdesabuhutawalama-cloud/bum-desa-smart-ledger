@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import {
   ACCOUNT_TYPES, AccountType, NormalBalance,
-  defaultNormalBalance, levelFromKode, validateAccountDraft, suggestNextKode,
+  defaultNormalBalance, levelFromKode, validateAccountDraft, generateKodeAkun, isLeafLevel,
 } from "@/lib/account-utils";
 
 type Acc = {
@@ -77,46 +77,49 @@ function AkunPage() {
     [rows, q],
   );
 
-  const headers = useMemo(() => rows.filter((r) => r.is_header), [rows]);
-  // Hanya parent dengan tipe akun yang sama (mis. ASET → parent ASET saja)
+  const headers = useMemo(() => rows.filter((r) => r.is_header && !isLeafLevel(r.kode_akun)), [rows]);
+  // Parent candidates: header non-leaf, dengan filter tipe akun (kecuali saat tipe belum dipilih untuk level 1)
   const parentCandidates = useMemo(
     () => headers.filter((h) => h.tipe_akun === form.tipe_akun),
     [headers, form.tipe_akun],
   );
 
-  // Auto sync normal balance when tipe changes (kecuali sedang edit & user override)
+  // Saat tipe akun berubah → reset parent (kode di-clear, harus pilih parent lagi)
   const onTipeChange = (t: AccountType) => {
     setForm((f) => ({
       ...f,
       tipe_akun: t,
       normal_balance: defaultNormalBalance(t),
-      // Reset parent jika tipe berbeda
       parent_kode: "",
+      kode_akun: editing ? f.kode_akun : "",
     }));
   };
 
-  // Saat parent dipilih → otomatis sarankan kode & turunkan tipe/saldo normal dari parent
+  // Saat parent dipilih → otomatis generate kode (READONLY untuk user)
   const onParentChange = (kode: string) => {
     if (!kode) {
-      setForm((f) => ({ ...f, parent_kode: "" }));
+      setForm((f) => ({ ...f, parent_kode: "", kode_akun: editing ? f.kode_akun : "" }));
       return;
     }
     const parent = rows.find((r) => r.kode_akun === kode);
     if (!parent) return;
-    const accountsLite = rows.map((r) => ({
-      id: r.id, kode_akun: r.kode_akun, nama_akun: r.nama_akun,
-      normal_balance: r.normal_balance as NormalBalance,
-      is_active: r.is_active, is_header: r.is_header, tipe_akun: r.tipe_akun,
-    }));
-    const nextKode = suggestNextKode(parent.kode_akun, accountsLite as any);
-    const inheritedTipe = parent.tipe_akun as AccountType;
-    setForm((f) => ({
-      ...f,
-      parent_kode: kode,
-      kode_akun: editing ? f.kode_akun : nextKode,
-      tipe_akun: inheritedTipe,
-      normal_balance: defaultNormalBalance(inheritedTipe),
-    }));
+    if (isLeafLevel(parent.kode_akun)) {
+      toast.error("Akun level terakhir tidak bisa memiliki turunan");
+      return;
+    }
+    try {
+      const nextKode = generateKodeAkun(parent.kode_akun, rows.map((r) => r.kode_akun));
+      const inheritedTipe = parent.tipe_akun as AccountType;
+      setForm((f) => ({
+        ...f,
+        parent_kode: kode,
+        kode_akun: editing ? f.kode_akun : nextKode,
+        tipe_akun: inheritedTipe,
+        normal_balance: defaultNormalBalance(inheritedTipe),
+      }));
+    } catch (e: any) {
+      toast.error(e.message ?? "Gagal generate kode");
+    }
   };
 
   const startCreate = () => {
@@ -145,7 +148,23 @@ function AkunPage() {
   const save = async () => {
     setSaving(true);
     try {
-      // Validasi
+      let kodeFinal = form.kode_akun.trim();
+
+      // Server-side re-validation: re-generate kode dari data terbaru (anti race condition)
+      if (!editing && form.parent_kode) {
+        const { data: fresh } = await supabase
+          .from("accounts")
+          .select("kode_akun")
+          .like("kode_akun", `${form.parent_kode.split(".").slice(0, levelFromKode(form.parent_kode)).join(".")}%`);
+        const allKodes = [...rows.map((r) => r.kode_akun), ...((fresh as any) ?? []).map((x: any) => x.kode_akun)];
+        try {
+          kodeFinal = generateKodeAkun(form.parent_kode, Array.from(new Set(allKodes)));
+        } catch (e: any) {
+          toast.error(e.message);
+          return;
+        }
+      }
+
       const accountsLite = rows.map((r) => ({
         id: r.id, kode_akun: r.kode_akun, nama_akun: r.nama_akun,
         normal_balance: r.normal_balance as NormalBalance,
@@ -156,7 +175,7 @@ function AkunPage() {
         : accountsLite;
       const errs = validateAccountDraft(
         {
-          kode_akun: form.kode_akun,
+          kode_akun: kodeFinal,
           nama_akun: form.nama_akun,
           tipe_akun: form.tipe_akun,
           normal_balance: form.normal_balance,
@@ -176,12 +195,12 @@ function AkunPage() {
         : null;
 
       const payload = {
-        kode_akun: form.kode_akun.trim(),
+        kode_akun: kodeFinal,
         nama_akun: form.nama_akun.trim(),
         tipe_akun: form.tipe_akun,
         normal_balance: form.normal_balance,
         parent_id: parent?.id ?? null,
-        level: levelFromKode(form.kode_akun.trim()),
+        level: levelFromKode(kodeFinal),
         is_header: form.is_header,
         is_active: form.is_active,
         description: form.description || null,
@@ -230,13 +249,19 @@ function AkunPage() {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label>Kode Akun *</Label>
+                      <Label>Kode Akun (otomatis)</Label>
                       <Input
                         value={form.kode_akun}
-                        onChange={(e) => setForm({ ...form, kode_akun: e.target.value })}
-                        placeholder="1.1.01.06"
+                        readOnly
+                        disabled
+                        placeholder="Pilih parent dulu…"
+                        className="font-mono bg-muted/40"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">Format hierarkis: 1-4 segmen.</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {form.kode_akun
+                          ? `Kode otomatis: ${form.kode_akun} (Level ${levelFromKode(form.kode_akun)})`
+                          : "Kode di-generate otomatis berdasarkan parent."}
+                      </p>
                     </div>
                     <div>
                       <Label>Tipe Akun *</Label>
@@ -276,14 +301,15 @@ function AkunPage() {
                       </p>
                     </div>
                     <div>
-                      <Label>Parent (opsional)</Label>
+                      <Label>Parent Akun *</Label>
                       <Select
                         value={form.parent_kode || "__none__"}
                         onValueChange={(v) => onParentChange(v === "__none__" ? "" : v)}
+                        disabled={!!editing}
                       >
-                        <SelectTrigger><SelectValue placeholder="(tanpa parent)" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Pilih parent…" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__none__">(tanpa parent)</SelectItem>
+                          <SelectItem value="__none__">(tanpa parent — golongan)</SelectItem>
                           {parentCandidates.map((h) => (
                             <SelectItem key={h.id} value={h.kode_akun}>
                               {h.kode_akun} — {h.nama_akun}
@@ -292,7 +318,7 @@ function AkunPage() {
                         </SelectContent>
                       </Select>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Daftar parent otomatis menyesuaikan tipe akun. Memilih parent akan menyarankan kode berikutnya.
+                        Memilih parent otomatis men-generate kode anak.
                       </p>
                     </div>
                   </div>
@@ -322,7 +348,7 @@ function AkunPage() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Batal</Button>
-                  <Button onClick={save} disabled={saving}>
+                  <Button onClick={save} disabled={saving || !form.kode_akun}>
                     {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Simpan"}
                   </Button>
                 </DialogFooter>

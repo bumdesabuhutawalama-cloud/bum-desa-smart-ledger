@@ -26,7 +26,7 @@ export type Database = {
           kode_akun: string
           level: number
           nama_akun: string
-          normal_balance: Database["public"]["Enums"]["normal_balance"]
+          normal_balance: Database["public"]["Enums"]["normal_balance"] | null
           parent_id: string | null
           tipe_akun: Database["public"]["Enums"]["account_type"]
           updated_at: string
@@ -42,7 +42,7 @@ export type Database = {
           kode_akun: string
           level?: number
           nama_akun: string
-          normal_balance: Database["public"]["Enums"]["normal_balance"]
+          normal_balance?: Database["public"]["Enums"]["normal_balance"] | null
           parent_id?: string | null
           tipe_akun: Database["public"]["Enums"]["account_type"]
           updated_at?: string
@@ -58,7 +58,7 @@ export type Database = {
           kode_akun?: string
           level?: number
           nama_akun?: string
-          normal_balance?: Database["public"]["Enums"]["normal_balance"]
+          normal_balance?: Database["public"]["Enums"]["normal_balance"] | null
           parent_id?: string | null
           tipe_akun?: Database["public"]["Enums"]["account_type"]
           updated_at?: string
@@ -658,6 +658,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_kode_akun: { Args: { p_parent_id: string }; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -668,6 +669,26 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      insert_account_auto: {
+        Args: {
+          p_nama_akun: string
+          p_parent_id: string
+          p_tipe_akun: Database["public"]["Enums"]["account_type"]
+        }
+        Returns: undefined
+      }
+      insert_coa: {
+        Args: {
+          p_balance: Database["public"]["Enums"]["normal_balance"]
+          p_header: boolean
+          p_kode: string
+          p_level: number
+          p_nama: string
+          p_parent_kode: string
+          p_tipe: Database["public"]["Enums"]["account_type"]
+        }
+        Returns: undefined
       }
     }
     Enums: {

@@ -24,11 +24,13 @@ type Acc = {
   is_active: boolean;
   is_system_account?: boolean;
   is_manual_input?: boolean;
+  business_unit_id?: string | null;
 };
 
 type Mode = "UNIT_TO_PUSAT" | "PUSAT_TO_UNIT" | "UNIT_TO_UNIT";
 
-const RK_PUSAT_PREFIX = "3.1.03.";
+// RK Pusat ada di ekuitas (3.8.x). RK Unit ada di aset lancar (1.1.99.x).
+const RK_PUSAT_PREFIXES = ["3.8.01.", "3.1.03."];
 const RK_UNIT_PREFIX = "1.1.99.";
 const KAS_PREFIX = "1.1.01.";
 
@@ -59,7 +61,7 @@ function TransferPage() {
     (async () => {
       const { data } = await supabase
         .from("accounts")
-        .select("id,kode_akun,nama_akun,is_header,is_active,is_system_account,is_manual_input")
+        .select("id,kode_akun,nama_akun,is_header,is_active,is_system_account,is_manual_input,business_unit_id")
         .eq("is_active", true)
         .order("kode_akun");
       setAccounts((data as any) ?? []);
@@ -73,12 +75,20 @@ function TransferPage() {
   );
 
   const rkPusat = useMemo(
-    () => accounts.find((a) => !a.is_header && a.kode_akun.startsWith(RK_PUSAT_PREFIX)) ?? null,
+    () =>
+      accounts.find(
+        (a) => !a.is_header && RK_PUSAT_PREFIXES.some((p) => a.kode_akun.startsWith(p)),
+      ) ?? null,
     [accounts],
   );
 
-  // Find RK Unit account for a given unit (matches by name)
+  // Find RK Unit account for a given unit. Prefer explicit business_unit_id link;
+  // fall back to fuzzy name match for legacy data.
   const findRkUnit = (unitId: string): Acc | null => {
+    const linked = accounts.find(
+      (a) => !a.is_header && a.kode_akun.startsWith(RK_UNIT_PREFIX) && a.business_unit_id === unitId,
+    );
+    if (linked) return linked;
     const u = units.find((x) => x.id === unitId);
     if (!u) return null;
     const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");

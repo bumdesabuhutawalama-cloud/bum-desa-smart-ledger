@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       accounts: {
         Row: {
+          business_unit_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -32,6 +33,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_unit_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -48,6 +50,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_unit_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -64,6 +67,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "accounts_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "accounts_parent_id_fkey"
             columns: ["parent_id"]

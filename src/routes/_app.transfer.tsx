@@ -61,7 +61,7 @@ function TransferPage() {
     (async () => {
       const { data } = await supabase
         .from("accounts")
-        .select("id,kode_akun,nama_akun,is_header,is_active,is_system_account,is_manual_input")
+        .select("id,kode_akun,nama_akun,is_header,is_active,is_system_account,is_manual_input,business_unit_id")
         .eq("is_active", true)
         .order("kode_akun");
       setAccounts((data as any) ?? []);
@@ -82,8 +82,13 @@ function TransferPage() {
     [accounts],
   );
 
-  // Find RK Unit account for a given unit (matches by name)
+  // Find RK Unit account for a given unit. Prefer explicit business_unit_id link;
+  // fall back to fuzzy name match for legacy data.
   const findRkUnit = (unitId: string): Acc | null => {
+    const linked = accounts.find(
+      (a) => !a.is_header && a.kode_akun.startsWith(RK_UNIT_PREFIX) && a.business_unit_id === unitId,
+    );
+    if (linked) return linked;
     const u = units.find((x) => x.id === unitId);
     if (!u) return null;
     const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");

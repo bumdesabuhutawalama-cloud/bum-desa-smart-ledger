@@ -24,6 +24,7 @@ type Acc = {
   is_active: boolean;
   is_system_account?: boolean;
   is_manual_input?: boolean;
+  business_unit_id?: string | null;
 };
 
 type Mode = "UNIT_TO_PUSAT" | "PUSAT_TO_UNIT" | "UNIT_TO_UNIT";

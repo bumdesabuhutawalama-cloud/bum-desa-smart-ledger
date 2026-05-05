@@ -327,6 +327,7 @@ function KoreksiDialog({
           correction_group_id: groupId,
           source_ref: journal.id,
           created_by: u.user.id,
+          business_unit_id: journal.business_unit_id,
           lines: journal.journal_lines.map((l) => ({
             account_id: l.account_id,
             debit: Number(l.kredit) || 0,
@@ -361,6 +362,7 @@ function KoreksiDialog({
           correction_group_id: groupId,
           source_ref: journal.id,
           created_by: u.user.id,
+          business_unit_id: journal.business_unit_id,
           lines: lines.map((l) => ({ ...l, keterangan: null })),
         });
         toast.success("Reklasifikasi berhasil dibuat");
@@ -417,6 +419,7 @@ function KoreksiDialog({
           correction_group_id: groupId,
           source_ref: journal.id,
           created_by: u.user.id,
+          business_unit_id: journal.business_unit_id,
           lines,
         });
         toast.success("Koreksi nominal berhasil dibuat");
@@ -430,6 +433,7 @@ function KoreksiDialog({
           correction_group_id: groupId,
           source_ref: journal.id,
           created_by: u.user.id,
+          business_unit_id: journal.business_unit_id,
           lines: journal.journal_lines.map((l) => ({
             account_id: l.account_id,
             debit: Number(l.kredit) || 0,
@@ -447,6 +451,7 @@ function KoreksiDialog({
           correction_group_id: groupId,
           source_ref: journal.id,
           created_by: u.user.id,
+          business_unit_id: journal.business_unit_id,
           lines: journal.journal_lines.map((l) => ({
             account_id: l.account_id,
             debit: Number(l.debit) || 0,

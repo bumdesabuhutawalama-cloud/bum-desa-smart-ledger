@@ -28,7 +28,8 @@ type Acc = {
 
 type Mode = "UNIT_TO_PUSAT" | "PUSAT_TO_UNIT" | "UNIT_TO_UNIT";
 
-const RK_PUSAT_PREFIX = "3.1.03.";
+// RK Pusat ada di ekuitas (3.8.x). RK Unit ada di aset lancar (1.1.99.x).
+const RK_PUSAT_PREFIXES = ["3.8.01.", "3.1.03."];
 const RK_UNIT_PREFIX = "1.1.99.";
 const KAS_PREFIX = "1.1.01.";
 

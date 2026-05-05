@@ -74,7 +74,10 @@ function TransferPage() {
   );
 
   const rkPusat = useMemo(
-    () => accounts.find((a) => !a.is_header && a.kode_akun.startsWith(RK_PUSAT_PREFIX)) ?? null,
+    () =>
+      accounts.find(
+        (a) => !a.is_header && RK_PUSAT_PREFIXES.some((p) => a.kode_akun.startsWith(p)),
+      ) ?? null,
     [accounts],
   );
 

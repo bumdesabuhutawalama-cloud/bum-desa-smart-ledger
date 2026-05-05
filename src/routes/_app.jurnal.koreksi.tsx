@@ -56,6 +56,7 @@ type Journal = {
   correction_type: string | null;
   correction_group_id: string | null;
   created_by: string | null;
+  business_unit_id: string | null;
   journal_lines: Line[];
   _creator?: string;
 };
@@ -83,7 +84,7 @@ function JurnalKoreksi() {
       supabase
         .from("journals")
         .select(
-          "id,nomor_jurnal,tanggal,keterangan,status,source,is_correction,correction_type,correction_group_id,created_by,journal_lines(id,account_id,debit,kredit,keterangan)"
+          "id,nomor_jurnal,tanggal,keterangan,status,source,is_correction,correction_type,correction_group_id,created_by,business_unit_id,journal_lines(id,account_id,debit,kredit,keterangan)"
         )
         .eq("status", "posted")
         .order("tanggal", { ascending: false })

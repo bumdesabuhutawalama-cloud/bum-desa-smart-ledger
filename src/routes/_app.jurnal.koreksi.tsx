@@ -633,6 +633,7 @@ async function createCorrectionJournal(params: {
   correction_group_id: string;
   source_ref: string;
   created_by: string;
+  business_unit_id: string | null;
   lines: { account_id: string; debit: number; kredit: number; keterangan: string | null }[];
 }) {
   // Validasi balance
@@ -643,20 +644,22 @@ async function createCorrectionJournal(params: {
   }
 
   const nomor = newNomor("KOR");
-  const { data: j, error: e1 } = await supabase
+  const insertPayload: any = {
+    nomor_jurnal: nomor,
+    tanggal: params.tanggal,
+    keterangan: params.keterangan,
+    status: "posted",
+    source: "correction",
+    source_ref: params.source_ref,
+    is_correction: true,
+    correction_type: params.correction_type,
+    correction_group_id: params.correction_group_id,
+    created_by: params.created_by,
+  };
+  if (params.business_unit_id) insertPayload.business_unit_id = params.business_unit_id;
+  const { data: j, error: e1 } = await (supabase as any)
     .from("journals")
-    .insert({
-      nomor_jurnal: nomor,
-      tanggal: params.tanggal,
-      keterangan: params.keterangan,
-      status: "posted",
-      source: "correction",
-      source_ref: params.source_ref,
-      is_correction: true,
-      correction_type: params.correction_type,
-      correction_group_id: params.correction_group_id,
-      created_by: params.created_by,
-    })
+    .insert(insertPayload)
     .select("id")
     .single();
   if (e1) throw e1;

@@ -19,6 +19,7 @@ import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
 import { Route as AppPurchaseOrdersRouteImport } from './routes/_app.purchase-orders'
 import { Route as AppPiutangRouteImport } from './routes/_app.piutang'
 import { Route as AppPersediaanRouteImport } from './routes/_app.persediaan'
+import { Route as AppPenjualanRouteImport } from './routes/_app.penjualan'
 import { Route as AppLpjRouteImport } from './routes/_app.lpj'
 import { Route as AppLaporanRouteImport } from './routes/_app.laporan'
 import { Route as AppJenisUsahaRouteImport } from './routes/_app.jenis-usaha'
@@ -80,6 +81,11 @@ const AppPiutangRoute = AppPiutangRouteImport.update({
 const AppPersediaanRoute = AppPersediaanRouteImport.update({
   id: '/persediaan',
   path: '/persediaan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPenjualanRoute = AppPenjualanRouteImport.update({
+  id: '/penjualan',
+  path: '/penjualan',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLpjRoute = AppLpjRouteImport.update({
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/jenis-usaha': typeof AppJenisUsahaRoute
   '/laporan': typeof AppLaporanRoute
   '/lpj': typeof AppLpjRoute
+  '/penjualan': typeof AppPenjualanRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
   '/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/jenis-usaha': typeof AppJenisUsahaRoute
   '/laporan': typeof AppLaporanRoute
   '/lpj': typeof AppLpjRoute
+  '/penjualan': typeof AppPenjualanRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
   '/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/_app/jenis-usaha': typeof AppJenisUsahaRoute
   '/_app/laporan': typeof AppLaporanRoute
   '/_app/lpj': typeof AppLpjRoute
+  '/_app/penjualan': typeof AppPenjualanRoute
   '/_app/persediaan': typeof AppPersediaanRoute
   '/_app/piutang': typeof AppPiutangRoute
   '/_app/purchase-orders': typeof AppPurchaseOrdersRoute
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/jenis-usaha'
     | '/laporan'
     | '/lpj'
+    | '/penjualan'
     | '/persediaan'
     | '/piutang'
     | '/purchase-orders'
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/jenis-usaha'
     | '/laporan'
     | '/lpj'
+    | '/penjualan'
     | '/persediaan'
     | '/piutang'
     | '/purchase-orders'
@@ -284,6 +295,7 @@ export interface FileRouteTypes {
     | '/_app/jenis-usaha'
     | '/_app/laporan'
     | '/_app/lpj'
+    | '/_app/penjualan'
     | '/_app/persediaan'
     | '/_app/piutang'
     | '/_app/purchase-orders'
@@ -373,6 +385,13 @@ declare module '@tanstack/react-router' {
       path: '/persediaan'
       fullPath: '/persediaan'
       preLoaderRoute: typeof AppPersediaanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/penjualan': {
+      id: '/_app/penjualan'
+      path: '/penjualan'
+      fullPath: '/penjualan'
+      preLoaderRoute: typeof AppPenjualanRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/lpj': {
@@ -479,6 +498,7 @@ interface AppRouteChildren {
   AppJenisUsahaRoute: typeof AppJenisUsahaRoute
   AppLaporanRoute: typeof AppLaporanRoute
   AppLpjRoute: typeof AppLpjRoute
+  AppPenjualanRoute: typeof AppPenjualanRoute
   AppPersediaanRoute: typeof AppPersediaanRoute
   AppPiutangRoute: typeof AppPiutangRoute
   AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
@@ -503,6 +523,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppJenisUsahaRoute: AppJenisUsahaRoute,
   AppLaporanRoute: AppLaporanRoute,
   AppLpjRoute: AppLpjRoute,
+  AppPenjualanRoute: AppPenjualanRoute,
   AppPersediaanRoute: AppPersediaanRoute,
   AppPiutangRoute: AppPiutangRoute,
   AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,

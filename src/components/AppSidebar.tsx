@@ -18,6 +18,9 @@ import {
   Bot,
   Layers,
   ArrowRightLeft,
+  Truck,
+  ShoppingCart,
+  ClipboardCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";

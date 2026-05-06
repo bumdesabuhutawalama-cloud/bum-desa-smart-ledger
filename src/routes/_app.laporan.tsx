@@ -65,7 +65,15 @@ function Laporan() {
         lq,
       ]);
 
-      setAccounts((a as Acc[]) ?? []);
+      // Eliminasi intercompany (RK) saat mode KONSOLIDASI.
+      // RK Unit (1.1.99.*) = piutang antar unit, RK Pusat (3.8.*) = utang antar unit.
+      // Saat konsolidasi keduanya saling hapus dan TIDAK boleh muncul di neraca.
+      const isIntercompany = (kode: string) =>
+        kode.startsWith("1.1.99.") || kode.startsWith("3.8.");
+      const filtered = ((a as Acc[]) ?? []).filter((acc) =>
+        currentUnitId === "ALL" ? !isIntercompany(acc.kode_akun) : true,
+      );
+      setAccounts(filtered);
       setLines(
         ((l as any[]) ?? []).map((x) => ({
           account_id: x.account_id,

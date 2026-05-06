@@ -1,0 +1,1 @@
+UPDATE public.accounts SET tipe_akun='KEWAJIBAN', normal_balance='KREDIT' WHERE kode_akun LIKE '3.8.%';

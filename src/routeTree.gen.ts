@@ -15,8 +15,11 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUtangRouteImport } from './routes/_app.utang'
 import { Route as AppUnitUsahaRouteImport } from './routes/_app.unit-usaha'
 import { Route as AppTransferRouteImport } from './routes/_app.transfer'
+import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
+import { Route as AppPurchaseOrdersRouteImport } from './routes/_app.purchase-orders'
 import { Route as AppPiutangRouteImport } from './routes/_app.piutang'
 import { Route as AppPersediaanRouteImport } from './routes/_app.persediaan'
+import { Route as AppPenjualanRouteImport } from './routes/_app.penjualan'
 import { Route as AppLpjRouteImport } from './routes/_app.lpj'
 import { Route as AppLaporanRouteImport } from './routes/_app.laporan'
 import { Route as AppJenisUsahaRouteImport } from './routes/_app.jenis-usaha'
@@ -27,6 +30,7 @@ import { Route as AppAsetRouteImport } from './routes/_app.aset'
 import { Route as AppAkunRouteImport } from './routes/_app.akun'
 import { Route as AppAiAsistenRouteImport } from './routes/_app.ai-asisten'
 import { Route as AppJurnalIndexRouteImport } from './routes/_app.jurnal.index'
+import { Route as AppPenerimaanBaruRouteImport } from './routes/_app.penerimaan.baru'
 import { Route as AppJurnalKoreksiRouteImport } from './routes/_app.jurnal.koreksi'
 import { Route as AppJurnalBaruRouteImport } from './routes/_app.jurnal.baru'
 
@@ -59,6 +63,16 @@ const AppTransferRoute = AppTransferRouteImport.update({
   path: '/transfer',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSuppliersRoute = AppSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchaseOrdersRoute = AppPurchaseOrdersRouteImport.update({
+  id: '/purchase-orders',
+  path: '/purchase-orders',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPiutangRoute = AppPiutangRouteImport.update({
   id: '/piutang',
   path: '/piutang',
@@ -67,6 +81,11 @@ const AppPiutangRoute = AppPiutangRouteImport.update({
 const AppPersediaanRoute = AppPersediaanRouteImport.update({
   id: '/persediaan',
   path: '/persediaan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPenjualanRoute = AppPenjualanRouteImport.update({
+  id: '/penjualan',
+  path: '/penjualan',
   getParentRoute: () => AppRoute,
 } as any)
 const AppLpjRoute = AppLpjRouteImport.update({
@@ -119,6 +138,11 @@ const AppJurnalIndexRoute = AppJurnalIndexRouteImport.update({
   path: '/jurnal/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPenerimaanBaruRoute = AppPenerimaanBaruRouteImport.update({
+  id: '/penerimaan/baru',
+  path: '/penerimaan/baru',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppJurnalKoreksiRoute = AppJurnalKoreksiRouteImport.update({
   id: '/jurnal/koreksi',
   path: '/jurnal/koreksi',
@@ -142,13 +166,17 @@ export interface FileRoutesByFullPath {
   '/jenis-usaha': typeof AppJenisUsahaRoute
   '/laporan': typeof AppLaporanRoute
   '/lpj': typeof AppLpjRoute
+  '/penjualan': typeof AppPenjualanRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
+  '/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/suppliers': typeof AppSuppliersRoute
   '/transfer': typeof AppTransferRoute
   '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
   '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
+  '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/jurnal/': typeof AppJurnalIndexRoute
 }
 export interface FileRoutesByTo {
@@ -162,14 +190,18 @@ export interface FileRoutesByTo {
   '/jenis-usaha': typeof AppJenisUsahaRoute
   '/laporan': typeof AppLaporanRoute
   '/lpj': typeof AppLpjRoute
+  '/penjualan': typeof AppPenjualanRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
+  '/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/suppliers': typeof AppSuppliersRoute
   '/transfer': typeof AppTransferRoute
   '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
   '/': typeof AppIndexRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
   '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
+  '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/jurnal': typeof AppJurnalIndexRoute
 }
 export interface FileRoutesById {
@@ -185,14 +217,18 @@ export interface FileRoutesById {
   '/_app/jenis-usaha': typeof AppJenisUsahaRoute
   '/_app/laporan': typeof AppLaporanRoute
   '/_app/lpj': typeof AppLpjRoute
+  '/_app/penjualan': typeof AppPenjualanRoute
   '/_app/persediaan': typeof AppPersediaanRoute
   '/_app/piutang': typeof AppPiutangRoute
+  '/_app/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/_app/suppliers': typeof AppSuppliersRoute
   '/_app/transfer': typeof AppTransferRoute
   '/_app/unit-usaha': typeof AppUnitUsahaRoute
   '/_app/utang': typeof AppUtangRoute
   '/_app/': typeof AppIndexRoute
   '/_app/jurnal/baru': typeof AppJurnalBaruRoute
   '/_app/jurnal/koreksi': typeof AppJurnalKoreksiRoute
+  '/_app/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/_app/jurnal/': typeof AppJurnalIndexRoute
 }
 export interface FileRouteTypes {
@@ -209,13 +245,17 @@ export interface FileRouteTypes {
     | '/jenis-usaha'
     | '/laporan'
     | '/lpj'
+    | '/penjualan'
     | '/persediaan'
     | '/piutang'
+    | '/purchase-orders'
+    | '/suppliers'
     | '/transfer'
     | '/unit-usaha'
     | '/utang'
     | '/jurnal/baru'
     | '/jurnal/koreksi'
+    | '/penerimaan/baru'
     | '/jurnal/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -229,14 +269,18 @@ export interface FileRouteTypes {
     | '/jenis-usaha'
     | '/laporan'
     | '/lpj'
+    | '/penjualan'
     | '/persediaan'
     | '/piutang'
+    | '/purchase-orders'
+    | '/suppliers'
     | '/transfer'
     | '/unit-usaha'
     | '/utang'
     | '/'
     | '/jurnal/baru'
     | '/jurnal/koreksi'
+    | '/penerimaan/baru'
     | '/jurnal'
   id:
     | '__root__'
@@ -251,14 +295,18 @@ export interface FileRouteTypes {
     | '/_app/jenis-usaha'
     | '/_app/laporan'
     | '/_app/lpj'
+    | '/_app/penjualan'
     | '/_app/persediaan'
     | '/_app/piutang'
+    | '/_app/purchase-orders'
+    | '/_app/suppliers'
     | '/_app/transfer'
     | '/_app/unit-usaha'
     | '/_app/utang'
     | '/_app/'
     | '/_app/jurnal/baru'
     | '/_app/jurnal/koreksi'
+    | '/_app/penerimaan/baru'
     | '/_app/jurnal/'
   fileRoutesById: FileRoutesById
 }
@@ -311,6 +359,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTransferRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/suppliers': {
+      id: '/_app/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AppSuppliersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/purchase-orders': {
+      id: '/_app/purchase-orders'
+      path: '/purchase-orders'
+      fullPath: '/purchase-orders'
+      preLoaderRoute: typeof AppPurchaseOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/piutang': {
       id: '/_app/piutang'
       path: '/piutang'
@@ -323,6 +385,13 @@ declare module '@tanstack/react-router' {
       path: '/persediaan'
       fullPath: '/persediaan'
       preLoaderRoute: typeof AppPersediaanRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/penjualan': {
+      id: '/_app/penjualan'
+      path: '/penjualan'
+      fullPath: '/penjualan'
+      preLoaderRoute: typeof AppPenjualanRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/lpj': {
@@ -395,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJurnalIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/penerimaan/baru': {
+      id: '/_app/penerimaan/baru'
+      path: '/penerimaan/baru'
+      fullPath: '/penerimaan/baru'
+      preLoaderRoute: typeof AppPenerimaanBaruRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/jurnal/koreksi': {
       id: '/_app/jurnal/koreksi'
       path: '/jurnal/koreksi'
@@ -422,14 +498,18 @@ interface AppRouteChildren {
   AppJenisUsahaRoute: typeof AppJenisUsahaRoute
   AppLaporanRoute: typeof AppLaporanRoute
   AppLpjRoute: typeof AppLpjRoute
+  AppPenjualanRoute: typeof AppPenjualanRoute
   AppPersediaanRoute: typeof AppPersediaanRoute
   AppPiutangRoute: typeof AppPiutangRoute
+  AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
+  AppSuppliersRoute: typeof AppSuppliersRoute
   AppTransferRoute: typeof AppTransferRoute
   AppUnitUsahaRoute: typeof AppUnitUsahaRoute
   AppUtangRoute: typeof AppUtangRoute
   AppIndexRoute: typeof AppIndexRoute
   AppJurnalBaruRoute: typeof AppJurnalBaruRoute
   AppJurnalKoreksiRoute: typeof AppJurnalKoreksiRoute
+  AppPenerimaanBaruRoute: typeof AppPenerimaanBaruRoute
   AppJurnalIndexRoute: typeof AppJurnalIndexRoute
 }
 
@@ -443,14 +523,18 @@ const AppRouteChildren: AppRouteChildren = {
   AppJenisUsahaRoute: AppJenisUsahaRoute,
   AppLaporanRoute: AppLaporanRoute,
   AppLpjRoute: AppLpjRoute,
+  AppPenjualanRoute: AppPenjualanRoute,
   AppPersediaanRoute: AppPersediaanRoute,
   AppPiutangRoute: AppPiutangRoute,
+  AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
+  AppSuppliersRoute: AppSuppliersRoute,
   AppTransferRoute: AppTransferRoute,
   AppUnitUsahaRoute: AppUnitUsahaRoute,
   AppUtangRoute: AppUtangRoute,
   AppIndexRoute: AppIndexRoute,
   AppJurnalBaruRoute: AppJurnalBaruRoute,
   AppJurnalKoreksiRoute: AppJurnalKoreksiRoute,
+  AppPenerimaanBaruRoute: AppPenerimaanBaruRoute,
   AppJurnalIndexRoute: AppJurnalIndexRoute,
 }
 

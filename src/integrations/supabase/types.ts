@@ -343,44 +343,134 @@ export type Database = {
         }
         Relationships: []
       }
-      inventory_items: {
+      goods_receipts: {
         Row: {
           business_unit_id: string
           created_at: string
-          harga_jual: number
-          harga_perolehan: number
+          created_by: string | null
           id: string
-          kode: string
-          nama: string
-          satuan: string | null
-          stok: number
+          journal_id: string | null
+          kas_account_id: string | null
+          metode_bayar: string
+          nomor_bast: string
+          po_id: string
+          tanggal: string
+          total: number
           updated_at: string
         }
         Insert: {
-          business_unit_id?: string
+          business_unit_id: string
           created_at?: string
-          harga_jual?: number
-          harga_perolehan?: number
+          created_by?: string | null
           id?: string
-          kode: string
-          nama: string
-          satuan?: string | null
-          stok?: number
+          journal_id?: string | null
+          kas_account_id?: string | null
+          metode_bayar: string
+          nomor_bast: string
+          po_id: string
+          tanggal: string
+          total?: number
           updated_at?: string
         }
         Update: {
           business_unit_id?: string
           created_at?: string
+          created_by?: string | null
+          id?: string
+          journal_id?: string | null
+          kas_account_id?: string | null
+          metode_bayar?: string
+          nomor_bast?: string
+          po_id?: string
+          tanggal?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goods_receipts_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipts_kas_account_id_fkey"
+            columns: ["kas_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goods_receipts_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_items: {
+        Row: {
+          business_unit_id: string
+          created_at: string
+          harga_beli_default: number
+          harga_jual: number
+          harga_jual_default: number
+          harga_perolehan: number
+          id: string
+          kategori_barang: string | null
+          kode: string
+          nama: string
+          satuan: string | null
+          stok: number
+          tipe_barang: string
+          unit_usaha_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_unit_id?: string
+          created_at?: string
+          harga_beli_default?: number
           harga_jual?: number
+          harga_jual_default?: number
           harga_perolehan?: number
           id?: string
+          kategori_barang?: string | null
+          kode: string
+          nama: string
+          satuan?: string | null
+          stok?: number
+          tipe_barang?: string
+          unit_usaha_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_unit_id?: string
+          created_at?: string
+          harga_beli_default?: number
+          harga_jual?: number
+          harga_jual_default?: number
+          harga_perolehan?: number
+          id?: string
+          kategori_barang?: string | null
           kode?: string
           nama?: string
           satuan?: string | null
           stok?: number
+          tipe_barang?: string
+          unit_usaha_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_unit_usaha_id_fkey"
+            columns: ["unit_usaha_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_movements: {
         Row: {
@@ -600,6 +690,108 @@ export type Database = {
         }
         Relationships: []
       }
+      purchase_order_items: {
+        Row: {
+          created_at: string
+          harga: number
+          id: string
+          item_id: string
+          po_id: string
+          qty: number
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string
+          harga: number
+          id?: string
+          item_id: string
+          po_id: string
+          qty: number
+          subtotal: number
+        }
+        Update: {
+          created_at?: string
+          harga?: number
+          id?: string
+          item_id?: string
+          po_id?: string
+          qty?: number
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_order_items_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          business_unit_id: string
+          catatan: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          nomor_po: string
+          status: string
+          supplier_id: string
+          tanggal: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          business_unit_id: string
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nomor_po: string
+          status?: string
+          supplier_id: string
+          tanggal: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          business_unit_id?: string
+          catatan?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nomor_po?: string
+          status?: string
+          supplier_id?: string
+          tanggal?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       receivables: {
         Row: {
           business_unit_id: string
@@ -641,6 +833,161 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sales_order_items: {
+        Row: {
+          created_at: string
+          harga_jual: number
+          hpp_per_unit: number
+          id: string
+          item_id: string
+          qty: number
+          so_id: string
+          subtotal: number
+        }
+        Insert: {
+          created_at?: string
+          harga_jual: number
+          hpp_per_unit: number
+          id?: string
+          item_id: string
+          qty: number
+          so_id: string
+          subtotal: number
+        }
+        Update: {
+          created_at?: string
+          harga_jual?: number
+          hpp_per_unit?: number
+          id?: string
+          item_id?: string
+          qty?: number
+          so_id?: string
+          subtotal?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_order_items_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_order_items_so_id_fkey"
+            columns: ["so_id"]
+            isOneToOne: false
+            referencedRelation: "sales_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sales_orders: {
+        Row: {
+          business_unit_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          journal_id: string | null
+          kas_account_id: string | null
+          metode_bayar: string
+          nomor_so: string
+          pelanggan: string | null
+          tanggal: string
+          total: number
+          total_hpp: number
+          updated_at: string
+        }
+        Insert: {
+          business_unit_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          journal_id?: string | null
+          kas_account_id?: string | null
+          metode_bayar?: string
+          nomor_so: string
+          pelanggan?: string | null
+          tanggal: string
+          total?: number
+          total_hpp?: number
+          updated_at?: string
+        }
+        Update: {
+          business_unit_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          journal_id?: string | null
+          kas_account_id?: string | null
+          metode_bayar?: string
+          nomor_so?: string
+          pelanggan?: string | null
+          tanggal?: string
+          total?: number
+          total_hpp?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_orders_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_orders_kas_account_id_fkey"
+            columns: ["kas_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          alamat: string | null
+          business_unit_id: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          nama_supplier: string
+          telepon: string | null
+          updated_at: string
+        }
+        Insert: {
+          alamat?: string | null
+          business_unit_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          nama_supplier: string
+          telepon?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alamat?: string | null
+          business_unit_id?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          nama_supplier?: string
+          telepon?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

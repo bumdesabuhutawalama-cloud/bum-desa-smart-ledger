@@ -18,6 +18,9 @@ import {
   Bot,
   Layers,
   ArrowRightLeft,
+  Truck,
+  ShoppingCart,
+  ClipboardCheck,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -40,6 +43,9 @@ const items = [
   { to: "/piutang", label: "Piutang", icon: Receipt },
   { to: "/utang", label: "Utang", icon: Wallet },
   { to: "/persediaan", label: "Persediaan", icon: Package },
+  { to: "/suppliers", label: "Supplier", icon: Truck },
+  { to: "/purchase-orders", label: "Purchase Order", icon: ClipboardCheck },
+  { to: "/penjualan", label: "Penjualan", icon: ShoppingCart },
 ] as const;
 
 export function AppSidebar() {

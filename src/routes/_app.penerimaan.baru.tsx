@@ -40,6 +40,7 @@ function PenerimaanBaru() {
     if (!poId) return;
     (async () => {
       const { data: p } = await supabase.from("purchase_orders").select("*").eq("id", poId).single();
+      if (!p) return;
       setPO(p);
       const { data: s } = await supabase.from("suppliers").select("*").eq("id", p.supplier_id).single();
       setSupplier(s);

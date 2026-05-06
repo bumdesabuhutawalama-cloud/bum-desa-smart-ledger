@@ -29,6 +29,7 @@ import { Route as AppAsetRouteImport } from './routes/_app.aset'
 import { Route as AppAkunRouteImport } from './routes/_app.akun'
 import { Route as AppAiAsistenRouteImport } from './routes/_app.ai-asisten'
 import { Route as AppJurnalIndexRouteImport } from './routes/_app.jurnal.index'
+import { Route as AppPenerimaanBaruRouteImport } from './routes/_app.penerimaan.baru'
 import { Route as AppJurnalKoreksiRouteImport } from './routes/_app.jurnal.koreksi'
 import { Route as AppJurnalBaruRouteImport } from './routes/_app.jurnal.baru'
 
@@ -131,6 +132,11 @@ const AppJurnalIndexRoute = AppJurnalIndexRouteImport.update({
   path: '/jurnal/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPenerimaanBaruRoute = AppPenerimaanBaruRouteImport.update({
+  id: '/penerimaan/baru',
+  path: '/penerimaan/baru',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppJurnalKoreksiRoute = AppJurnalKoreksiRouteImport.update({
   id: '/jurnal/koreksi',
   path: '/jurnal/koreksi',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/utang': typeof AppUtangRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
   '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
+  '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/jurnal/': typeof AppJurnalIndexRoute
 }
 export interface FileRoutesByTo {
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/': typeof AppIndexRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
   '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
+  '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/jurnal': typeof AppJurnalIndexRoute
 }
 export interface FileRoutesById {
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/_app/': typeof AppIndexRoute
   '/_app/jurnal/baru': typeof AppJurnalBaruRoute
   '/_app/jurnal/koreksi': typeof AppJurnalKoreksiRoute
+  '/_app/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/_app/jurnal/': typeof AppJurnalIndexRoute
 }
 export interface FileRouteTypes {
@@ -236,6 +245,7 @@ export interface FileRouteTypes {
     | '/utang'
     | '/jurnal/baru'
     | '/jurnal/koreksi'
+    | '/penerimaan/baru'
     | '/jurnal/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/'
     | '/jurnal/baru'
     | '/jurnal/koreksi'
+    | '/penerimaan/baru'
     | '/jurnal'
   id:
     | '__root__'
@@ -283,6 +294,7 @@ export interface FileRouteTypes {
     | '/_app/'
     | '/_app/jurnal/baru'
     | '/_app/jurnal/koreksi'
+    | '/_app/penerimaan/baru'
     | '/_app/jurnal/'
   fileRoutesById: FileRoutesById
 }
@@ -433,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJurnalIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/penerimaan/baru': {
+      id: '/_app/penerimaan/baru'
+      path: '/penerimaan/baru'
+      fullPath: '/penerimaan/baru'
+      preLoaderRoute: typeof AppPenerimaanBaruRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/jurnal/koreksi': {
       id: '/_app/jurnal/koreksi'
       path: '/jurnal/koreksi'
@@ -470,6 +489,7 @@ interface AppRouteChildren {
   AppIndexRoute: typeof AppIndexRoute
   AppJurnalBaruRoute: typeof AppJurnalBaruRoute
   AppJurnalKoreksiRoute: typeof AppJurnalKoreksiRoute
+  AppPenerimaanBaruRoute: typeof AppPenerimaanBaruRoute
   AppJurnalIndexRoute: typeof AppJurnalIndexRoute
 }
 
@@ -493,6 +513,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppIndexRoute: AppIndexRoute,
   AppJurnalBaruRoute: AppJurnalBaruRoute,
   AppJurnalKoreksiRoute: AppJurnalKoreksiRoute,
+  AppPenerimaanBaruRoute: AppPenerimaanBaruRoute,
   AppJurnalIndexRoute: AppJurnalIndexRoute,
 }
 

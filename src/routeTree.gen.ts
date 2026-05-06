@@ -15,6 +15,8 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppUtangRouteImport } from './routes/_app.utang'
 import { Route as AppUnitUsahaRouteImport } from './routes/_app.unit-usaha'
 import { Route as AppTransferRouteImport } from './routes/_app.transfer'
+import { Route as AppSuppliersRouteImport } from './routes/_app.suppliers'
+import { Route as AppPurchaseOrdersRouteImport } from './routes/_app.purchase-orders'
 import { Route as AppPiutangRouteImport } from './routes/_app.piutang'
 import { Route as AppPersediaanRouteImport } from './routes/_app.persediaan'
 import { Route as AppLpjRouteImport } from './routes/_app.lpj'
@@ -57,6 +59,16 @@ const AppUnitUsahaRoute = AppUnitUsahaRouteImport.update({
 const AppTransferRoute = AppTransferRouteImport.update({
   id: '/transfer',
   path: '/transfer',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSuppliersRoute = AppSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPurchaseOrdersRoute = AppPurchaseOrdersRouteImport.update({
+  id: '/purchase-orders',
+  path: '/purchase-orders',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPiutangRoute = AppPiutangRouteImport.update({
@@ -144,6 +156,8 @@ export interface FileRoutesByFullPath {
   '/lpj': typeof AppLpjRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
+  '/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/suppliers': typeof AppSuppliersRoute
   '/transfer': typeof AppTransferRoute
   '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
@@ -164,6 +178,8 @@ export interface FileRoutesByTo {
   '/lpj': typeof AppLpjRoute
   '/persediaan': typeof AppPersediaanRoute
   '/piutang': typeof AppPiutangRoute
+  '/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/suppliers': typeof AppSuppliersRoute
   '/transfer': typeof AppTransferRoute
   '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
@@ -187,6 +203,8 @@ export interface FileRoutesById {
   '/_app/lpj': typeof AppLpjRoute
   '/_app/persediaan': typeof AppPersediaanRoute
   '/_app/piutang': typeof AppPiutangRoute
+  '/_app/purchase-orders': typeof AppPurchaseOrdersRoute
+  '/_app/suppliers': typeof AppSuppliersRoute
   '/_app/transfer': typeof AppTransferRoute
   '/_app/unit-usaha': typeof AppUnitUsahaRoute
   '/_app/utang': typeof AppUtangRoute
@@ -211,6 +229,8 @@ export interface FileRouteTypes {
     | '/lpj'
     | '/persediaan'
     | '/piutang'
+    | '/purchase-orders'
+    | '/suppliers'
     | '/transfer'
     | '/unit-usaha'
     | '/utang'
@@ -231,6 +251,8 @@ export interface FileRouteTypes {
     | '/lpj'
     | '/persediaan'
     | '/piutang'
+    | '/purchase-orders'
+    | '/suppliers'
     | '/transfer'
     | '/unit-usaha'
     | '/utang'
@@ -253,6 +275,8 @@ export interface FileRouteTypes {
     | '/_app/lpj'
     | '/_app/persediaan'
     | '/_app/piutang'
+    | '/_app/purchase-orders'
+    | '/_app/suppliers'
     | '/_app/transfer'
     | '/_app/unit-usaha'
     | '/_app/utang'
@@ -309,6 +333,20 @@ declare module '@tanstack/react-router' {
       path: '/transfer'
       fullPath: '/transfer'
       preLoaderRoute: typeof AppTransferRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/suppliers': {
+      id: '/_app/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AppSuppliersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/purchase-orders': {
+      id: '/_app/purchase-orders'
+      path: '/purchase-orders'
+      fullPath: '/purchase-orders'
+      preLoaderRoute: typeof AppPurchaseOrdersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/piutang': {
@@ -424,6 +462,8 @@ interface AppRouteChildren {
   AppLpjRoute: typeof AppLpjRoute
   AppPersediaanRoute: typeof AppPersediaanRoute
   AppPiutangRoute: typeof AppPiutangRoute
+  AppPurchaseOrdersRoute: typeof AppPurchaseOrdersRoute
+  AppSuppliersRoute: typeof AppSuppliersRoute
   AppTransferRoute: typeof AppTransferRoute
   AppUnitUsahaRoute: typeof AppUnitUsahaRoute
   AppUtangRoute: typeof AppUtangRoute
@@ -445,6 +485,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppLpjRoute: AppLpjRoute,
   AppPersediaanRoute: AppPersediaanRoute,
   AppPiutangRoute: AppPiutangRoute,
+  AppPurchaseOrdersRoute: AppPurchaseOrdersRoute,
+  AppSuppliersRoute: AppSuppliersRoute,
   AppTransferRoute: AppTransferRoute,
   AppUnitUsahaRoute: AppUnitUsahaRoute,
   AppUtangRoute: AppUtangRoute,
@@ -463,3 +505,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

@@ -27,7 +27,7 @@ type Acc = {
   business_unit_id?: string | null;
 };
 
-type Mode = "UNIT_TO_PUSAT" | "PUSAT_TO_UNIT" | "UNIT_TO_UNIT";
+type Mode = "PENYERTAAN_TO_PUSAT" | "UNIT_TO_PUSAT" | "PUSAT_TO_UNIT" | "UNIT_TO_UNIT";
 
 // RK Pusat ada di ekuitas (3.8.x). RK Unit ada di aset lancar (1.1.99.x).
 const RK_PUSAT_PREFIXES = ["3.8.01.", "3.1.03."];
@@ -51,10 +51,10 @@ function TransferPage() {
   const [jumlah, setJumlah] = useState<number>(0);
   const [keterangan, setKeterangan] = useState("");
 
-  const pusat = defaultUnit;
+  const pusat = units.find((u) => u.kode === 'PUSAT') || defaultUnit;
   const nonPusatUnits = useMemo(
-    () => units.filter((u) => u.is_active && !u.is_default),
-    [units],
+    () => units.filter((u) => u.is_active && u.id !== pusat?.id),
+    [units, pusat],
   );
 
   useEffect(() => {
@@ -118,22 +118,29 @@ function TransferPage() {
   };
 
   const validate = (): string | null => {
-    if (!pusat) return "Unit Pusat (default) belum ditentukan";
+    if (!pusat) return "Unit Pusat belum ditentukan";
     if (jumlah <= 0) return "Jumlah harus lebih dari 0";
-    if (!kasAsalId || !kasTujuanId) return "Akun kas asal & tujuan wajib dipilih";
-    if (!rkPusat) return "Akun RK Pusat tidak ditemukan di Bagan Akun";
 
-    if (mode === "UNIT_TO_PUSAT") {
-      if (!sourceUnitId) return "Unit asal wajib dipilih";
-      if (!findRkUnit(sourceUnitId)) return "Akun RK untuk unit asal belum dibuat";
-    } else if (mode === "PUSAT_TO_UNIT") {
-      if (!targetUnitId) return "Unit tujuan wajib dipilih";
-      if (!findRkUnit(targetUnitId)) return "Akun RK untuk unit tujuan belum dibuat";
+    if (mode === "PENYERTAAN_TO_PUSAT") {
+      if (!kasTujuanId) return "Akun kas tujuan wajib dipilih";
+      const penyertaanAccount = accounts.find((a) => a.kode_akun === '3.1.04.01');
+      if (!penyertaanAccount) return "Akun Modal Penyertaan tidak ditemukan di Bagan Akun";
     } else {
-      if (!sourceUnitId || !targetUnitId) return "Unit asal & tujuan wajib dipilih";
-      if (sourceUnitId === targetUnitId) return "Unit asal & tujuan tidak boleh sama";
-      if (!findRkUnit(sourceUnitId) || !findRkUnit(targetUnitId))
-        return "Akun RK untuk salah satu unit belum dibuat";
+      if (!kasAsalId || !kasTujuanId) return "Akun kas asal & tujuan wajib dipilih";
+      if (!rkPusat) return "Akun RK Pusat tidak ditemukan di Bagan Akun";
+
+      if (mode === "UNIT_TO_PUSAT") {
+        if (!sourceUnitId) return "Unit asal wajib dipilih";
+        if (!findRkUnit(sourceUnitId)) return "Akun RK untuk unit asal belum dibuat";
+      } else if (mode === "PUSAT_TO_UNIT") {
+        if (!targetUnitId) return "Unit tujuan wajib dipilih";
+        if (!findRkUnit(targetUnitId)) return "Akun RK untuk unit tujuan belum dibuat";
+      } else {
+        if (!sourceUnitId || !targetUnitId) return "Unit asal & tujuan wajib dipilih";
+        if (sourceUnitId === targetUnitId) return "Unit asal & tujuan tidak boleh sama";
+        if (!findRkUnit(sourceUnitId) || !findRkUnit(targetUnitId))
+          return "Akun RK untuk salah satu unit belum dibuat";
+      }
     }
     return null;
   };
@@ -147,6 +154,21 @@ function TransferPage() {
 
   const buildJournals = (): J[] => {
     const amt = jumlah;
+    if (mode === "PENYERTAAN_TO_PUSAT") {
+      const penyertaanAccount = accounts.find((a) => a.kode_akun === '3.1.04.01');
+      if (!penyertaanAccount) throw new Error("Akun Modal Penyertaan tidak ditemukan");
+      const ket = keterangan || `Penyertaan modal ke Unit Pusat`;
+      return [
+        {
+          unit_id: pusat!.id,
+          keterangan: ket,
+          lines: [
+            { account_id: kasTujuanId, debit: amt, kredit: 0, keterangan: ket },
+            { account_id: penyertaanAccount.id, debit: 0, kredit: amt, keterangan: ket },
+          ],
+        },
+      ];
+    }
     if (mode === "UNIT_TO_PUSAT") {
       const rkUnit = findRkUnit(sourceUnitId)!;
       const ket = keterangan || `Transfer dari ${units.find((u) => u.id === sourceUnitId)?.nama} ke Pusat`;
@@ -230,9 +252,11 @@ function TransferPage() {
         ? (crypto as any).randomUUID()
         : `${Date.now()}-${Math.random()}`;
       const srcUid =
-        mode === "PUSAT_TO_UNIT" ? pusat!.id : sourceUnitId;
+        mode === "PUSAT_TO_UNIT" ? pusat!.id :
+        mode === "PENYERTAAN_TO_PUSAT" ? null :
+        sourceUnitId;
       const tgtUid =
-        mode === "UNIT_TO_PUSAT" ? pusat!.id : targetUnitId;
+        mode === "UNIT_TO_PUSAT" || mode === "PENYERTAAN_TO_PUSAT" ? pusat!.id : targetUnitId;
 
       const created: string[] = [];
       for (const j of journals) {
@@ -318,8 +342,9 @@ function TransferPage() {
       <Card className="p-5 space-y-5">
         <div>
           <Label className="mb-2 block">Jenis Transfer</Label>
-          <RadioGroup value={mode} onValueChange={(v) => onModeChange(v as Mode)} className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <RadioGroup value={mode} onValueChange={(v) => onModeChange(v as Mode)} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {[
+              { v: "PENYERTAAN_TO_PUSAT", label: "Penyertaan → Pusat" },
               { v: "UNIT_TO_PUSAT", label: "Unit → Pusat" },
               { v: "PUSAT_TO_UNIT", label: "Pusat → Unit" },
               { v: "UNIT_TO_UNIT", label: "Antar Unit" },
@@ -351,7 +376,7 @@ function TransferPage() {
             />
           </div>
 
-          {mode !== "PUSAT_TO_UNIT" && (
+          {mode !== "PUSAT_TO_UNIT" && mode !== "PENYERTAAN_TO_PUSAT" && (
             <div>
               <Label>Unit Asal</Label>
               <Select value={sourceUnitId} onValueChange={setSourceUnitId}>
@@ -371,7 +396,7 @@ function TransferPage() {
             </div>
           )}
 
-          {mode !== "UNIT_TO_PUSAT" && (
+          {mode !== "UNIT_TO_PUSAT" && mode !== "PENYERTAAN_TO_PUSAT" && (
             <div>
               <Label>Unit Tujuan</Label>
               <Select value={targetUnitId} onValueChange={setTargetUnitId}>
@@ -392,18 +417,26 @@ function TransferPage() {
               <Input value={pusat ? `PUSAT — ${pusat.nama}` : "—"} disabled />
             </div>
           )}
+          {mode === "PENYERTAAN_TO_PUSAT" && (
+            <div>
+              <Label>Unit Tujuan</Label>
+              <Input value={pusat ? `PUSAT — ${pusat.nama}` : "—"} disabled />
+            </div>
+          )}
 
-          <div>
-            <Label>Akun Kas Asal (yang berkurang)</Label>
-            <Select value={kasAsalId} onValueChange={setKasAsalId}>
-              <SelectTrigger><SelectValue placeholder="Pilih kas asal…" /></SelectTrigger>
-              <SelectContent>
-                {kasAccounts.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>{a.kode_akun} — {a.nama_akun}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {mode !== "PENYERTAAN_TO_PUSAT" && (
+            <div>
+              <Label>Akun Kas Asal (yang berkurang)</Label>
+              <Select value={kasAsalId} onValueChange={setKasAsalId}>
+                <SelectTrigger><SelectValue placeholder="Pilih kas asal…" /></SelectTrigger>
+                <SelectContent>
+                  {kasAccounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.kode_akun} — {a.nama_akun}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div>
             <Label>Akun Kas Tujuan (yang bertambah)</Label>
             <Select value={kasTujuanId} onValueChange={setKasTujuanId}>

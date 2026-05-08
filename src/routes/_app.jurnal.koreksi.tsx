@@ -115,7 +115,7 @@ function JurnalKoreksi() {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [currentUnitId]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -357,9 +357,11 @@ function KoreksiDialog({
         if (!reklasNominal || reklasNominal <= 0) throw new Error("Nominal harus > 0");
         const fromAcc = accMap.get(fromAccountId);
         if (!fromAcc) throw new Error("Akun asal tidak ditemukan");
-        // Aturan: balikkan akun lama sesuai normal balance, taruh di akun baru
+        const fromLine = journal.journal_lines.find((l) => l.account_id === fromAccountId);
+        if (!fromLine) throw new Error("Akun asal tidak ada di jurnal asal");
+        const fromSide: "D" | "K" = Number(fromLine.debit) > 0 ? "D" : "K";
         const lines =
-          fromAcc.normal_balance === "DEBIT"
+          fromSide === "D"
             ? [
                 { account_id: toAccountId, debit: reklasNominal, kredit: 0 },
                 { account_id: fromAccountId, debit: 0, kredit: reklasNominal },
@@ -393,34 +395,21 @@ function KoreksiDialog({
         if (selisih === 0) throw new Error("Tidak ada selisih untuk dikoreksi");
 
         // Pasangan kontra: cari akun lawan terbesar di jurnal asal
-        const counter = [...journal.journal_lines]
-          .filter((l) => l.account_id !== nominalAccountId)
-          .sort(
-            (a, b) =>
-              Math.max(Number(b.debit), Number(b.kredit)) -
-              Math.max(Number(a.debit), Number(a.kredit))
-          )[0];
+        const counter = journal.journal_lines.find((l) => l.account_id !== nominalAccountId);
         if (!counter) throw new Error("Tidak ada akun lawan di jurnal asal");
         const counterSide: "D" | "K" = Number(counter.debit) > 0 ? "D" : "K";
-
-        // Jika selisih > 0: tambahkan di sisi yang sama dengan jurnal asal
-        // Jika selisih < 0: balik sisi
         const abs = Math.abs(selisih);
-        const sideForMain: "D" | "K" = selisih > 0 ? oldSide : oldSide === "D" ? "K" : "D";
-        const sideForCounter: "D" | "K" =
-          selisih > 0 ? counterSide : counterSide === "D" ? "K" : "D";
-
         const lines = [
           {
             account_id: nominalAccountId,
-            debit: sideForMain === "D" ? abs : 0,
-            kredit: sideForMain === "K" ? abs : 0,
+            debit: selisih > 0 ? abs : 0,
+            kredit: selisih < 0 ? abs : 0,
             keterangan: null as string | null,
           },
           {
             account_id: counter.account_id,
-            debit: sideForCounter === "D" ? abs : 0,
-            kredit: sideForCounter === "K" ? abs : 0,
+            debit: selisih < 0 ? abs : 0,
+            kredit: selisih > 0 ? abs : 0,
             keterangan: null as string | null,
           },
         ];

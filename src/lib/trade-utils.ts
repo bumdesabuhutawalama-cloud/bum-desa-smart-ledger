@@ -4,7 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const TRADE_ACCOUNT_CODES = {
-  PERSEDIAAN: "1.1.04.01",
+  PERSEDIAAN: "1.1.05.01",
   HUTANG_SUPPLIER: "2.1.01.02",
   PENJUALAN: "4.1.01.01",
   HPP: "5.1.01.01",

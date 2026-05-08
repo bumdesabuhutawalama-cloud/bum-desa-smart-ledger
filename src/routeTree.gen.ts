@@ -32,6 +32,7 @@ import { Route as AppAkunRouteImport } from './routes/_app.akun'
 import { Route as AppAiAsistenRouteImport } from './routes/_app.ai-asisten'
 import { Route as AppJurnalIndexRouteImport } from './routes/_app.jurnal.index'
 import { Route as AppUnitUspRouteImport } from './routes/_app.unit.usp'
+import { Route as AppUnitPusatRouteImport } from './routes/_app.unit.pusat'
 import { Route as AppUnitJasaRouteImport } from './routes/_app.unit.jasa'
 import { Route as AppUnitDagangRouteImport } from './routes/_app.unit.dagang'
 import { Route as AppPenerimaanBaruRouteImport } from './routes/_app.penerimaan.baru'
@@ -152,6 +153,11 @@ const AppUnitUspRoute = AppUnitUspRouteImport.update({
   path: '/unit/usp',
   getParentRoute: () => AppRoute,
 } as any)
+const AppUnitPusatRoute = AppUnitPusatRouteImport.update({
+  id: '/unit/pusat',
+  path: '/unit/pusat',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUnitJasaRoute = AppUnitJasaRouteImport.update({
   id: '/unit/jasa',
   path: '/unit/jasa',
@@ -204,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/unit/dagang': typeof AppUnitDagangRoute
   '/unit/jasa': typeof AppUnitJasaRoute
+  '/unit/pusat': typeof AppUnitPusatRoute
   '/unit/usp': typeof AppUnitUspRoute
   '/jurnal/': typeof AppJurnalIndexRoute
 }
@@ -233,6 +240,7 @@ export interface FileRoutesByTo {
   '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/unit/dagang': typeof AppUnitDagangRoute
   '/unit/jasa': typeof AppUnitJasaRoute
+  '/unit/pusat': typeof AppUnitPusatRoute
   '/unit/usp': typeof AppUnitUspRoute
   '/jurnal': typeof AppJurnalIndexRoute
 }
@@ -264,6 +272,7 @@ export interface FileRoutesById {
   '/_app/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/_app/unit/dagang': typeof AppUnitDagangRoute
   '/_app/unit/jasa': typeof AppUnitJasaRoute
+  '/_app/unit/pusat': typeof AppUnitPusatRoute
   '/_app/unit/usp': typeof AppUnitUspRoute
   '/_app/jurnal/': typeof AppJurnalIndexRoute
 }
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/penerimaan/baru'
     | '/unit/dagang'
     | '/unit/jasa'
+    | '/unit/pusat'
     | '/unit/usp'
     | '/jurnal/'
   fileRoutesByTo: FileRoutesByTo
@@ -324,6 +334,7 @@ export interface FileRouteTypes {
     | '/penerimaan/baru'
     | '/unit/dagang'
     | '/unit/jasa'
+    | '/unit/pusat'
     | '/unit/usp'
     | '/jurnal'
   id:
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/_app/penerimaan/baru'
     | '/_app/unit/dagang'
     | '/_app/unit/jasa'
+    | '/_app/unit/pusat'
     | '/_app/unit/usp'
     | '/_app/jurnal/'
   fileRoutesById: FileRoutesById
@@ -526,6 +538,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUnitUspRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/unit/pusat': {
+      id: '/_app/unit/pusat'
+      path: '/unit/pusat'
+      fullPath: '/unit/pusat'
+      preLoaderRoute: typeof AppUnitPusatRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/unit/jasa': {
       id: '/_app/unit/jasa'
       path: '/unit/jasa'
@@ -589,6 +608,7 @@ interface AppRouteChildren {
   AppPenerimaanBaruRoute: typeof AppPenerimaanBaruRoute
   AppUnitDagangRoute: typeof AppUnitDagangRoute
   AppUnitJasaRoute: typeof AppUnitJasaRoute
+  AppUnitPusatRoute: typeof AppUnitPusatRoute
   AppUnitUspRoute: typeof AppUnitUspRoute
   AppJurnalIndexRoute: typeof AppJurnalIndexRoute
 }
@@ -618,6 +638,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPenerimaanBaruRoute: AppPenerimaanBaruRoute,
   AppUnitDagangRoute: AppUnitDagangRoute,
   AppUnitJasaRoute: AppUnitJasaRoute,
+  AppUnitPusatRoute: AppUnitPusatRoute,
   AppUnitUspRoute: AppUnitUspRoute,
   AppJurnalIndexRoute: AppJurnalIndexRoute,
 }

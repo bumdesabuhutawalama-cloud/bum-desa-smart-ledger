@@ -15,6 +15,7 @@ const items = [
   { to: "/dashboard", label: "Dashboard Utama", icon: LayoutDashboard },
   { to: "/data-master", label: "Data Master", icon: ListTree },
   { to: "/unit-usaha", label: "Daftar Unit Usaha", icon: Store },
+  { to: "/unit/pusat", label: "Unit Pusat", icon: Store },
   { to: "/unit/dagang", label: "Unit Dagang", icon: Truck },
   { to: "/unit/jasa", label: "Unit Jasa", icon: Briefcase },
   { to: "/unit/usp", label: "USP Simpan Pinjam", icon: PiggyBank },

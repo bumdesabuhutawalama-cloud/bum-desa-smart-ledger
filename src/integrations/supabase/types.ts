@@ -128,6 +128,164 @@ export type Database = {
           },
         ]
       }
+      usp_members: {
+        Row: {
+          alamat: string | null
+          business_unit_id: string
+          created_at: string
+          id: string
+          nama: string
+          no_hp: string | null
+          status_aktif: boolean
+          tanggal_daftar: string
+          updated_at: string
+        }
+        Insert: {
+          alamat?: string | null
+          business_unit_id: string
+          created_at?: string
+          id?: string
+          nama: string
+          no_hp?: string | null
+          status_aktif?: boolean
+          tanggal_daftar?: string
+          updated_at?: string
+        }
+        Update: {
+          alamat?: string | null
+          business_unit_id?: string
+          created_at?: string
+          id?: string
+          nama?: string
+          no_hp?: string | null
+          status_aktif?: boolean
+          tanggal_daftar?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usp_members_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usp_loans: {
+        Row: {
+          angsuran_per_bulan: number
+          bunga_persen_per_tahun: number
+          business_unit_id: string
+          created_at: string
+          id: string
+          jumlah_pinjaman: number
+          member_id: string
+          sisa_pinjaman: number
+          status: string
+          tanggal_pencairan: string
+          tenor_bulan: number
+          updated_at: string
+        }
+        Insert: {
+          angsuran_per_bulan: number
+          bunga_persen_per_tahun: number
+          business_unit_id: string
+          created_at?: string
+          id?: string
+          jumlah_pinjaman: number
+          member_id: string
+          sisa_pinjaman: number
+          status?: string
+          tanggal_pencairan: string
+          tenor_bulan: number
+          updated_at?: string
+        }
+        Update: {
+          angsuran_per_bulan?: number
+          bunga_persen_per_tahun?: number
+          business_unit_id?: string
+          created_at?: string
+          id?: string
+          jumlah_pinjaman?: number
+          member_id?: string
+          sisa_pinjaman?: number
+          status?: string
+          tanggal_pencairan?: string
+          tenor_bulan?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usp_loans_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usp_loans_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "usp_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usp_loan_installments: {
+        Row: {
+          business_unit_id: string
+          created_at: string
+          denda: number
+          id: string
+          loan_id: string
+          pokok: number
+          bunga: number
+          tanggal_bayar: string
+          total_bayar: number
+          updated_at: string
+        }
+        Insert: {
+          business_unit_id: string
+          created_at?: string
+          denda?: number
+          id?: string
+          loan_id: string
+          pokok?: number
+          bunga?: number
+          tanggal_bayar: string
+          total_bayar?: number
+          updated_at?: string
+        }
+        Update: {
+          business_unit_id?: string
+          created_at?: string
+          denda?: number
+          id?: string
+          loan_id?: string
+          pokok?: number
+          bunga?: number
+          tanggal_bayar?: string
+          total_bayar?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usp_loan_installments_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usp_loan_installments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "usp_loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_templates: {
         Row: {
           applicable_units: string[] | null

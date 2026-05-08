@@ -1,13 +1,13 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, BookOpen, FileText, ListTree, Building2 } from "lucide-react";
+import { LayoutDashboard, ListTree, Store, Truck, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
   { to: "/dashboard", label: "Beranda", icon: LayoutDashboard },
-  { to: "/akun", label: "Akun", icon: ListTree },
-  { to: "/jurnal", label: "Jurnal", icon: BookOpen },
-  { to: "/laporan", label: "Laporan", icon: FileText },
-  { to: "/aset", label: "Aset", icon: Building2 },
+  { to: "/data-master", label: "Master", icon: ListTree },
+  { to: "/unit-usaha", label: "Unit", icon: Store },
+  { to: "/unit/dagang", label: "Dagang", icon: Truck },
+  { to: "/unit/jasa", label: "Jasa", icon: Briefcase },
 ];
 
 export function MobileNav() {

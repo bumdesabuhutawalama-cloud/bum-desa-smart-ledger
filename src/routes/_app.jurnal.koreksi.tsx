@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useBusinessUnit } from "@/lib/business-unit-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +72,7 @@ function totalLines(ls: Line[]) {
 }
 
 function JurnalKoreksi() {
+  const { currentUnitId } = useBusinessUnit();
   const [rows, setRows] = useState<Journal[]>([]);
   const [accounts, setAccounts] = useState<Acc[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,16 +82,22 @@ function JurnalKoreksi() {
 
   const load = async () => {
     setLoading(true);
+    const journalQuery = supabase
+      .from("journals")
+      .select(
+        "id,nomor_jurnal,tanggal,keterangan,status,source,is_correction,correction_type,correction_group_id,created_by,business_unit_id,journal_lines(id,account_id,debit,kredit,keterangan)"
+      )
+      .eq("status", "posted")
+      .order("tanggal", { ascending: false })
+      .order("nomor_jurnal", { ascending: false })
+      .limit(200);
+
+    if (currentUnitId !== "ALL") {
+      journalQuery.eq("business_unit_id", currentUnitId);
+    }
+
     const [{ data: js }, { data: accs }] = await Promise.all([
-      supabase
-        .from("journals")
-        .select(
-          "id,nomor_jurnal,tanggal,keterangan,status,source,is_correction,correction_type,correction_group_id,created_by,business_unit_id,journal_lines(id,account_id,debit,kredit,keterangan)"
-        )
-        .eq("status", "posted")
-        .order("tanggal", { ascending: false })
-        .order("nomor_jurnal", { ascending: false })
-        .limit(200),
+      journalQuery,
       supabase.from("accounts").select("id,kode_akun,nama_akun,normal_balance,is_header").eq("is_active", true).eq("is_manual_input", true),
     ]);
 
@@ -147,6 +155,13 @@ function JurnalKoreksi() {
           </div>
         </div>
       </div>
+      {currentUnitId !== "ALL" && (
+        <Card className="p-3">
+          <div className="text-sm text-muted-foreground">
+            Menampilkan jurnal koreksi untuk unit aktif saat ini saja.
+          </div>
+        </Card>
+      )}
 
       <Card className="p-3">
         <div className="relative">

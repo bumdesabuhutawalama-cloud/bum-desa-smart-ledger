@@ -231,9 +231,14 @@ function AdminManagement() {
               </h1>
             </div>
           </div>
-          <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
-            <UserPlus className="h-4 w-4 mr-1.5" /> Daftarkan Admin Baru
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={openInvite} variant="outline" className="bg-transparent border-slate-600 text-white hover:bg-slate-800">
+              <Mail className="h-4 w-4 mr-1.5" /> Undang via Email
+            </Button>
+            <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+              <UserPlus className="h-4 w-4 mr-1.5" /> Daftarkan Admin Baru
+            </Button>
+          </div>
         </div>
       </header>
 

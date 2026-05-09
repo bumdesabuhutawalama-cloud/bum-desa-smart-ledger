@@ -45,9 +45,37 @@ function Laporan() {
   // Ambil unit aktif dari context global (di-import di bawah)
   const { currentUnitId, units } = useBusinessUnitForReport();
 
+  // Tentukan mode laporan
+  const reportMode = useMemo(() => {
+    if (currentUnitId === "ALL") return "KONSOLIDASI";
+    const currentUnit = units.find(u => u.id === currentUnitId);
+    if (currentUnit?.kode === "PUSAT") return "PUSAT";
+    return "UNIT";
+  }, [currentUnitId, units]);
+
   const isContra = (acc: any) =>
     acc.kode_akun.startsWith("1.1.04") ||
     /penyisihan|akumulasi/i.test(acc.nama_akun);
+
+  // Fungsi untuk menentukan apakah akun perlu dieliminasi berdasarkan mode laporan
+  const shouldEliminateAccount = (kode: string, mode: string) => {
+    // RK antar unit (selalu dieliminasi di semua mode karena sudah di-map)
+    if (kode.startsWith("1.1.99.") || kode.startsWith("2.1.02.") || kode.startsWith("3.8.")) {
+      return true; // Selalu eliminasi RK
+    }
+
+    // Modal unit internal (hanya tampil di mode UNIT)
+    if (kode.startsWith("3.2.01.")) {
+      return mode !== "UNIT";
+    }
+
+    // Investasi unit (hanya tampil di mode PUSAT)
+    if (kode.startsWith("1.2.01.")) {
+      return mode !== "PUSAT";
+    }
+
+    return false;
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -65,13 +93,9 @@ function Laporan() {
         lq,
       ]);
 
-      // Eliminasi intercompany (RK) saat mode KONSOLIDASI.
-      // RK Unit (1.1.99.*) = piutang antar unit, RK Pusat (3.8.*) = utang antar unit.
-      // Saat konsolidasi keduanya saling hapus dan TIDAK boleh muncul di neraca.
-      const isIntercompany = (kode: string) =>
-        kode.startsWith("1.1.99.") || kode.startsWith("3.8.");
+      // Filter akun berdasarkan mode laporan
       const filtered = ((a as Acc[]) ?? []).filter((acc) =>
-        currentUnitId === "ALL" ? !isIntercompany(acc.kode_akun) : true,
+        !shouldEliminateAccount(acc.kode_akun, reportMode)
       );
       setAccounts(filtered);
       setLines(
@@ -85,7 +109,7 @@ function Laporan() {
 
       setLoading(false);
     })();
-  }, [from, to, currentUnitId]);
+  }, [from, to, currentUnitId, reportMode]);
 
   const unitLabel = currentUnitId === "ALL"
     ? "Semua Unit (Konsolidasi)"
@@ -95,6 +119,7 @@ function Laporan() {
     const m = new Map<string, number>();
     for (const a of accounts) m.set(a.id, 0);
 
+    // Hitung saldo normal untuk semua akun
     for (const ln of lines) {
       const acc = accounts.find((a) => a.id === ln.account_id);
       if (!acc) continue;
@@ -107,8 +132,44 @@ function Laporan() {
       m.set(ln.account_id, (m.get(ln.account_id) ?? 0) + delta);
     }
 
+    // Hitung saldo untuk akun virtual
+    if (reportMode === "UNIT") {
+      const currentUnit = units.find(u => u.id === currentUnitId);
+      if (currentUnit) {
+        // Hitung total RK yang masuk ke unit ini
+        const rkLines = lines.filter(ln => {
+          const acc = accounts.find(a => a.id === ln.account_id);
+          return acc && acc.kode_akun.startsWith("2.1.02.") && acc.business_unit_id === currentUnitId;
+        });
+        const totalRkIn = rkLines.reduce((sum, ln) => {
+          const acc = accounts.find(a => a.id === ln.account_id);
+          if (!acc) return sum;
+          const delta = acc.normal_balance === "DEBIT"
+            ? ln.debit - ln.kredit
+            : ln.kredit - ln.debit;
+          return sum + delta;
+        }, 0);
+        m.set("modal_unit_virtual", totalRkIn);
+      }
+    } else if (reportMode === "PUSAT") {
+      // Hitung total RK ke unit lain sebagai investasi
+      const rkLines = lines.filter(ln => {
+        const acc = accounts.find(a => a.id === ln.account_id);
+        return acc && acc.kode_akun.startsWith("2.1.02.");
+      });
+      const totalInvestasi = rkLines.reduce((sum, ln) => {
+        const acc = accounts.find(a => a.id === ln.account_id);
+        if (!acc) return sum;
+        const delta = acc.normal_balance === "DEBIT"
+          ? ln.debit - ln.kredit
+          : ln.kredit - ln.debit;
+        return sum + delta;
+      }, 0);
+      m.set("investasi_virtual", totalInvestasi);
+    }
+
     return m;
-  }, [accounts, lines]);
+  }, [accounts, lines, reportMode, currentUnitId, units]);
 
   const grouped = useMemo(() => {
     const g: any = {
@@ -128,8 +189,41 @@ function Laporan() {
       g[a.tipe_akun].push({ ...a, saldo });
     }
 
+    // Tambahkan akun virtual untuk modal unit jika di mode UNIT
+    if (reportMode === "UNIT") {
+      const currentUnit = units.find(u => u.id === currentUnitId);
+      if (currentUnit) {
+        const modalSaldo = saldoMap.get("modal_unit_virtual") ?? 0;
+        if (Math.abs(modalSaldo) >= 0.005) {
+          g.EKUITAS.push({
+            id: "modal_unit_virtual",
+            kode_akun: "3.2.01.01",
+            nama_akun: `Modal Unit ${currentUnit.nama}`,
+            tipe_akun: "EKUITAS",
+            normal_balance: "KREDIT",
+            saldo: modalSaldo
+          });
+        }
+      }
+    }
+
+    // Tambahkan akun virtual untuk investasi jika di mode PUSAT
+    if (reportMode === "PUSAT") {
+      const investasiSaldo = saldoMap.get("investasi_virtual") ?? 0;
+      if (Math.abs(investasiSaldo) >= 0.005) {
+        g.ASET.push({
+          id: "investasi_virtual",
+          kode_akun: "1.2.01.00",
+          nama_akun: "Investasi ke Unit",
+          tipe_akun: "ASET",
+          normal_balance: "DEBIT",
+          saldo: investasiSaldo
+        });
+      }
+    }
+
     return g;
-  }, [accounts, saldoMap]);
+  }, [accounts, saldoMap, reportMode, currentUnitId, units]);
 
   const sum = (arr: any[]) => arr.reduce((s, x) => s + x.saldo, 0);
 

@@ -25,13 +25,12 @@ function PembelianDagang() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
-            accounts (nama, kode)
+            accounts (nama:nama_akun, kode:kode_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
-        .eq('jenis_transaksi', 'PEMBELIAN')
         .order('tanggal', { ascending: false })
         .limit(50)
 
@@ -140,7 +139,7 @@ function PembelianDagang() {
                   <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
                       <p className="font-medium">
-                        {item.deskripsi || 'Pembelian'}
+                        {item.keterangan || 'Pembelian'}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(item.tanggal).toLocaleDateString('id-ID')}

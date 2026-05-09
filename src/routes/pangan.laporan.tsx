@@ -45,7 +45,7 @@ function LaporanPangan() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
             accounts (nama, kode, jenis_akun)
           )
@@ -179,7 +179,7 @@ function LaporanPangan() {
                 {laporan.slice(0, 10).map((journal) => (
                   <div key={journal.id} className="flex items-center justify-between p-3 border rounded">
                     <div>
-                      <p className="font-medium">{journal.deskripsi}</p>
+                      <p className="font-medium">{journal.keterangan}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(journal.tanggal).toLocaleDateString('id-ID')}
                       </p>

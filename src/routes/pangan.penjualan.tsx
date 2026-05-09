@@ -25,13 +25,12 @@ function PenjualanPangan() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
-            accounts (nama, kode)
+            accounts (nama:nama_akun, kode:kode_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
-        .eq('jenis_transaksi', 'PENJUALAN_PANGAN')
         .order('tanggal', { ascending: false })
         .limit(50)
 
@@ -141,7 +140,7 @@ function PenjualanPangan() {
                   <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
                       <p className="font-medium">
-                        {item.deskripsi || 'Penjualan Pangan'}
+                        {item.keterangan || 'Penjualan Pangan'}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(item.tanggal).toLocaleDateString('id-ID')} • {item.customer_name || 'Petani'}

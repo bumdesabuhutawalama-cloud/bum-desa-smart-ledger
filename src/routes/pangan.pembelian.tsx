@@ -25,13 +25,12 @@ function PembelianPangan() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
-            accounts (nama, kode)
+            accounts (nama:nama_akun, kode:kode_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
-        .eq('jenis_transaksi', 'PEMBELIAN_PANGAN')
         .order('tanggal', { ascending: false })
         .limit(50)
 
@@ -104,7 +103,7 @@ function PembelianPangan() {
               {pembelian.map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
-                    <p className="font-medium">{item.deskripsi}</p>
+                    <p className="font-medium">{item.keterangan}</p>
                     <p className="text-sm text-muted-foreground">
                       {new Date(item.tanggal).toLocaleDateString('id-ID')}
                     </p>

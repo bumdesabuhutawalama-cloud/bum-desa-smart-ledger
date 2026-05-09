@@ -26,7 +26,7 @@ function KasBankPangan() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
             accounts (nama, kode, jenis_akun)
           )
@@ -169,7 +169,7 @@ function KasBankPangan() {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{item.deskripsi}</p>
+                      <p className="font-medium">{item.keterangan}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(item.tanggal).toLocaleDateString('id-ID')}
                       </p>

@@ -46,7 +46,7 @@ function LaporanDagang() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
             accounts (nama, kode, kategori)
           )

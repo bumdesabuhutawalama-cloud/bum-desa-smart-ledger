@@ -23,9 +23,9 @@ function JurnalPangan() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
-            accounts (nama, kode)
+            accounts (nama:nama_akun, kode:kode_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
@@ -121,7 +121,7 @@ function JurnalPangan() {
                 <div key={journal.id} className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold">{journal.deskripsi}</h3>
+                      <h3 className="font-semibold">{journal.keterangan}</h3>
                       <p className="text-sm text-muted-foreground">
                         {new Date(journal.tanggal).toLocaleDateString('id-ID')} •
                         {journal.jenis_transaksi}

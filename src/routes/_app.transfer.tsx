@@ -29,9 +29,9 @@ type Acc = {
 
 type Mode = "PENYERTAAN_TO_PUSAT" | "UNIT_TO_PUSAT" | "PUSAT_TO_UNIT" | "UNIT_TO_UNIT";
 
-// RK Pusat ada di ekuitas (3.8.x). RK Unit ada di aset lancar (1.1.99.x).
+// RK Pusat ada di ekuitas (3.8.x). RK Unit ada di kewajiban (2.1.02.x).
 const RK_PUSAT_PREFIXES = ["3.8.01.", "3.1.03."];
-const RK_UNIT_PREFIX = "1.1.99.";
+const RK_UNIT_PREFIX = "2.1.02.";
 const KAS_PREFIX = "1.1.01.";
 
 function TransferPage() {
@@ -82,25 +82,11 @@ function TransferPage() {
     [accounts],
   );
 
-  // Find RK Unit account for a given unit. Prefer explicit business_unit_id link;
-  // fall back to fuzzy name match for legacy data.
+  // Find RK Unit account for a given unit (di KEWAJIBAN)
   const findRkUnit = (unitId: string): Acc | null => {
-    const linked = accounts.find(
+    return accounts.find(
       (a) => !a.is_header && a.kode_akun.startsWith(RK_UNIT_PREFIX) && a.business_unit_id === unitId,
-    );
-    if (linked) return linked;
-    const u = units.find((x) => x.id === unitId);
-    if (!u) return null;
-    const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-    const target = norm(u.nama);
-    return (
-      accounts.find(
-        (a) =>
-          !a.is_header &&
-          a.kode_akun.startsWith(RK_UNIT_PREFIX) &&
-          norm(a.nama_akun).includes(target),
-      ) ?? null
-    );
+    ) ?? null;
   };
 
   const reset = () => {

@@ -79,7 +79,7 @@ function LaporanDagang() {
 
     laporanData.forEach(journal => {
       journal.journal_entries?.forEach(entry => {
-        const amount = entry.debet || entry.kredit || 0
+        const amount = entry.debit || entry.kredit || 0
 
         // Kategorisasi berdasarkan jenis transaksi dan account
         if ((journal.source || "JURNAL") === 'PENJUALAN') {

@@ -25,13 +25,12 @@ function SimpananSP() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
-            accounts (nama, kode)
+            accounts (nama:nama_akun, kode:kode_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
-        .eq('jenis_transaksi', 'SIMPANAN')
         .order('tanggal', { ascending: false })
         .limit(50)
 

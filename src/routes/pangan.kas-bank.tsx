@@ -68,7 +68,7 @@ function KasBankPangan() {
   }
 
   const balances = calculateBalances()
-  ((balances.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) = balances.kas + balances.bank
+  balances.total = balances.kas + balances.bank
 
   // Hitung transaksi hari ini
   const transaksiHariIni = kasBank?.filter(item => {

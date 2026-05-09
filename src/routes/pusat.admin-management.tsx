@@ -295,6 +295,9 @@ function AdminManagement() {
                       <Button size="sm" variant="ghost" onClick={() => openEdit(u)} title="Edit">
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={() => resendInvite(u)} title="Kirim ulang undangan email" disabled={!u.email}>
+                        <Send className="h-4 w-4 text-blue-600" />
+                      </Button>
                       <Button
                         size="sm" variant="ghost"
                         onClick={() => toggleSuspend(u)}

@@ -2,6 +2,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { UnitLayout } from '@/shared/layouts/UnitLayout'
 import { useUnitFilter } from '@/shared/hooks/useUnitFilter'
+import { useUnit } from '@/lib/unit-context'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'

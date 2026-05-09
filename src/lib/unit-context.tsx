@@ -94,7 +94,7 @@ export function UnitProvider({ children }: { children: ReactNode }) {
   };
 
   const getUnitModule = (kode: string): UnitModule | null => {
-    return getUnitByKode(kode);
+    return getUnitByKode(kode as any);
   };
 
   const resolveWriteUnitId = () => {

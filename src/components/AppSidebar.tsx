@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useUnit } from "@/lib/unit-context";
-import { UNIT_MODULES } from "@/lib/unit-modules";
+import { UNIT_MODULES, type SubMenu, type UnitCode } from "@/lib/unit-modules";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -86,7 +86,7 @@ export function AppSidebar() {
         {units
           .filter((u) => u.is_active && ["PANGAN", "DAGANG", "JASA", "SP"].includes(u.kode))
           .map((unit) => {
-            const module = UNIT_MODULES[unit.kode as any];
+            const module = UNIT_MODULES[unit.kode as UnitCode];
             const isExpanded = expandedUnits.has(unit.kode);
             const isSelected = currentUnitKode === unit.kode;
 
@@ -125,10 +125,10 @@ export function AppSidebar() {
                 {/* Unit Submenu */}
                 {isExpanded && module && (
                   <div className="ml-3 mt-1 space-y-1 border-l border-sidebar-accent">
-                    {module.subMenus.slice(0, 3).map((item) => (
+                    {module.subMenus.slice(0, 3).map((item: SubMenu) => (
                       <Link
                         key={item.href}
-                        to={item.href}
+                        to={item.href as any}
                         className={cn(
                           "flex items-center gap-3 rounded-md px-3 py-2 text-xs transition-colors pl-4",
                           isPathActive(item.href)

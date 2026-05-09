@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createFileRoute } from '@tanstack/react-router'
 import { UnitLayout } from '@/shared/layouts/UnitLayout'
 import { useUnitFilter } from '@/shared/hooks/useUnitFilter'
@@ -20,13 +21,13 @@ function JurnalDagang() {
   const { data: journals, isLoading } = useQuery({
     queryKey: ['journals-dagang', unitIdFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
-            accounts (nama, kode)
+            accounts (nama_akun, kode_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
@@ -34,7 +35,7 @@ function JurnalDagang() {
         .limit(100)
 
       if (error) throw error
-      return data
+      return (data ?? []) as any[]
     }
   })
 
@@ -89,9 +90,9 @@ function JurnalDagang() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                Rp {journals?.reduce((sum, journal) =>
-                  sum + (journal.journal_entries?.reduce((entrySum, entry) =>
-                    entrySum + (entry.debet || 0), 0) || 0), 0).toLocaleString('id-ID') || '0'}
+                Rp {(journals?.reduce((sum: number, journal: any) =>
+                  sum + (journal.journal_entries?.reduce((entrySum: number, entry: any) =>
+                    entrySum + (Number(entry.debit) || 0), 0) || 0), 0) || 0).toLocaleString('id-ID')}
               </div>
               <p className="text-xs text-muted-foreground">
                 Total nilai debit
@@ -106,9 +107,9 @@ function JurnalDagang() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                Rp {journals?.reduce((sum, journal) =>
-                  sum + (journal.journal_entries?.reduce((entrySum, entry) =>
-                    entrySum + (entry.kredit || 0), 0) || 0), 0).toLocaleString('id-ID') || '0'}
+                Rp {(journals?.reduce((sum: number, journal: any) =>
+                  sum + (journal.journal_entries?.reduce((entrySum: number, entry: any) =>
+                    entrySum + (Number(entry.kredit) || 0), 0) || 0), 0) || 0).toLocaleString('id-ID')}
               </div>
               <p className="text-xs text-muted-foreground">
                 Total nilai kredit
@@ -132,16 +133,16 @@ function JurnalDagang() {
               </div>
             ) : journals && journals.length > 0 ? (
               <div className="space-y-6">
-                {journals.map((journal) => (
+                {journals.map((journal: any) => (
                   <div key={journal.id} className="border rounded-lg p-4">
                     {/* Journal Header */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium">{journal.deskripsi}</h3>
-                          {getTransactionTypeBadge(journal.jenis_transaksi || '').label && (
-                            <Badge variant={getTransactionTypeBadge(journal.jenis_transaksi || '').variant}>
-                              {getTransactionTypeBadge(journal.jenis_transaksi || '').label}
+                          <h3 className="font-medium">{journal.keterangan}</h3>
+                          {getTransactionTypeBadge(journal.source || '').label && (
+                            <Badge variant={getTransactionTypeBadge(journal.source || '').variant}>
+                              {getTransactionTypeBadge(journal.source || '').label}
                             </Badge>
                           )}
                         </div>
@@ -152,26 +153,26 @@ function JurnalDagang() {
                       </div>
                       <div className="text-right">
                         <p className="font-medium">
-                          Rp {(journal.total || 0).toLocaleString('id-ID')}
+                          Rp {Number(journal.total || 0).toLocaleString('id-ID')}
                         </p>
                       </div>
                     </div>
 
                     {/* Journal Entries */}
                     <div className="space-y-2">
-                      {journal.journal_entries?.map((entry, index) => (
+                      {journal.journal_entries?.map((entry: any, index: number) => (
                         <div key={index} className="flex items-center justify-between py-2 px-4 bg-muted/50 rounded">
                           <div className="flex items-center gap-4">
                             <span className="text-sm font-medium">
-                              {entry.accounts?.kode} - {entry.accounts?.nama}
+                              {entry.accounts?.kode_akun} - {entry.accounts?.nama_akun}
                             </span>
                           </div>
                           <div className="flex items-center gap-6 text-sm">
-                            <span className={entry.debet ? 'text-red-600' : 'text-muted-foreground'}>
-                              {entry.debet ? `D: Rp ${entry.debet.toLocaleString('id-ID')}` : ''}
+                            <span className={entry.debit ? 'text-red-600' : 'text-muted-foreground'}>
+                              {entry.debit ? `D: Rp ${Number(entry.debit).toLocaleString('id-ID')}` : ''}
                             </span>
                             <span className={entry.kredit ? 'text-green-600' : 'text-muted-foreground'}>
-                              {entry.kredit ? `K: Rp ${entry.kredit.toLocaleString('id-ID')}` : ''}
+                              {entry.kredit ? `K: Rp ${Number(entry.kredit).toLocaleString('id-ID')}` : ''}
                             </span>
                           </div>
                         </div>

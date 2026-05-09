@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { UnitModule, getUnitByKode } from "./unit-modules";
+import { UnitModule, getUnitByKode as getUnitModuleByKode } from "./unit-modules";
 
 export type BusinessUnit = {
   id: string;
@@ -94,7 +94,7 @@ export function UnitProvider({ children }: { children: ReactNode }) {
   };
 
   const getUnitModule = (kode: string): UnitModule | null => {
-    return getUnitByKode(kode);
+    return getUnitModuleByKode(kode as any);
   };
 
   const resolveWriteUnitId = () => {

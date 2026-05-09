@@ -387,6 +387,55 @@ function AdminManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Invite via Email Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Undang Admin via Email</DialogTitle>
+            <DialogDescription>
+              Sistem akan mengirim email berisi tautan aman. Penerima akan menyetel password sendiri
+              saat menerima undangan—Admin Pusat tidak perlu menentukan atau melihat password.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nama Lengkap (opsional)</Label>
+              <Input value={inviteForm.full_name} onChange={(e) => setInviteForm({ ...inviteForm, full_name: e.target.value })} />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} placeholder="admin@contoh.com" />
+            </div>
+            <div>
+              <Label>Unit Usaha</Label>
+              <Select value={inviteForm.business_unit_id} onValueChange={(v) => setInviteForm({ ...inviteForm, business_unit_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Pilih unit" /></SelectTrigger>
+                <SelectContent>
+                  {units.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.kode} — {u.nama}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Peran</Label>
+              <Select value={inviteForm.role} onValueChange={(v) => setInviteForm({ ...inviteForm, role: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Batal</Button>
+            <Button onClick={sendInvite} disabled={inviting} className="bg-emerald-600 hover:bg-emerald-700">
+              <Send className="h-4 w-4 mr-1.5" /> {inviting ? "Mengirim…" : "Kirim Undangan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

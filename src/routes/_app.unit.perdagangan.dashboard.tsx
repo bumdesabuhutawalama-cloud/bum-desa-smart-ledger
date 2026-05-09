@@ -63,42 +63,42 @@ function PerdaganganDashboard() {
           description="Catat penjualan dan pembelian barang dagangan"
           icon={<FileText className="h-5 w-5" />}
           href="/unit/perdagangan/transaksi"
-          onClick={() => navigate({ to: ("/unit/perdagangan/transaksi" })}
+          onClick={() => navigate({ to: "/unit/perdagangan/transaksi" as any })}
         />
         <ModuleCard
           title="Kelola Persediaan"
           description="Lihat stok dan pindah lokasi barang"
           icon={<ShoppingCart className="h-5 w-5" />}
           href="/unit/perdagangan/persediaan"
-          onClick={() => navigate({ to: ("/unit/perdagangan/persediaan" })}
+          onClick={() => navigate({ to: "/unit/perdagangan/persediaan" as any })}
         />
         <ModuleCard
           title="Laporan Keuangan"
           description="Analisis neraca, laba rugi, dan arus kas"
           icon={<BarChart3 className="h-5 w-5" />}
           href="/unit/perdagangan/laporan"
-          onClick={() => navigate({ to: ("/unit/perdagangan/laporan" })}
+          onClick={() => navigate({ to: "/unit/perdagangan/laporan" as any })}
         />
         <ModuleCard
           title="Kelola Jurnal"
           description="Edit jurnal dan validasi posting"
           icon={<FileText className="h-5 w-5" />}
           href="/unit/perdagangan/jurnal"
-          onClick={() => navigate({ to: ("/unit/perdagangan/jurnal" })}
+          onClick={() => navigate({ to: "/unit/perdagangan/jurnal" as any })}
         />
         <ModuleCard
           title="Kas & Bank"
           description="Kelola transaksi kas dan bank unit"
           icon={<Wallet className="h-5 w-5" />}
           href="/unit/perdagangan/kas-bank"
-          onClick={() => navigate({ to: ("/unit/perdagangan/kas-bank" })}
+          onClick={() => navigate({ to: "/unit/perdagangan/kas-bank" as any })}
         />
         <ModuleCard
           title="Transfer Modal"
           description="Lakukan transfer ke unit lain atau pusat"
           icon={<ArrowRightLeft className="h-5 w-5" />}
           href="/unit/perdagangan/transfer"
-          onClick={() => navigate({ to: ("/unit/perdagangan/transfer" })}
+          onClick={() => navigate({ to: "/unit/perdagangan/transfer" as any })}
         />
       </div>
     </UnitLayout>

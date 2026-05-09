@@ -9,9 +9,42 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SpRouteImport } from './routes/sp'
+import { Route as PanganRouteImport } from './routes/pangan'
+import { Route as JasaRouteImport } from './routes/jasa'
+import { Route as DagangRouteImport } from './routes/dagang'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
-import { Route as AppIndexRouteImport } from './routes/_app.index'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as SpIndexRouteImport } from './routes/sp.index'
+import { Route as PanganIndexRouteImport } from './routes/pangan.index'
+import { Route as JasaIndexRouteImport } from './routes/jasa.index'
+import { Route as DagangIndexRouteImport } from './routes/dagang.index'
+import { Route as SpSimpananRouteImport } from './routes/sp.simpanan'
+import { Route as SpPinjamanRouteImport } from './routes/sp.pinjaman'
+import { Route as SpLoginRouteImport } from './routes/sp.login'
+import { Route as SpDashboardRouteImport } from './routes/sp.dashboard'
+import { Route as PanganPersediaanRouteImport } from './routes/pangan.persediaan'
+import { Route as PanganPenjualanRouteImport } from './routes/pangan.penjualan'
+import { Route as PanganPembelianRouteImport } from './routes/pangan.pembelian'
+import { Route as PanganLoginRouteImport } from './routes/pangan.login'
+import { Route as PanganLaporanRouteImport } from './routes/pangan.laporan'
+import { Route as PanganKasBankRouteImport } from './routes/pangan.kas-bank'
+import { Route as PanganJurnalRouteImport } from './routes/pangan.jurnal'
+import { Route as PanganDashboardRouteImport } from './routes/pangan.dashboard'
+import { Route as JasaPenjualanRouteImport } from './routes/jasa.penjualan'
+import { Route as JasaLoginRouteImport } from './routes/jasa.login'
+import { Route as JasaKontrakRouteImport } from './routes/jasa.kontrak'
+import { Route as JasaKasBankRouteImport } from './routes/jasa.kas-bank'
+import { Route as JasaDashboardRouteImport } from './routes/jasa.dashboard'
+import { Route as JasaBiayaRouteImport } from './routes/jasa.biaya'
+import { Route as DagangPersediaanRouteImport } from './routes/dagang.persediaan'
+import { Route as DagangPenjualanRouteImport } from './routes/dagang.penjualan'
+import { Route as DagangPembelianRouteImport } from './routes/dagang.pembelian'
+import { Route as DagangLoginRouteImport } from './routes/dagang.login'
+import { Route as DagangLaporanRouteImport } from './routes/dagang.laporan'
+import { Route as DagangJurnalRouteImport } from './routes/dagang.jurnal'
+import { Route as DagangDashboardRouteImport } from './routes/dagang.dashboard'
 import { Route as AppUtangRouteImport } from './routes/_app.utang'
 import { Route as AppUnitUsahaRouteImport } from './routes/_app.unit-usaha'
 import { Route as AppTransferRouteImport } from './routes/_app.transfer'
@@ -31,14 +64,42 @@ import { Route as AppAsetRouteImport } from './routes/_app.aset'
 import { Route as AppAkunRouteImport } from './routes/_app.akun'
 import { Route as AppAiAsistenRouteImport } from './routes/_app.ai-asisten'
 import { Route as AppJurnalIndexRouteImport } from './routes/_app.jurnal.index'
+import { Route as DagangPenjualanBaruRouteImport } from './routes/dagang.penjualan.baru'
 import { Route as AppUnitUspRouteImport } from './routes/_app.unit.usp'
+import { Route as AppUnitSpRouteImport } from './routes/_app.unit.sp'
 import { Route as AppUnitPusatRouteImport } from './routes/_app.unit.pusat'
+import { Route as AppUnitPerdaganganRouteImport } from './routes/_app.unit.perdagangan'
+import { Route as AppUnitPanganRouteImport } from './routes/_app.unit.pangan'
 import { Route as AppUnitJasaRouteImport } from './routes/_app.unit.jasa'
 import { Route as AppUnitDagangRouteImport } from './routes/_app.unit.dagang'
 import { Route as AppPenerimaanBaruRouteImport } from './routes/_app.penerimaan.baru'
 import { Route as AppJurnalKoreksiRouteImport } from './routes/_app.jurnal.koreksi'
 import { Route as AppJurnalBaruRouteImport } from './routes/_app.jurnal.baru'
+import { Route as AppUnitSpDashboardRouteImport } from './routes/_app.unit.sp.dashboard'
+import { Route as AppUnitPerdaganganDashboardRouteImport } from './routes/_app.unit.perdagangan.dashboard'
+import { Route as AppUnitPanganDashboardRouteImport } from './routes/_app.unit.pangan.dashboard'
+import { Route as AppUnitJasaDashboardRouteImport } from './routes/_app.unit.jasa.dashboard'
 
+const SpRoute = SpRouteImport.update({
+  id: '/sp',
+  path: '/sp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanganRoute = PanganRouteImport.update({
+  id: '/pangan',
+  path: '/pangan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JasaRoute = JasaRouteImport.update({
+  id: '/jasa',
+  path: '/jasa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DagangRoute = DagangRouteImport.update({
+  id: '/dagang',
+  path: '/dagang',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -48,10 +109,155 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppIndexRoute = AppIndexRouteImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AppRoute,
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SpIndexRoute = SpIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SpRoute,
+} as any)
+const PanganIndexRoute = PanganIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PanganRoute,
+} as any)
+const JasaIndexRoute = JasaIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => JasaRoute,
+} as any)
+const DagangIndexRoute = DagangIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DagangRoute,
+} as any)
+const SpSimpananRoute = SpSimpananRouteImport.update({
+  id: '/simpanan',
+  path: '/simpanan',
+  getParentRoute: () => SpRoute,
+} as any)
+const SpPinjamanRoute = SpPinjamanRouteImport.update({
+  id: '/pinjaman',
+  path: '/pinjaman',
+  getParentRoute: () => SpRoute,
+} as any)
+const SpLoginRoute = SpLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => SpRoute,
+} as any)
+const SpDashboardRoute = SpDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => SpRoute,
+} as any)
+const PanganPersediaanRoute = PanganPersediaanRouteImport.update({
+  id: '/persediaan',
+  path: '/persediaan',
+  getParentRoute: () => PanganRoute,
+} as any)
+const PanganPenjualanRoute = PanganPenjualanRouteImport.update({
+  id: '/penjualan',
+  path: '/penjualan',
+  getParentRoute: () => PanganRoute,
+} as any)
+const PanganPembelianRoute = PanganPembelianRouteImport.update({
+  id: '/pembelian',
+  path: '/pembelian',
+  getParentRoute: () => PanganRoute,
+} as any)
+const PanganLoginRoute = PanganLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => PanganRoute,
+} as any)
+const PanganLaporanRoute = PanganLaporanRouteImport.update({
+  id: '/laporan',
+  path: '/laporan',
+  getParentRoute: () => PanganRoute,
+} as any)
+const PanganKasBankRoute = PanganKasBankRouteImport.update({
+  id: '/kas-bank',
+  path: '/kas-bank',
+  getParentRoute: () => PanganRoute,
+} as any)
+const PanganJurnalRoute = PanganJurnalRouteImport.update({
+  id: '/jurnal',
+  path: '/jurnal',
+  getParentRoute: () => PanganRoute,
+} as any)
+const PanganDashboardRoute = PanganDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => PanganRoute,
+} as any)
+const JasaPenjualanRoute = JasaPenjualanRouteImport.update({
+  id: '/penjualan',
+  path: '/penjualan',
+  getParentRoute: () => JasaRoute,
+} as any)
+const JasaLoginRoute = JasaLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => JasaRoute,
+} as any)
+const JasaKontrakRoute = JasaKontrakRouteImport.update({
+  id: '/kontrak',
+  path: '/kontrak',
+  getParentRoute: () => JasaRoute,
+} as any)
+const JasaKasBankRoute = JasaKasBankRouteImport.update({
+  id: '/kas-bank',
+  path: '/kas-bank',
+  getParentRoute: () => JasaRoute,
+} as any)
+const JasaDashboardRoute = JasaDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => JasaRoute,
+} as any)
+const JasaBiayaRoute = JasaBiayaRouteImport.update({
+  id: '/biaya',
+  path: '/biaya',
+  getParentRoute: () => JasaRoute,
+} as any)
+const DagangPersediaanRoute = DagangPersediaanRouteImport.update({
+  id: '/persediaan',
+  path: '/persediaan',
+  getParentRoute: () => DagangRoute,
+} as any)
+const DagangPenjualanRoute = DagangPenjualanRouteImport.update({
+  id: '/penjualan',
+  path: '/penjualan',
+  getParentRoute: () => DagangRoute,
+} as any)
+const DagangPembelianRoute = DagangPembelianRouteImport.update({
+  id: '/pembelian',
+  path: '/pembelian',
+  getParentRoute: () => DagangRoute,
+} as any)
+const DagangLoginRoute = DagangLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => DagangRoute,
+} as any)
+const DagangLaporanRoute = DagangLaporanRouteImport.update({
+  id: '/laporan',
+  path: '/laporan',
+  getParentRoute: () => DagangRoute,
+} as any)
+const DagangJurnalRoute = DagangJurnalRouteImport.update({
+  id: '/jurnal',
+  path: '/jurnal',
+  getParentRoute: () => DagangRoute,
+} as any)
+const DagangDashboardRoute = DagangDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => DagangRoute,
 } as any)
 const AppUtangRoute = AppUtangRouteImport.update({
   id: '/utang',
@@ -148,14 +354,34 @@ const AppJurnalIndexRoute = AppJurnalIndexRouteImport.update({
   path: '/jurnal/',
   getParentRoute: () => AppRoute,
 } as any)
+const DagangPenjualanBaruRoute = DagangPenjualanBaruRouteImport.update({
+  id: '/baru',
+  path: '/baru',
+  getParentRoute: () => DagangPenjualanRoute,
+} as any)
 const AppUnitUspRoute = AppUnitUspRouteImport.update({
   id: '/unit/usp',
   path: '/unit/usp',
   getParentRoute: () => AppRoute,
 } as any)
+const AppUnitSpRoute = AppUnitSpRouteImport.update({
+  id: '/unit/sp',
+  path: '/unit/sp',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppUnitPusatRoute = AppUnitPusatRouteImport.update({
   id: '/unit/pusat',
   path: '/unit/pusat',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUnitPerdaganganRoute = AppUnitPerdaganganRouteImport.update({
+  id: '/unit/perdagangan',
+  path: '/unit/perdagangan',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppUnitPanganRoute = AppUnitPanganRouteImport.update({
+  id: '/unit/pangan',
+  path: '/unit/pangan',
   getParentRoute: () => AppRoute,
 } as any)
 const AppUnitJasaRoute = AppUnitJasaRouteImport.update({
@@ -183,10 +409,35 @@ const AppJurnalBaruRoute = AppJurnalBaruRouteImport.update({
   path: '/jurnal/baru',
   getParentRoute: () => AppRoute,
 } as any)
+const AppUnitSpDashboardRoute = AppUnitSpDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppUnitSpRoute,
+} as any)
+const AppUnitPerdaganganDashboardRoute =
+  AppUnitPerdaganganDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AppUnitPerdaganganRoute,
+  } as any)
+const AppUnitPanganDashboardRoute = AppUnitPanganDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppUnitPanganRoute,
+} as any)
+const AppUnitJasaDashboardRoute = AppUnitJasaDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppUnitJasaRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AppIndexRoute
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/dagang': typeof DagangRouteWithChildren
+  '/jasa': typeof JasaRouteWithChildren
+  '/pangan': typeof PanganRouteWithChildren
+  '/sp': typeof SpRouteWithChildren
   '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
   '/aset': typeof AppAsetRoute
@@ -205,16 +456,54 @@ export interface FileRoutesByFullPath {
   '/transfer': typeof AppTransferRoute
   '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
+  '/dagang/dashboard': typeof DagangDashboardRoute
+  '/dagang/jurnal': typeof DagangJurnalRoute
+  '/dagang/laporan': typeof DagangLaporanRoute
+  '/dagang/login': typeof DagangLoginRoute
+  '/dagang/pembelian': typeof DagangPembelianRoute
+  '/dagang/penjualan': typeof DagangPenjualanRouteWithChildren
+  '/dagang/persediaan': typeof DagangPersediaanRoute
+  '/jasa/biaya': typeof JasaBiayaRoute
+  '/jasa/dashboard': typeof JasaDashboardRoute
+  '/jasa/kas-bank': typeof JasaKasBankRoute
+  '/jasa/kontrak': typeof JasaKontrakRoute
+  '/jasa/login': typeof JasaLoginRoute
+  '/jasa/penjualan': typeof JasaPenjualanRoute
+  '/pangan/dashboard': typeof PanganDashboardRoute
+  '/pangan/jurnal': typeof PanganJurnalRoute
+  '/pangan/kas-bank': typeof PanganKasBankRoute
+  '/pangan/laporan': typeof PanganLaporanRoute
+  '/pangan/login': typeof PanganLoginRoute
+  '/pangan/pembelian': typeof PanganPembelianRoute
+  '/pangan/penjualan': typeof PanganPenjualanRoute
+  '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/sp/dashboard': typeof SpDashboardRoute
+  '/sp/login': typeof SpLoginRoute
+  '/sp/pinjaman': typeof SpPinjamanRoute
+  '/sp/simpanan': typeof SpSimpananRoute
+  '/dagang/': typeof DagangIndexRoute
+  '/jasa/': typeof JasaIndexRoute
+  '/pangan/': typeof PanganIndexRoute
+  '/sp/': typeof SpIndexRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
   '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
   '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/unit/dagang': typeof AppUnitDagangRoute
-  '/unit/jasa': typeof AppUnitJasaRoute
+  '/unit/jasa': typeof AppUnitJasaRouteWithChildren
+  '/unit/pangan': typeof AppUnitPanganRouteWithChildren
+  '/unit/perdagangan': typeof AppUnitPerdaganganRouteWithChildren
   '/unit/pusat': typeof AppUnitPusatRoute
+  '/unit/sp': typeof AppUnitSpRouteWithChildren
   '/unit/usp': typeof AppUnitUspRoute
+  '/dagang/penjualan/baru': typeof DagangPenjualanBaruRoute
   '/jurnal/': typeof AppJurnalIndexRoute
+  '/unit/jasa/dashboard': typeof AppUnitJasaDashboardRoute
+  '/unit/pangan/dashboard': typeof AppUnitPanganDashboardRoute
+  '/unit/perdagangan/dashboard': typeof AppUnitPerdaganganDashboardRoute
+  '/unit/sp/dashboard': typeof AppUnitSpDashboardRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
@@ -234,20 +523,61 @@ export interface FileRoutesByTo {
   '/transfer': typeof AppTransferRoute
   '/unit-usaha': typeof AppUnitUsahaRoute
   '/utang': typeof AppUtangRoute
-  '/': typeof AppIndexRoute
+  '/dagang/dashboard': typeof DagangDashboardRoute
+  '/dagang/jurnal': typeof DagangJurnalRoute
+  '/dagang/laporan': typeof DagangLaporanRoute
+  '/dagang/login': typeof DagangLoginRoute
+  '/dagang/pembelian': typeof DagangPembelianRoute
+  '/dagang/penjualan': typeof DagangPenjualanRouteWithChildren
+  '/dagang/persediaan': typeof DagangPersediaanRoute
+  '/jasa/biaya': typeof JasaBiayaRoute
+  '/jasa/dashboard': typeof JasaDashboardRoute
+  '/jasa/kas-bank': typeof JasaKasBankRoute
+  '/jasa/kontrak': typeof JasaKontrakRoute
+  '/jasa/login': typeof JasaLoginRoute
+  '/jasa/penjualan': typeof JasaPenjualanRoute
+  '/pangan/dashboard': typeof PanganDashboardRoute
+  '/pangan/jurnal': typeof PanganJurnalRoute
+  '/pangan/kas-bank': typeof PanganKasBankRoute
+  '/pangan/laporan': typeof PanganLaporanRoute
+  '/pangan/login': typeof PanganLoginRoute
+  '/pangan/pembelian': typeof PanganPembelianRoute
+  '/pangan/penjualan': typeof PanganPenjualanRoute
+  '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/sp/dashboard': typeof SpDashboardRoute
+  '/sp/login': typeof SpLoginRoute
+  '/sp/pinjaman': typeof SpPinjamanRoute
+  '/sp/simpanan': typeof SpSimpananRoute
+  '/dagang': typeof DagangIndexRoute
+  '/jasa': typeof JasaIndexRoute
+  '/pangan': typeof PanganIndexRoute
+  '/sp': typeof SpIndexRoute
   '/jurnal/baru': typeof AppJurnalBaruRoute
   '/jurnal/koreksi': typeof AppJurnalKoreksiRoute
   '/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/unit/dagang': typeof AppUnitDagangRoute
-  '/unit/jasa': typeof AppUnitJasaRoute
+  '/unit/jasa': typeof AppUnitJasaRouteWithChildren
+  '/unit/pangan': typeof AppUnitPanganRouteWithChildren
+  '/unit/perdagangan': typeof AppUnitPerdaganganRouteWithChildren
   '/unit/pusat': typeof AppUnitPusatRoute
+  '/unit/sp': typeof AppUnitSpRouteWithChildren
   '/unit/usp': typeof AppUnitUspRoute
+  '/dagang/penjualan/baru': typeof DagangPenjualanBaruRoute
   '/jurnal': typeof AppJurnalIndexRoute
+  '/unit/jasa/dashboard': typeof AppUnitJasaDashboardRoute
+  '/unit/pangan/dashboard': typeof AppUnitPanganDashboardRoute
+  '/unit/perdagangan/dashboard': typeof AppUnitPerdaganganDashboardRoute
+  '/unit/sp/dashboard': typeof AppUnitSpDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/dagang': typeof DagangRouteWithChildren
+  '/jasa': typeof JasaRouteWithChildren
+  '/pangan': typeof PanganRouteWithChildren
+  '/sp': typeof SpRouteWithChildren
   '/_app/ai-asisten': typeof AppAiAsistenRoute
   '/_app/akun': typeof AppAkunRoute
   '/_app/aset': typeof AppAsetRoute
@@ -266,21 +596,61 @@ export interface FileRoutesById {
   '/_app/transfer': typeof AppTransferRoute
   '/_app/unit-usaha': typeof AppUnitUsahaRoute
   '/_app/utang': typeof AppUtangRoute
-  '/_app/': typeof AppIndexRoute
+  '/dagang/dashboard': typeof DagangDashboardRoute
+  '/dagang/jurnal': typeof DagangJurnalRoute
+  '/dagang/laporan': typeof DagangLaporanRoute
+  '/dagang/login': typeof DagangLoginRoute
+  '/dagang/pembelian': typeof DagangPembelianRoute
+  '/dagang/penjualan': typeof DagangPenjualanRouteWithChildren
+  '/dagang/persediaan': typeof DagangPersediaanRoute
+  '/jasa/biaya': typeof JasaBiayaRoute
+  '/jasa/dashboard': typeof JasaDashboardRoute
+  '/jasa/kas-bank': typeof JasaKasBankRoute
+  '/jasa/kontrak': typeof JasaKontrakRoute
+  '/jasa/login': typeof JasaLoginRoute
+  '/jasa/penjualan': typeof JasaPenjualanRoute
+  '/pangan/dashboard': typeof PanganDashboardRoute
+  '/pangan/jurnal': typeof PanganJurnalRoute
+  '/pangan/kas-bank': typeof PanganKasBankRoute
+  '/pangan/laporan': typeof PanganLaporanRoute
+  '/pangan/login': typeof PanganLoginRoute
+  '/pangan/pembelian': typeof PanganPembelianRoute
+  '/pangan/penjualan': typeof PanganPenjualanRoute
+  '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/sp/dashboard': typeof SpDashboardRoute
+  '/sp/login': typeof SpLoginRoute
+  '/sp/pinjaman': typeof SpPinjamanRoute
+  '/sp/simpanan': typeof SpSimpananRoute
+  '/dagang/': typeof DagangIndexRoute
+  '/jasa/': typeof JasaIndexRoute
+  '/pangan/': typeof PanganIndexRoute
+  '/sp/': typeof SpIndexRoute
   '/_app/jurnal/baru': typeof AppJurnalBaruRoute
   '/_app/jurnal/koreksi': typeof AppJurnalKoreksiRoute
   '/_app/penerimaan/baru': typeof AppPenerimaanBaruRoute
   '/_app/unit/dagang': typeof AppUnitDagangRoute
-  '/_app/unit/jasa': typeof AppUnitJasaRoute
+  '/_app/unit/jasa': typeof AppUnitJasaRouteWithChildren
+  '/_app/unit/pangan': typeof AppUnitPanganRouteWithChildren
+  '/_app/unit/perdagangan': typeof AppUnitPerdaganganRouteWithChildren
   '/_app/unit/pusat': typeof AppUnitPusatRoute
+  '/_app/unit/sp': typeof AppUnitSpRouteWithChildren
   '/_app/unit/usp': typeof AppUnitUspRoute
+  '/dagang/penjualan/baru': typeof DagangPenjualanBaruRoute
   '/_app/jurnal/': typeof AppJurnalIndexRoute
+  '/_app/unit/jasa/dashboard': typeof AppUnitJasaDashboardRoute
+  '/_app/unit/pangan/dashboard': typeof AppUnitPanganDashboardRoute
+  '/_app/unit/perdagangan/dashboard': typeof AppUnitPerdaganganDashboardRoute
+  '/_app/unit/sp/dashboard': typeof AppUnitSpDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/dagang'
+    | '/jasa'
+    | '/pangan'
+    | '/sp'
     | '/ai-asisten'
     | '/akun'
     | '/aset'
@@ -299,16 +669,54 @@ export interface FileRouteTypes {
     | '/transfer'
     | '/unit-usaha'
     | '/utang'
+    | '/dagang/dashboard'
+    | '/dagang/jurnal'
+    | '/dagang/laporan'
+    | '/dagang/login'
+    | '/dagang/pembelian'
+    | '/dagang/penjualan'
+    | '/dagang/persediaan'
+    | '/jasa/biaya'
+    | '/jasa/dashboard'
+    | '/jasa/kas-bank'
+    | '/jasa/kontrak'
+    | '/jasa/login'
+    | '/jasa/penjualan'
+    | '/pangan/dashboard'
+    | '/pangan/jurnal'
+    | '/pangan/kas-bank'
+    | '/pangan/laporan'
+    | '/pangan/login'
+    | '/pangan/pembelian'
+    | '/pangan/penjualan'
+    | '/pangan/persediaan'
+    | '/sp/dashboard'
+    | '/sp/login'
+    | '/sp/pinjaman'
+    | '/sp/simpanan'
+    | '/dagang/'
+    | '/jasa/'
+    | '/pangan/'
+    | '/sp/'
     | '/jurnal/baru'
     | '/jurnal/koreksi'
     | '/penerimaan/baru'
     | '/unit/dagang'
     | '/unit/jasa'
+    | '/unit/pangan'
+    | '/unit/perdagangan'
     | '/unit/pusat'
+    | '/unit/sp'
     | '/unit/usp'
+    | '/dagang/penjualan/baru'
     | '/jurnal/'
+    | '/unit/jasa/dashboard'
+    | '/unit/pangan/dashboard'
+    | '/unit/perdagangan/dashboard'
+    | '/unit/sp/dashboard'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/auth'
     | '/ai-asisten'
     | '/akun'
@@ -328,19 +736,60 @@ export interface FileRouteTypes {
     | '/transfer'
     | '/unit-usaha'
     | '/utang'
-    | '/'
+    | '/dagang/dashboard'
+    | '/dagang/jurnal'
+    | '/dagang/laporan'
+    | '/dagang/login'
+    | '/dagang/pembelian'
+    | '/dagang/penjualan'
+    | '/dagang/persediaan'
+    | '/jasa/biaya'
+    | '/jasa/dashboard'
+    | '/jasa/kas-bank'
+    | '/jasa/kontrak'
+    | '/jasa/login'
+    | '/jasa/penjualan'
+    | '/pangan/dashboard'
+    | '/pangan/jurnal'
+    | '/pangan/kas-bank'
+    | '/pangan/laporan'
+    | '/pangan/login'
+    | '/pangan/pembelian'
+    | '/pangan/penjualan'
+    | '/pangan/persediaan'
+    | '/sp/dashboard'
+    | '/sp/login'
+    | '/sp/pinjaman'
+    | '/sp/simpanan'
+    | '/dagang'
+    | '/jasa'
+    | '/pangan'
+    | '/sp'
     | '/jurnal/baru'
     | '/jurnal/koreksi'
     | '/penerimaan/baru'
     | '/unit/dagang'
     | '/unit/jasa'
+    | '/unit/pangan'
+    | '/unit/perdagangan'
     | '/unit/pusat'
+    | '/unit/sp'
     | '/unit/usp'
+    | '/dagang/penjualan/baru'
     | '/jurnal'
+    | '/unit/jasa/dashboard'
+    | '/unit/pangan/dashboard'
+    | '/unit/perdagangan/dashboard'
+    | '/unit/sp/dashboard'
   id:
     | '__root__'
+    | '/'
     | '/_app'
     | '/auth'
+    | '/dagang'
+    | '/jasa'
+    | '/pangan'
+    | '/sp'
     | '/_app/ai-asisten'
     | '/_app/akun'
     | '/_app/aset'
@@ -359,24 +808,93 @@ export interface FileRouteTypes {
     | '/_app/transfer'
     | '/_app/unit-usaha'
     | '/_app/utang'
-    | '/_app/'
+    | '/dagang/dashboard'
+    | '/dagang/jurnal'
+    | '/dagang/laporan'
+    | '/dagang/login'
+    | '/dagang/pembelian'
+    | '/dagang/penjualan'
+    | '/dagang/persediaan'
+    | '/jasa/biaya'
+    | '/jasa/dashboard'
+    | '/jasa/kas-bank'
+    | '/jasa/kontrak'
+    | '/jasa/login'
+    | '/jasa/penjualan'
+    | '/pangan/dashboard'
+    | '/pangan/jurnal'
+    | '/pangan/kas-bank'
+    | '/pangan/laporan'
+    | '/pangan/login'
+    | '/pangan/pembelian'
+    | '/pangan/penjualan'
+    | '/pangan/persediaan'
+    | '/sp/dashboard'
+    | '/sp/login'
+    | '/sp/pinjaman'
+    | '/sp/simpanan'
+    | '/dagang/'
+    | '/jasa/'
+    | '/pangan/'
+    | '/sp/'
     | '/_app/jurnal/baru'
     | '/_app/jurnal/koreksi'
     | '/_app/penerimaan/baru'
     | '/_app/unit/dagang'
     | '/_app/unit/jasa'
+    | '/_app/unit/pangan'
+    | '/_app/unit/perdagangan'
     | '/_app/unit/pusat'
+    | '/_app/unit/sp'
     | '/_app/unit/usp'
+    | '/dagang/penjualan/baru'
     | '/_app/jurnal/'
+    | '/_app/unit/jasa/dashboard'
+    | '/_app/unit/pangan/dashboard'
+    | '/_app/unit/perdagangan/dashboard'
+    | '/_app/unit/sp/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  DagangRoute: typeof DagangRouteWithChildren
+  JasaRoute: typeof JasaRouteWithChildren
+  PanganRoute: typeof PanganRouteWithChildren
+  SpRoute: typeof SpRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sp': {
+      id: '/sp'
+      path: '/sp'
+      fullPath: '/sp'
+      preLoaderRoute: typeof SpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pangan': {
+      id: '/pangan'
+      path: '/pangan'
+      fullPath: '/pangan'
+      preLoaderRoute: typeof PanganRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/jasa': {
+      id: '/jasa'
+      path: '/jasa'
+      fullPath: '/jasa'
+      preLoaderRoute: typeof JasaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dagang': {
+      id: '/dagang'
+      path: '/dagang'
+      fullPath: '/dagang'
+      preLoaderRoute: typeof DagangRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -391,12 +909,215 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/': {
-      id: '/_app/'
+    '/': {
+      id: '/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AppIndexRouteImport
-      parentRoute: typeof AppRoute
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sp/': {
+      id: '/sp/'
+      path: '/'
+      fullPath: '/sp/'
+      preLoaderRoute: typeof SpIndexRouteImport
+      parentRoute: typeof SpRoute
+    }
+    '/pangan/': {
+      id: '/pangan/'
+      path: '/'
+      fullPath: '/pangan/'
+      preLoaderRoute: typeof PanganIndexRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/jasa/': {
+      id: '/jasa/'
+      path: '/'
+      fullPath: '/jasa/'
+      preLoaderRoute: typeof JasaIndexRouteImport
+      parentRoute: typeof JasaRoute
+    }
+    '/dagang/': {
+      id: '/dagang/'
+      path: '/'
+      fullPath: '/dagang/'
+      preLoaderRoute: typeof DagangIndexRouteImport
+      parentRoute: typeof DagangRoute
+    }
+    '/sp/simpanan': {
+      id: '/sp/simpanan'
+      path: '/simpanan'
+      fullPath: '/sp/simpanan'
+      preLoaderRoute: typeof SpSimpananRouteImport
+      parentRoute: typeof SpRoute
+    }
+    '/sp/pinjaman': {
+      id: '/sp/pinjaman'
+      path: '/pinjaman'
+      fullPath: '/sp/pinjaman'
+      preLoaderRoute: typeof SpPinjamanRouteImport
+      parentRoute: typeof SpRoute
+    }
+    '/sp/login': {
+      id: '/sp/login'
+      path: '/login'
+      fullPath: '/sp/login'
+      preLoaderRoute: typeof SpLoginRouteImport
+      parentRoute: typeof SpRoute
+    }
+    '/sp/dashboard': {
+      id: '/sp/dashboard'
+      path: '/dashboard'
+      fullPath: '/sp/dashboard'
+      preLoaderRoute: typeof SpDashboardRouteImport
+      parentRoute: typeof SpRoute
+    }
+    '/pangan/persediaan': {
+      id: '/pangan/persediaan'
+      path: '/persediaan'
+      fullPath: '/pangan/persediaan'
+      preLoaderRoute: typeof PanganPersediaanRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/pangan/penjualan': {
+      id: '/pangan/penjualan'
+      path: '/penjualan'
+      fullPath: '/pangan/penjualan'
+      preLoaderRoute: typeof PanganPenjualanRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/pangan/pembelian': {
+      id: '/pangan/pembelian'
+      path: '/pembelian'
+      fullPath: '/pangan/pembelian'
+      preLoaderRoute: typeof PanganPembelianRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/pangan/login': {
+      id: '/pangan/login'
+      path: '/login'
+      fullPath: '/pangan/login'
+      preLoaderRoute: typeof PanganLoginRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/pangan/laporan': {
+      id: '/pangan/laporan'
+      path: '/laporan'
+      fullPath: '/pangan/laporan'
+      preLoaderRoute: typeof PanganLaporanRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/pangan/kas-bank': {
+      id: '/pangan/kas-bank'
+      path: '/kas-bank'
+      fullPath: '/pangan/kas-bank'
+      preLoaderRoute: typeof PanganKasBankRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/pangan/jurnal': {
+      id: '/pangan/jurnal'
+      path: '/jurnal'
+      fullPath: '/pangan/jurnal'
+      preLoaderRoute: typeof PanganJurnalRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/pangan/dashboard': {
+      id: '/pangan/dashboard'
+      path: '/dashboard'
+      fullPath: '/pangan/dashboard'
+      preLoaderRoute: typeof PanganDashboardRouteImport
+      parentRoute: typeof PanganRoute
+    }
+    '/jasa/penjualan': {
+      id: '/jasa/penjualan'
+      path: '/penjualan'
+      fullPath: '/jasa/penjualan'
+      preLoaderRoute: typeof JasaPenjualanRouteImport
+      parentRoute: typeof JasaRoute
+    }
+    '/jasa/login': {
+      id: '/jasa/login'
+      path: '/login'
+      fullPath: '/jasa/login'
+      preLoaderRoute: typeof JasaLoginRouteImport
+      parentRoute: typeof JasaRoute
+    }
+    '/jasa/kontrak': {
+      id: '/jasa/kontrak'
+      path: '/kontrak'
+      fullPath: '/jasa/kontrak'
+      preLoaderRoute: typeof JasaKontrakRouteImport
+      parentRoute: typeof JasaRoute
+    }
+    '/jasa/kas-bank': {
+      id: '/jasa/kas-bank'
+      path: '/kas-bank'
+      fullPath: '/jasa/kas-bank'
+      preLoaderRoute: typeof JasaKasBankRouteImport
+      parentRoute: typeof JasaRoute
+    }
+    '/jasa/dashboard': {
+      id: '/jasa/dashboard'
+      path: '/dashboard'
+      fullPath: '/jasa/dashboard'
+      preLoaderRoute: typeof JasaDashboardRouteImport
+      parentRoute: typeof JasaRoute
+    }
+    '/jasa/biaya': {
+      id: '/jasa/biaya'
+      path: '/biaya'
+      fullPath: '/jasa/biaya'
+      preLoaderRoute: typeof JasaBiayaRouteImport
+      parentRoute: typeof JasaRoute
+    }
+    '/dagang/persediaan': {
+      id: '/dagang/persediaan'
+      path: '/persediaan'
+      fullPath: '/dagang/persediaan'
+      preLoaderRoute: typeof DagangPersediaanRouteImport
+      parentRoute: typeof DagangRoute
+    }
+    '/dagang/penjualan': {
+      id: '/dagang/penjualan'
+      path: '/penjualan'
+      fullPath: '/dagang/penjualan'
+      preLoaderRoute: typeof DagangPenjualanRouteImport
+      parentRoute: typeof DagangRoute
+    }
+    '/dagang/pembelian': {
+      id: '/dagang/pembelian'
+      path: '/pembelian'
+      fullPath: '/dagang/pembelian'
+      preLoaderRoute: typeof DagangPembelianRouteImport
+      parentRoute: typeof DagangRoute
+    }
+    '/dagang/login': {
+      id: '/dagang/login'
+      path: '/login'
+      fullPath: '/dagang/login'
+      preLoaderRoute: typeof DagangLoginRouteImport
+      parentRoute: typeof DagangRoute
+    }
+    '/dagang/laporan': {
+      id: '/dagang/laporan'
+      path: '/laporan'
+      fullPath: '/dagang/laporan'
+      preLoaderRoute: typeof DagangLaporanRouteImport
+      parentRoute: typeof DagangRoute
+    }
+    '/dagang/jurnal': {
+      id: '/dagang/jurnal'
+      path: '/jurnal'
+      fullPath: '/dagang/jurnal'
+      preLoaderRoute: typeof DagangJurnalRouteImport
+      parentRoute: typeof DagangRoute
+    }
+    '/dagang/dashboard': {
+      id: '/dagang/dashboard'
+      path: '/dashboard'
+      fullPath: '/dagang/dashboard'
+      preLoaderRoute: typeof DagangDashboardRouteImport
+      parentRoute: typeof DagangRoute
     }
     '/_app/utang': {
       id: '/_app/utang'
@@ -531,6 +1252,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJurnalIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/dagang/penjualan/baru': {
+      id: '/dagang/penjualan/baru'
+      path: '/baru'
+      fullPath: '/dagang/penjualan/baru'
+      preLoaderRoute: typeof DagangPenjualanBaruRouteImport
+      parentRoute: typeof DagangPenjualanRoute
+    }
     '/_app/unit/usp': {
       id: '/_app/unit/usp'
       path: '/unit/usp'
@@ -538,11 +1266,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUnitUspRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/unit/sp': {
+      id: '/_app/unit/sp'
+      path: '/unit/sp'
+      fullPath: '/unit/sp'
+      preLoaderRoute: typeof AppUnitSpRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/unit/pusat': {
       id: '/_app/unit/pusat'
       path: '/unit/pusat'
       fullPath: '/unit/pusat'
       preLoaderRoute: typeof AppUnitPusatRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/unit/perdagangan': {
+      id: '/_app/unit/perdagangan'
+      path: '/unit/perdagangan'
+      fullPath: '/unit/perdagangan'
+      preLoaderRoute: typeof AppUnitPerdaganganRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/unit/pangan': {
+      id: '/_app/unit/pangan'
+      path: '/unit/pangan'
+      fullPath: '/unit/pangan'
+      preLoaderRoute: typeof AppUnitPanganRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/unit/jasa': {
@@ -580,8 +1329,83 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppJurnalBaruRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/unit/sp/dashboard': {
+      id: '/_app/unit/sp/dashboard'
+      path: '/dashboard'
+      fullPath: '/unit/sp/dashboard'
+      preLoaderRoute: typeof AppUnitSpDashboardRouteImport
+      parentRoute: typeof AppUnitSpRoute
+    }
+    '/_app/unit/perdagangan/dashboard': {
+      id: '/_app/unit/perdagangan/dashboard'
+      path: '/dashboard'
+      fullPath: '/unit/perdagangan/dashboard'
+      preLoaderRoute: typeof AppUnitPerdaganganDashboardRouteImport
+      parentRoute: typeof AppUnitPerdaganganRoute
+    }
+    '/_app/unit/pangan/dashboard': {
+      id: '/_app/unit/pangan/dashboard'
+      path: '/dashboard'
+      fullPath: '/unit/pangan/dashboard'
+      preLoaderRoute: typeof AppUnitPanganDashboardRouteImport
+      parentRoute: typeof AppUnitPanganRoute
+    }
+    '/_app/unit/jasa/dashboard': {
+      id: '/_app/unit/jasa/dashboard'
+      path: '/dashboard'
+      fullPath: '/unit/jasa/dashboard'
+      preLoaderRoute: typeof AppUnitJasaDashboardRouteImport
+      parentRoute: typeof AppUnitJasaRoute
+    }
   }
 }
+
+interface AppUnitJasaRouteChildren {
+  AppUnitJasaDashboardRoute: typeof AppUnitJasaDashboardRoute
+}
+
+const AppUnitJasaRouteChildren: AppUnitJasaRouteChildren = {
+  AppUnitJasaDashboardRoute: AppUnitJasaDashboardRoute,
+}
+
+const AppUnitJasaRouteWithChildren = AppUnitJasaRoute._addFileChildren(
+  AppUnitJasaRouteChildren,
+)
+
+interface AppUnitPanganRouteChildren {
+  AppUnitPanganDashboardRoute: typeof AppUnitPanganDashboardRoute
+}
+
+const AppUnitPanganRouteChildren: AppUnitPanganRouteChildren = {
+  AppUnitPanganDashboardRoute: AppUnitPanganDashboardRoute,
+}
+
+const AppUnitPanganRouteWithChildren = AppUnitPanganRoute._addFileChildren(
+  AppUnitPanganRouteChildren,
+)
+
+interface AppUnitPerdaganganRouteChildren {
+  AppUnitPerdaganganDashboardRoute: typeof AppUnitPerdaganganDashboardRoute
+}
+
+const AppUnitPerdaganganRouteChildren: AppUnitPerdaganganRouteChildren = {
+  AppUnitPerdaganganDashboardRoute: AppUnitPerdaganganDashboardRoute,
+}
+
+const AppUnitPerdaganganRouteWithChildren =
+  AppUnitPerdaganganRoute._addFileChildren(AppUnitPerdaganganRouteChildren)
+
+interface AppUnitSpRouteChildren {
+  AppUnitSpDashboardRoute: typeof AppUnitSpDashboardRoute
+}
+
+const AppUnitSpRouteChildren: AppUnitSpRouteChildren = {
+  AppUnitSpDashboardRoute: AppUnitSpDashboardRoute,
+}
+
+const AppUnitSpRouteWithChildren = AppUnitSpRoute._addFileChildren(
+  AppUnitSpRouteChildren,
+)
 
 interface AppRouteChildren {
   AppAiAsistenRoute: typeof AppAiAsistenRoute
@@ -602,13 +1426,15 @@ interface AppRouteChildren {
   AppTransferRoute: typeof AppTransferRoute
   AppUnitUsahaRoute: typeof AppUnitUsahaRoute
   AppUtangRoute: typeof AppUtangRoute
-  AppIndexRoute: typeof AppIndexRoute
   AppJurnalBaruRoute: typeof AppJurnalBaruRoute
   AppJurnalKoreksiRoute: typeof AppJurnalKoreksiRoute
   AppPenerimaanBaruRoute: typeof AppPenerimaanBaruRoute
   AppUnitDagangRoute: typeof AppUnitDagangRoute
-  AppUnitJasaRoute: typeof AppUnitJasaRoute
+  AppUnitJasaRoute: typeof AppUnitJasaRouteWithChildren
+  AppUnitPanganRoute: typeof AppUnitPanganRouteWithChildren
+  AppUnitPerdaganganRoute: typeof AppUnitPerdaganganRouteWithChildren
   AppUnitPusatRoute: typeof AppUnitPusatRoute
+  AppUnitSpRoute: typeof AppUnitSpRouteWithChildren
   AppUnitUspRoute: typeof AppUnitUspRoute
   AppJurnalIndexRoute: typeof AppJurnalIndexRoute
 }
@@ -632,22 +1458,133 @@ const AppRouteChildren: AppRouteChildren = {
   AppTransferRoute: AppTransferRoute,
   AppUnitUsahaRoute: AppUnitUsahaRoute,
   AppUtangRoute: AppUtangRoute,
-  AppIndexRoute: AppIndexRoute,
   AppJurnalBaruRoute: AppJurnalBaruRoute,
   AppJurnalKoreksiRoute: AppJurnalKoreksiRoute,
   AppPenerimaanBaruRoute: AppPenerimaanBaruRoute,
   AppUnitDagangRoute: AppUnitDagangRoute,
-  AppUnitJasaRoute: AppUnitJasaRoute,
+  AppUnitJasaRoute: AppUnitJasaRouteWithChildren,
+  AppUnitPanganRoute: AppUnitPanganRouteWithChildren,
+  AppUnitPerdaganganRoute: AppUnitPerdaganganRouteWithChildren,
   AppUnitPusatRoute: AppUnitPusatRoute,
+  AppUnitSpRoute: AppUnitSpRouteWithChildren,
   AppUnitUspRoute: AppUnitUspRoute,
   AppJurnalIndexRoute: AppJurnalIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface DagangPenjualanRouteChildren {
+  DagangPenjualanBaruRoute: typeof DagangPenjualanBaruRoute
+}
+
+const DagangPenjualanRouteChildren: DagangPenjualanRouteChildren = {
+  DagangPenjualanBaruRoute: DagangPenjualanBaruRoute,
+}
+
+const DagangPenjualanRouteWithChildren = DagangPenjualanRoute._addFileChildren(
+  DagangPenjualanRouteChildren,
+)
+
+interface DagangRouteChildren {
+  DagangDashboardRoute: typeof DagangDashboardRoute
+  DagangJurnalRoute: typeof DagangJurnalRoute
+  DagangLaporanRoute: typeof DagangLaporanRoute
+  DagangLoginRoute: typeof DagangLoginRoute
+  DagangPembelianRoute: typeof DagangPembelianRoute
+  DagangPenjualanRoute: typeof DagangPenjualanRouteWithChildren
+  DagangPersediaanRoute: typeof DagangPersediaanRoute
+  DagangIndexRoute: typeof DagangIndexRoute
+}
+
+const DagangRouteChildren: DagangRouteChildren = {
+  DagangDashboardRoute: DagangDashboardRoute,
+  DagangJurnalRoute: DagangJurnalRoute,
+  DagangLaporanRoute: DagangLaporanRoute,
+  DagangLoginRoute: DagangLoginRoute,
+  DagangPembelianRoute: DagangPembelianRoute,
+  DagangPenjualanRoute: DagangPenjualanRouteWithChildren,
+  DagangPersediaanRoute: DagangPersediaanRoute,
+  DagangIndexRoute: DagangIndexRoute,
+}
+
+const DagangRouteWithChildren =
+  DagangRoute._addFileChildren(DagangRouteChildren)
+
+interface JasaRouteChildren {
+  JasaBiayaRoute: typeof JasaBiayaRoute
+  JasaDashboardRoute: typeof JasaDashboardRoute
+  JasaKasBankRoute: typeof JasaKasBankRoute
+  JasaKontrakRoute: typeof JasaKontrakRoute
+  JasaLoginRoute: typeof JasaLoginRoute
+  JasaPenjualanRoute: typeof JasaPenjualanRoute
+  JasaIndexRoute: typeof JasaIndexRoute
+}
+
+const JasaRouteChildren: JasaRouteChildren = {
+  JasaBiayaRoute: JasaBiayaRoute,
+  JasaDashboardRoute: JasaDashboardRoute,
+  JasaKasBankRoute: JasaKasBankRoute,
+  JasaKontrakRoute: JasaKontrakRoute,
+  JasaLoginRoute: JasaLoginRoute,
+  JasaPenjualanRoute: JasaPenjualanRoute,
+  JasaIndexRoute: JasaIndexRoute,
+}
+
+const JasaRouteWithChildren = JasaRoute._addFileChildren(JasaRouteChildren)
+
+interface PanganRouteChildren {
+  PanganDashboardRoute: typeof PanganDashboardRoute
+  PanganJurnalRoute: typeof PanganJurnalRoute
+  PanganKasBankRoute: typeof PanganKasBankRoute
+  PanganLaporanRoute: typeof PanganLaporanRoute
+  PanganLoginRoute: typeof PanganLoginRoute
+  PanganPembelianRoute: typeof PanganPembelianRoute
+  PanganPenjualanRoute: typeof PanganPenjualanRoute
+  PanganPersediaanRoute: typeof PanganPersediaanRoute
+  PanganIndexRoute: typeof PanganIndexRoute
+}
+
+const PanganRouteChildren: PanganRouteChildren = {
+  PanganDashboardRoute: PanganDashboardRoute,
+  PanganJurnalRoute: PanganJurnalRoute,
+  PanganKasBankRoute: PanganKasBankRoute,
+  PanganLaporanRoute: PanganLaporanRoute,
+  PanganLoginRoute: PanganLoginRoute,
+  PanganPembelianRoute: PanganPembelianRoute,
+  PanganPenjualanRoute: PanganPenjualanRoute,
+  PanganPersediaanRoute: PanganPersediaanRoute,
+  PanganIndexRoute: PanganIndexRoute,
+}
+
+const PanganRouteWithChildren =
+  PanganRoute._addFileChildren(PanganRouteChildren)
+
+interface SpRouteChildren {
+  SpDashboardRoute: typeof SpDashboardRoute
+  SpLoginRoute: typeof SpLoginRoute
+  SpPinjamanRoute: typeof SpPinjamanRoute
+  SpSimpananRoute: typeof SpSimpananRoute
+  SpIndexRoute: typeof SpIndexRoute
+}
+
+const SpRouteChildren: SpRouteChildren = {
+  SpDashboardRoute: SpDashboardRoute,
+  SpLoginRoute: SpLoginRoute,
+  SpPinjamanRoute: SpPinjamanRoute,
+  SpSimpananRoute: SpSimpananRoute,
+  SpIndexRoute: SpIndexRoute,
+}
+
+const SpRouteWithChildren = SpRoute._addFileChildren(SpRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  DagangRoute: DagangRouteWithChildren,
+  JasaRoute: JasaRouteWithChildren,
+  PanganRoute: PanganRouteWithChildren,
+  SpRoute: SpRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

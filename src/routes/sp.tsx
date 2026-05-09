@@ -1,18 +1,21 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { UnitProvider } from "@/lib/unit-context";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileNav } from "@/components/MobileNav";
-import { UnitProvider } from "@/lib/unit-context";
 import { UnitSelector } from "@/components/UnitSelector";
 
-export const Route = createFileRoute("/_app")({ component: AppLayout });
+export const Route = createFileRoute("/sp")({
+  component: SPLayout,
+});
 
-function AppLayout() {
+function SPLayout() {
   const { user, loading } = useAuth();
   const nav = useNavigate();
+
   useEffect(() => {
-    if (!loading && !user) nav({ to: "/auth" });
+    if (!loading && !user) nav({ to: "/sp/login" });
   }, [loading, user, nav]);
 
   if (loading || !user) {

@@ -9,6 +9,7 @@ type AuthCtx = {
   session: Session | null;
   roles: AppRole[];
   loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   hasRole: (r: AppRole) => boolean;
   canEdit: boolean;
@@ -51,8 +52,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = (r: AppRole) => roles.includes(r);
   const canEdit = hasRole("admin") || hasRole("bendahara");
 
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  };
+
   return (
-    <Ctx.Provider value={{ user, session, roles, loading, signOut: async () => { await supabase.auth.signOut(); }, hasRole, canEdit }}>
+    <Ctx.Provider value={{ user, session, roles, loading, signIn, signOut: async () => { await supabase.auth.signOut(); }, hasRole, canEdit }}>
       {children}
     </Ctx.Provider>
   );

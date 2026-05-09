@@ -1,9 +1,9 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useUnit } from "@/lib/unit-context";
 import { Store } from "lucide-react";
 
 export function UnitSelector({ className = "" }: { className?: string }) {
-  const { units, currentUnitId, setCurrentUnitId, loading } = useBusinessUnit();
+  const { units, currentUnitId, setCurrentUnitId, loading } = useUnit();
   const active = units.filter((u) => u.is_active);
 
   return (

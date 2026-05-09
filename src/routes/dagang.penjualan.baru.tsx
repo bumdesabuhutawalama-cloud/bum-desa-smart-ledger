@@ -35,7 +35,6 @@ export const Route = createFileRoute('/dagang/penjualan/baru')({
 })
 
 function PenjualanBaru() {
-  const { useUnit } = require('@/lib/unit-context')
   const { resolveWriteUnitId } = useUnit()
   const navigate = useNavigate()
   const queryClient = useQueryClient()

@@ -155,11 +155,11 @@ function PusatDashboard() {
                 <div className="text-xs text-muted-foreground mt-0.5">Penyertaan & distribusi modal</div>
               </Card>
             </Link>
-            <Link to="/unit-usaha">
+            <Link to="/pusat/admin-management">
               <Card className="p-4 hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer border-l-4 border-l-purple-600">
                 <Users className="h-5 w-5 text-purple-600 mb-2" />
-                <div className="font-semibold text-sm">Kelola Unit Usaha</div>
-                <div className="text-xs text-muted-foreground mt-0.5">Tambah / atur unit</div>
+                <div className="font-semibold text-sm">Manajemen Admin Unit</div>
+                <div className="text-xs text-muted-foreground mt-0.5">Daftar / suspend / hapus akun</div>
               </Card>
             </Link>
           </div>

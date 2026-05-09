@@ -90,8 +90,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     roles.includes("bendahara");
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error, data } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    const uid = data.user?.id;
+    if (uid) {
+      const { data: ubu } = await (supabase as any)
+        .from("user_business_units")
+        .select("is_suspended")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (ubu?.is_suspended) {
+        await supabase.auth.signOut();
+        throw new Error("Akun Anda telah dinonaktifkan oleh Admin Pusat.");
+      }
+    }
   };
 
   return (

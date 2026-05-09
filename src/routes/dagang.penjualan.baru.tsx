@@ -78,8 +78,8 @@ function PenjualanBaru() {
         .insert({
           business_unit_id: unitId,
           tanggal: data.tanggal,
-          deskripsi: data.deskripsi,
-          jenis_transaksi: 'PENJUALAN',
+          keterangan: data.deskripsi,
+          
           total: data.total,
           status: data.status
         })
@@ -102,12 +102,12 @@ function PenjualanBaru() {
           account_id: 'penjualan', // TODO: Get actual account ID
           debet: 0,
           kredit: data.total,
-          deskripsi: `Penjualan ${data.deskripsi}`
+          keterangan: `Penjualan ${data.deskripsi}`
         }
       ]
 
       const { error: entriesError } = await supabase
-        .from('journal_entries')
+        .from('journal_lines')
         .insert(entries)
 
       if (entriesError) throw entriesError

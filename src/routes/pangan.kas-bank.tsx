@@ -32,7 +32,6 @@ function KasBankPangan() {
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
-        .in('jenis_transaksi', ['KAS_MASUK', 'KAS_KELUAR', 'BANK_MASUK', 'BANK_KELUAR'])
         .order('tanggal', { ascending: false })
         .limit(50)
 

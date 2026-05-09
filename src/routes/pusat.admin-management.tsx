@@ -61,6 +61,11 @@ function AdminManagement() {
   });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<UserRow | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: "", full_name: "", business_unit_id: "", role: "admin_unit" });
+  const [inviting, setInviting] = useState(false);
+
+  const inviteRedirect = typeof window !== "undefined" ? `${window.location.origin}/set-password` : undefined;
 
   useEffect(() => {
     if (!authLoading && !isSuperAdmin) nav({ to: "/" });

@@ -34,7 +34,8 @@ export const Route = createFileRoute('/dagang/penjualan/baru')({
 })
 
 function PenjualanBaru() {
-  const { resolveWriteUnitId } = useUnitFilter()
+  const { useUnit } = require('@/lib/unit-context')
+  const { resolveWriteUnitId } = useUnit()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [items, setItems] = useState<Array<{nama: string, qty: number, harga: number, total: number}>>([
@@ -47,7 +48,7 @@ function PenjualanBaru() {
       deskripsi: '',
       customer: '',
       total: 0,
-      status: 'LUNAS'
+      status: 'POSTED'
     }
   })
 

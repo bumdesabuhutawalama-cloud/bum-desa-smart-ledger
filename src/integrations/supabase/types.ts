@@ -997,6 +997,7 @@ export type Database = {
           business_unit_id: string | null
           created_at: string
           id: string
+          is_suspended: boolean
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string
@@ -1005,6 +1006,7 @@ export type Database = {
           business_unit_id?: string | null
           created_at?: string
           id?: string
+          is_suspended?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id: string
@@ -1013,6 +1015,7 @@ export type Database = {
           business_unit_id?: string | null
           created_at?: string
           id?: string
+          is_suspended?: boolean
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string

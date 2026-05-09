@@ -26,13 +26,12 @@ function KasBankPangan() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
             accounts (nama, kode, jenis_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
-        .in('jenis_transaksi', ['KAS_MASUK', 'KAS_KELUAR', 'BANK_MASUK', 'BANK_KELUAR'])
         .order('tanggal', { ascending: false })
         .limit(50)
 
@@ -69,7 +68,7 @@ function KasBankPangan() {
   }
 
   const balances = calculateBalances()
-  balances.total = balances.kas + balances.bank
+  ((balances.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) = balances.kas + balances.bank
 
   // Hitung transaksi hari ini
   const transaksiHariIni = kasBank?.filter(item => {
@@ -117,7 +116,7 @@ function KasBankPangan() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rp {balances.total.toLocaleString()}
+              Rp {((balances.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)).toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">Kas + Bank</p>
           </CardContent>
@@ -156,33 +155,33 @@ function KasBankPangan() {
                 <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-4">
                     <div className={`p-2 rounded-full ${
-                      item.jenis_transaksi.includes('MASUK') ? 'bg-green-100' : 'bg-red-100'
+                      (item.source || "JURNAL").includes('MASUK') ? 'bg-green-100' : 'bg-red-100'
                     }`}>
-                      {item.jenis_transaksi.includes('KAS') ? (
+                      {(item.source || "JURNAL").includes('KAS') ? (
                         <Wallet className={`h-4 w-4 ${
-                          item.jenis_transaksi.includes('MASUK') ? 'text-green-600' : 'text-red-600'
+                          (item.source || "JURNAL").includes('MASUK') ? 'text-green-600' : 'text-red-600'
                         }`} />
                       ) : (
                         <CreditCard className={`h-4 w-4 ${
-                          item.jenis_transaksi.includes('MASUK') ? 'text-green-600' : 'text-red-600'
+                          (item.source || "JURNAL").includes('MASUK') ? 'text-green-600' : 'text-red-600'
                         }`} />
                       )}
                     </div>
                     <div>
-                      <p className="font-medium">{item.deskripsi}</p>
+                      <p className="font-medium">{item.keterangan}</p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(item.tanggal).toLocaleDateString('id-ID')}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge variant={item.jenis_transaksi.includes('MASUK') ? 'default' : 'destructive'}>
-                      {item.jenis_transaksi.replace('_', ' ')}
+                    <Badge variant={(item.source || "JURNAL").includes('MASUK') ? 'default' : 'destructive'}>
+                      {(item.source || "JURNAL").replace('_', ' ')}
                     </Badge>
                     <p className={`font-semibold mt-1 ${
-                      item.jenis_transaksi.includes('MASUK') ? 'text-green-600' : 'text-red-600'
+                      (item.source || "JURNAL").includes('MASUK') ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {item.jenis_transaksi.includes('MASUK') ? '+' : '-'}Rp {item.total?.toLocaleString()}
+                      {(item.source || "JURNAL").includes('MASUK') ? '+' : '-'}Rp {((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0))?.toLocaleString()}
                     </p>
                   </div>
                 </div>

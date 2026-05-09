@@ -2,6 +2,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { UnitLayout } from '@/shared/layouts/UnitLayout'
 import { useUnitFilter } from '@/shared/hooks/useUnitFilter'
+import { useUnit } from '@/lib/unit-context'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/integrations/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -34,7 +35,7 @@ export const Route = createFileRoute('/dagang/penjualan/baru')({
 })
 
 function PenjualanBaru() {
-  const { resolveWriteUnitId } = useUnitFilter()
+  const { resolveWriteUnitId } = useUnit()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [items, setItems] = useState<Array<{nama: string, qty: number, harga: number, total: number}>>([
@@ -47,77 +48,97 @@ function PenjualanBaru() {
       deskripsi: '',
       customer: '',
       total: 0,
-      status: 'LUNAS'
+      status: 'POSTED'
     }
   })
 
-  // Query accounts untuk dropdown
+  // Query accounts untuk dropdown (kolom: kode_akun, nama_akun)
   const { data: accounts } = useQuery({
     queryKey: ['accounts'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('accounts')
-        .select('id, nama, kode')
+        .select('id, nama_akun, kode_akun')
         .eq('is_active', true)
-        .order('nama')
+        .order('kode_akun')
 
       if (error) throw error
       return data
     }
   })
 
+  // Helper: cari account berdasarkan prefix kode (mis. 1101 utk Kas, 1102 utk Bank, dst.)
+  const findAccount = (prefixes: string[]) => {
+    if (!accounts) return null
+    for (const p of prefixes) {
+      const a = accounts.find((x: any) => x.kode_akun?.startsWith(p))
+      if (a) return a
+    }
+    return null
+  }
+
   // Mutation untuk simpan penjualan
   const createPenjualan = useMutation({
     mutationFn: async (data: PenjualanForm) => {
       const unitId = resolveWriteUnitId()
-      if (!unitId) throw new Error('Unit tidak ditemukan')
+      if (!unitId) throw new Error('Unit usaha tidak ditemukan')
 
-      // Create journal entry
+      const akunPiutang = findAccount(['113', '112'])      // Piutang Usaha
+      const akunPendapatan = findAccount(['41', '4'])      // Pendapatan / Penjualan
+      if (!akunPiutang || !akunPendapatan) {
+        throw new Error('Akun Piutang atau Penjualan belum tersedia di Daftar Akun (COA).')
+      }
+
+      const nomor = `JV-${Date.now()}`
+
+      // Insert journal header
       const { data: journal, error: journalError } = await supabase
         .from('journals')
         .insert({
           business_unit_id: unitId,
           tanggal: data.tanggal,
-          deskripsi: data.deskripsi,
-          jenis_transaksi: 'PENJUALAN',
-          total: data.total,
-          status: data.status
+          nomor_jurnal: nomor,
+          keterangan: data.deskripsi || `Penjualan ${data.customer || ''}`.trim(),
+          status: 'POSTED',
+          source: 'PENJUALAN',
         })
         .select()
         .single()
 
       if (journalError) throw journalError
 
-      // Create journal entries (debet piutang/kas, kredit penjualan)
-      const entries = [
+      // Insert journal lines (debit Piutang, kredit Pendapatan)
+      const lines = [
         {
           journal_id: journal.id,
-          account_id: 'piutang-dagang', // TODO: Get actual account ID
-          debet: data.total,
+          account_id: akunPiutang.id,
+          debit: data.total,
           kredit: 0,
-          deskripsi: `Piutang dari ${data.customer}`
+          keterangan: `Piutang dari ${data.customer || '-'}`,
+          line_order: 1,
         },
         {
           journal_id: journal.id,
-          account_id: 'penjualan', // TODO: Get actual account ID
-          debet: 0,
+          account_id: akunPendapatan.id,
+          debit: 0,
           kredit: data.total,
-          deskripsi: `Penjualan ${data.deskripsi}`
-        }
+          keterangan: `Penjualan ${data.deskripsi || ''}`.trim(),
+          line_order: 2,
+        },
       ]
 
-      const { error: entriesError } = await supabase
-        .from('journal_entries')
-        .insert(entries)
-
-      if (entriesError) throw entriesError
+      const { error: linesError } = await supabase.from('journal_lines').insert(lines)
+      if (linesError) throw linesError
 
       return journal
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['penjualan-dagang'] })
       navigate({ to: '/dagang/penjualan' })
-    }
+    },
+    onError: (e: any) => {
+      alert(`Gagal menyimpan: ${e.message}`)
+    },
   })
 
   const addItem = () => {

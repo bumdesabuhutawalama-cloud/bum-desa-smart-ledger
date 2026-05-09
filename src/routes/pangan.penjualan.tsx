@@ -25,13 +25,12 @@ function PenjualanPangan() {
         .from('journals')
         .select(`
           *,
-          journal_entries (
+          journal_entries:journal_lines (
             *,
-            accounts (nama, kode)
+            accounts (nama:nama_akun, kode:kode_akun)
           )
         `)
         .match(isConsolidating ? {} : { business_unit_id: unitIdFilter })
-        .eq('jenis_transaksi', 'PENJUALAN_PANGAN')
         .order('tanggal', { ascending: false })
         .limit(50)
 
@@ -45,7 +44,7 @@ function PenjualanPangan() {
     const today = new Date().toDateString()
     const itemDate = new Date(item.tanggal).toDateString()
     if (itemDate === today) {
-      return sum + (item.total || 0)
+      return sum + (((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) || 0)
     }
     return sum
   }, 0) || 0
@@ -141,7 +140,7 @@ function PenjualanPangan() {
                   <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
                       <p className="font-medium">
-                        {item.deskripsi || 'Penjualan Pangan'}
+                        {item.keterangan || 'Penjualan Pangan'}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {new Date(item.tanggal).toLocaleDateString('id-ID')} • {item.customer_name || 'Petani'}
@@ -149,7 +148,7 @@ function PenjualanPangan() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
-                        Rp {(item.total || 0).toLocaleString('id-ID')}
+                        Rp {(((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) || 0).toLocaleString('id-ID')}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {item.status || 'Lunas'}

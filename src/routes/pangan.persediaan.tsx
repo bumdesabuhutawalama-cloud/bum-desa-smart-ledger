@@ -116,7 +116,7 @@ function PersediaanPangan() {
                           {stockStatus.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{item.deskripsi}</p>
+                      <p className="text-sm text-muted-foreground">{item.keterangan}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">{item.stok} {item.satuan}</p>

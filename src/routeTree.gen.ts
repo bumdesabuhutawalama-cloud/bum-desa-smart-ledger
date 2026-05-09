@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpRouteImport } from './routes/sp'
+import { Route as SetPasswordRouteImport } from './routes/set-password'
 import { Route as PusatRouteImport } from './routes/pusat'
 import { Route as PanganRouteImport } from './routes/pangan'
 import { Route as JasaRouteImport } from './routes/jasa'
@@ -87,6 +88,11 @@ import { Route as AppUnitJasaDashboardRouteImport } from './routes/_app.unit.jas
 const SpRoute = SpRouteImport.update({
   id: '/sp',
   path: '/sp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SetPasswordRoute = SetPasswordRouteImport.update({
+  id: '/set-password',
+  path: '/set-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PusatRoute = PusatRouteImport.update({
@@ -462,6 +468,7 @@ export interface FileRoutesByFullPath {
   '/jasa': typeof JasaRouteWithChildren
   '/pangan': typeof PanganRouteWithChildren
   '/pusat': typeof PusatRouteWithChildren
+  '/set-password': typeof SetPasswordRoute
   '/sp': typeof SpRouteWithChildren
   '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
@@ -534,6 +541,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/pusat': typeof PusatRouteWithChildren
+  '/set-password': typeof SetPasswordRoute
   '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
   '/aset': typeof AppAsetRoute
@@ -610,6 +618,7 @@ export interface FileRoutesById {
   '/jasa': typeof JasaRouteWithChildren
   '/pangan': typeof PanganRouteWithChildren
   '/pusat': typeof PusatRouteWithChildren
+  '/set-password': typeof SetPasswordRoute
   '/sp': typeof SpRouteWithChildren
   '/_app/ai-asisten': typeof AppAiAsistenRoute
   '/_app/akun': typeof AppAkunRoute
@@ -687,6 +696,7 @@ export interface FileRouteTypes {
     | '/jasa'
     | '/pangan'
     | '/pusat'
+    | '/set-password'
     | '/sp'
     | '/ai-asisten'
     | '/akun'
@@ -759,6 +769,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/pusat'
+    | '/set-password'
     | '/ai-asisten'
     | '/akun'
     | '/aset'
@@ -834,6 +845,7 @@ export interface FileRouteTypes {
     | '/jasa'
     | '/pangan'
     | '/pusat'
+    | '/set-password'
     | '/sp'
     | '/_app/ai-asisten'
     | '/_app/akun'
@@ -911,6 +923,7 @@ export interface RootRouteChildren {
   JasaRoute: typeof JasaRouteWithChildren
   PanganRoute: typeof PanganRouteWithChildren
   PusatRoute: typeof PusatRouteWithChildren
+  SetPasswordRoute: typeof SetPasswordRoute
   SpRoute: typeof SpRouteWithChildren
 }
 
@@ -921,6 +934,13 @@ declare module '@tanstack/react-router' {
       path: '/sp'
       fullPath: '/sp'
       preLoaderRoute: typeof SpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/set-password': {
+      id: '/set-password'
+      path: '/set-password'
+      fullPath: '/set-password'
+      preLoaderRoute: typeof SetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pusat': {
@@ -1676,6 +1696,7 @@ const rootRouteChildren: RootRouteChildren = {
   JasaRoute: JasaRouteWithChildren,
   PanganRoute: PanganRouteWithChildren,
   PusatRoute: PusatRouteWithChildren,
+  SetPasswordRoute: SetPasswordRoute,
   SpRoute: SpRouteWithChildren,
 }
 export const routeTree = rootRouteImport

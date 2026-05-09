@@ -21,7 +21,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, UserPlus, Pencil, Trash2, Ban, CheckCircle2, Users } from "lucide-react";
+import { ArrowLeft, UserPlus, Pencil, Trash2, Ban, CheckCircle2, Users, Mail, Send } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/pusat/admin-management")({
@@ -61,6 +61,11 @@ function AdminManagement() {
   });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<UserRow | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteForm, setInviteForm] = useState({ email: "", full_name: "", business_unit_id: "", role: "admin_unit" });
+  const [inviting, setInviting] = useState(false);
+
+  const inviteRedirect = typeof window !== "undefined" ? `${window.location.origin}/set-password` : undefined;
 
   useEffect(() => {
     if (!authLoading && !isSuperAdmin) nav({ to: "/" });
@@ -168,6 +173,45 @@ function AdminManagement() {
     }
   };
 
+  const openInvite = () => {
+    setInviteForm({ email: "", full_name: "", business_unit_id: units[0]?.id ?? "", role: "admin_unit" });
+    setInviteOpen(true);
+  };
+
+  const sendInvite = async () => {
+    if (!inviteForm.email || !inviteForm.business_unit_id) {
+      toast.error("Email dan unit wajib diisi");
+      return;
+    }
+    setInviting(true);
+    try {
+      const { error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "invite", ...inviteForm, redirect_to: inviteRedirect },
+      });
+      if (error) throw error;
+      toast.success(`Undangan terkirim ke ${inviteForm.email}`);
+      setInviteOpen(false);
+      await reload();
+    } catch (e: any) {
+      toast.error("Gagal mengundang: " + (e?.message ?? e));
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const resendInvite = async (u: UserRow) => {
+    if (!u.email) return;
+    try {
+      const { error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "resend_invite", email: u.email, redirect_to: inviteRedirect },
+      });
+      if (error) throw error;
+      toast.success("Undangan dikirim ulang ke " + u.email);
+    } catch (e: any) {
+      toast.error("Gagal: " + (e?.message ?? e));
+    }
+  };
+
   if (authLoading || !isSuperAdmin) return null;
 
   return (
@@ -187,9 +231,14 @@ function AdminManagement() {
               </h1>
             </div>
           </div>
-          <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
-            <UserPlus className="h-4 w-4 mr-1.5" /> Daftarkan Admin Baru
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={openInvite} variant="outline" className="bg-transparent border-slate-600 text-white hover:bg-slate-800">
+              <Mail className="h-4 w-4 mr-1.5" /> Undang via Email
+            </Button>
+            <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+              <UserPlus className="h-4 w-4 mr-1.5" /> Daftarkan Admin Baru
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -245,6 +294,9 @@ function AdminManagement() {
                     <div className="flex justify-end gap-1">
                       <Button size="sm" variant="ghost" onClick={() => openEdit(u)} title="Edit">
                         <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => resendInvite(u)} title="Kirim ulang undangan email" disabled={!u.email}>
+                        <Send className="h-4 w-4 text-blue-600" />
                       </Button>
                       <Button
                         size="sm" variant="ghost"
@@ -335,6 +387,55 @@ function AdminManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Invite via Email Dialog */}
+      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Undang Admin via Email</DialogTitle>
+            <DialogDescription>
+              Sistem akan mengirim email berisi tautan aman. Penerima akan menyetel password sendiri
+              saat menerima undangan—Admin Pusat tidak perlu menentukan atau melihat password.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nama Lengkap (opsional)</Label>
+              <Input value={inviteForm.full_name} onChange={(e) => setInviteForm({ ...inviteForm, full_name: e.target.value })} />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" value={inviteForm.email} onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })} placeholder="admin@contoh.com" />
+            </div>
+            <div>
+              <Label>Unit Usaha</Label>
+              <Select value={inviteForm.business_unit_id} onValueChange={(v) => setInviteForm({ ...inviteForm, business_unit_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Pilih unit" /></SelectTrigger>
+                <SelectContent>
+                  {units.map((u) => (
+                    <SelectItem key={u.id} value={u.id}>{u.kode} — {u.nama}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Peran</Label>
+              <Select value={inviteForm.role} onValueChange={(v) => setInviteForm({ ...inviteForm, role: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ROLES.map((r) => (<SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteOpen(false)}>Batal</Button>
+            <Button onClick={sendInvite} disabled={inviting} className="bg-emerald-600 hover:bg-emerald-700">
+              <Send className="h-4 w-4 mr-1.5" /> {inviting ? "Mengirim…" : "Kirim Undangan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

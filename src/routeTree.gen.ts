@@ -26,6 +26,7 @@ import { Route as SpPinjamanRouteImport } from './routes/sp.pinjaman'
 import { Route as SpLoginRouteImport } from './routes/sp.login'
 import { Route as SpDashboardRouteImport } from './routes/sp.dashboard'
 import { Route as PusatLoginRouteImport } from './routes/pusat.login'
+import { Route as PusatDashboardRouteImport } from './routes/pusat.dashboard'
 import { Route as PanganPersediaanRouteImport } from './routes/pangan.persediaan'
 import { Route as PanganPenjualanRouteImport } from './routes/pangan.penjualan'
 import { Route as PanganPembelianRouteImport } from './routes/pangan.pembelian'
@@ -164,6 +165,11 @@ const SpDashboardRoute = SpDashboardRouteImport.update({
 const PusatLoginRoute = PusatLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => PusatRoute,
+} as any)
+const PusatDashboardRoute = PusatDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => PusatRoute,
 } as any)
 const PanganPersediaanRoute = PanganPersediaanRouteImport.update({
@@ -490,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/pangan/pembelian': typeof PanganPembelianRoute
   '/pangan/penjualan': typeof PanganPenjualanRoute
   '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/pusat/dashboard': typeof PusatDashboardRoute
   '/pusat/login': typeof PusatLoginRoute
   '/sp/dashboard': typeof SpDashboardRoute
   '/sp/login': typeof SpLoginRoute
@@ -559,6 +566,7 @@ export interface FileRoutesByTo {
   '/pangan/pembelian': typeof PanganPembelianRoute
   '/pangan/penjualan': typeof PanganPenjualanRoute
   '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/pusat/dashboard': typeof PusatDashboardRoute
   '/pusat/login': typeof PusatLoginRoute
   '/sp/dashboard': typeof SpDashboardRoute
   '/sp/login': typeof SpLoginRoute
@@ -634,6 +642,7 @@ export interface FileRoutesById {
   '/pangan/pembelian': typeof PanganPembelianRoute
   '/pangan/penjualan': typeof PanganPenjualanRoute
   '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/pusat/dashboard': typeof PusatDashboardRoute
   '/pusat/login': typeof PusatLoginRoute
   '/sp/dashboard': typeof SpDashboardRoute
   '/sp/login': typeof SpLoginRoute
@@ -709,6 +718,7 @@ export interface FileRouteTypes {
     | '/pangan/pembelian'
     | '/pangan/penjualan'
     | '/pangan/persediaan'
+    | '/pusat/dashboard'
     | '/pusat/login'
     | '/sp/dashboard'
     | '/sp/login'
@@ -778,6 +788,7 @@ export interface FileRouteTypes {
     | '/pangan/pembelian'
     | '/pangan/penjualan'
     | '/pangan/persediaan'
+    | '/pusat/dashboard'
     | '/pusat/login'
     | '/sp/dashboard'
     | '/sp/login'
@@ -852,6 +863,7 @@ export interface FileRouteTypes {
     | '/pangan/pembelian'
     | '/pangan/penjualan'
     | '/pangan/persediaan'
+    | '/pusat/dashboard'
     | '/pusat/login'
     | '/sp/dashboard'
     | '/sp/login'
@@ -1009,6 +1021,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/pusat/login'
       preLoaderRoute: typeof PusatLoginRouteImport
+      parentRoute: typeof PusatRoute
+    }
+    '/pusat/dashboard': {
+      id: '/pusat/dashboard'
+      path: '/dashboard'
+      fullPath: '/pusat/dashboard'
+      preLoaderRoute: typeof PusatDashboardRouteImport
       parentRoute: typeof PusatRoute
     }
     '/pangan/persediaan': {
@@ -1599,10 +1618,12 @@ const PanganRouteWithChildren =
   PanganRoute._addFileChildren(PanganRouteChildren)
 
 interface PusatRouteChildren {
+  PusatDashboardRoute: typeof PusatDashboardRoute
   PusatLoginRoute: typeof PusatLoginRoute
 }
 
 const PusatRouteChildren: PusatRouteChildren = {
+  PusatDashboardRoute: PusatDashboardRoute,
   PusatLoginRoute: PusatLoginRoute,
 }
 

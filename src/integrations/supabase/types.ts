@@ -314,6 +314,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_default: boolean
+          is_head_office: boolean
           jenis: string
           kode: string
           nama: string
@@ -325,6 +326,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_default?: boolean
+          is_head_office?: boolean
           jenis?: string
           kode: string
           nama: string
@@ -336,6 +338,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_default?: boolean
+          is_head_office?: boolean
           jenis?: string
           kode?: string
           nama?: string
@@ -1216,7 +1219,13 @@ export type Database = {
         | "HPP"
         | "PENDAPATAN_LAIN"
         | "BEBAN_LAIN"
-      app_role: "admin" | "bendahara" | "auditor"
+      app_role:
+        | "admin"
+        | "bendahara"
+        | "auditor"
+        | "super_admin"
+        | "admin_unit"
+        | "staff_unit"
       journal_status: "draft" | "posted"
       normal_balance: "DEBIT" | "KREDIT"
       receivable_status: "lancar" | "kurang_lancar" | "diragukan" | "macet"
@@ -1357,7 +1366,14 @@ export const Constants = {
         "PENDAPATAN_LAIN",
         "BEBAN_LAIN",
       ],
-      app_role: ["admin", "bendahara", "auditor"],
+      app_role: [
+        "admin",
+        "bendahara",
+        "auditor",
+        "super_admin",
+        "admin_unit",
+        "staff_unit",
+      ],
       journal_status: ["draft", "posted"],
       normal_balance: ["DEBIT", "KREDIT"],
       receivable_status: ["lancar", "kurang_lancar", "diragukan", "macet"],

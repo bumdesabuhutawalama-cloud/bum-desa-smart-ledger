@@ -54,7 +54,7 @@ const units = [
     titleColor: "text-orange-700",
   },
   {
-    to: "/auth",
+    to: "/pusat/login",
     title: "Unit Pusat",
     desc: "Konsolidasi & supervisi seluruh unit usaha BUM Desa",
     icon: Landmark,

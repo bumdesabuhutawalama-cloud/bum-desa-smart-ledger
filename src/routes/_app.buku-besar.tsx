@@ -12,7 +12,7 @@ import { formatRp, formatDate, todayISO } from "@/lib/format";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 
 export const Route = createFileRoute("/_app/buku-besar")({ component: BukuBesar });
 

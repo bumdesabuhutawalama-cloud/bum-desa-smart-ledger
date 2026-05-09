@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, Loader2, ArrowLeft, ShoppingCart } from "lucide-react";
 import { formatRp, todayISO, formatDate } from "@/lib/format";
 import { fetchTradeAccounts, fetchKasAccounts, generateDocNumber, reduceStock, postJournal } from "@/lib/trade-utils";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/penjualan")({ component: PenjualanPage });

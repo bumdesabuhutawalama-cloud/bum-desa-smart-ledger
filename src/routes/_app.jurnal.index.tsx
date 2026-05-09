@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatRp, formatDate } from "@/lib/format";
 import { Plus } from "lucide-react";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 
 export const Route = createFileRoute("/_app/jurnal/")({ component: JurnalList });
 

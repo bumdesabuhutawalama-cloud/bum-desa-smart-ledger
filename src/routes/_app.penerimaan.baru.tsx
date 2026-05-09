@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Loader2, ArrowLeft, FileText } from "lucide-react";
 import { formatRp, todayISO, formatDate } from "@/lib/format";
 import { fetchTradeAccounts, fetchKasAccounts, generateDocNumber, addStockMovingAvg, postJournal } from "@/lib/trade-utils";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 import { toast } from "sonner";
 
 const searchSchema = z.object({ po: z.string().optional() });

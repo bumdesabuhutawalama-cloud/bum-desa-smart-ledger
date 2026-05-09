@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2, ArrowLeft, FileText, PackageCheck } from "lucide-react";
 import { formatRp, todayISO, formatDate } from "@/lib/format";
 import { generateDocNumber } from "@/lib/trade-utils";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/purchase-orders")({ component: POPage });

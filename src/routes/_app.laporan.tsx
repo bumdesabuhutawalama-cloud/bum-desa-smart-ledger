@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { formatRp, todayISO } from "@/lib/format";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useBusinessUnit as useBusinessUnitForReport } from "@/lib/business-unit-context";
+import { useBusinessUnit as useBusinessUnitForReport } from "@/lib/unit-context";
 
 export const Route = createFileRoute("/_app/laporan")({ component: Laporan });
 

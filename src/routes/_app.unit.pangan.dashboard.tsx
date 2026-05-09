@@ -64,42 +64,42 @@ function PanganDashboard() {
           description="Catat penjualan, pembelian, dan transaksi lainnya"
           icon={<FileText className="h-5 w-5" />}
           href="/unit/pangan/transaksi"
-          onClick={() => navigate({ to: "/unit/pangan/transaksi" })}
+          onClick={() => navigate({ to: ("/unit/pangan/transaksi" })}
         />
         <ModuleCard
           title="Kelola Persediaan"
           description="Gunakan dan catat persediaan pangan"
           icon={<Leaf className="h-5 w-5" />}
           href="/unit/pangan/persediaan"
-          onClick={() => navigate({ to: "/unit/pangan/persediaan" })}
+          onClick={() => navigate({ to: ("/unit/pangan/persediaan" })}
         />
         <ModuleCard
           title="Laporan Keuangan"
           description="Lihat neraca, laba rugi, dan laporan lainnya"
           icon={<BarChart3 className="h-5 w-5" />}
           href="/unit/pangan/laporan"
-          onClick={() => navigate({ to: "/unit/pangan/laporan" })}
+          onClick={() => navigate({ to: ("/unit/pangan/laporan" })}
         />
         <ModuleCard
           title="Kelola Jurnal"
           description="Edit jurnal dan lihat posting transaksi"
           icon={<FileText className="h-5 w-5" />}
           href="/unit/pangan/jurnal"
-          onClick={() => navigate({ to: "/unit/pangan/jurnal" })}
+          onClick={() => navigate({ to: ("/unit/pangan/jurnal" })}
         />
         <ModuleCard
           title="Kas & Bank"
           description="Kelola kas masuk dan kas keluar unit"
           icon={<Wallet className="h-5 w-5" />}
           href="/unit/pangan/kas-bank"
-          onClick={() => navigate({ to: "/unit/pangan/kas-bank" })}
+          onClick={() => navigate({ to: ("/unit/pangan/kas-bank" })}
         />
         <ModuleCard
           title="Transfer Antar Unit"
           description="Lakukan transfer atau distribusi modal"
           icon={<ArrowRightLeft className="h-5 w-5" />}
           href="/unit/pangan/transfer"
-          onClick={() => navigate({ to: "/unit/pangan/transfer" })}
+          onClick={() => navigate({ to: ("/unit/pangan/transfer" })}
         />
       </div>
     </UnitLayout>

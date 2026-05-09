@@ -63,42 +63,42 @@ function SPDashboard() {
           description="Catat pinjaman, simpanan, dan bunga"
           icon={<FileText className="h-5 w-5" />}
           href="/unit/sp/transaksi"
-          onClick={() => navigate({ to: "/unit/sp/transaksi" })}
+          onClick={() => navigate({ to: ("/unit/sp/transaksi" })}
         />
         <ModuleCard
           title="Kelola Pinjaman"
           description="Cek status, cicilan, dan piutang bunga"
           icon={<Wallet className="h-5 w-5" />}
           href="/unit/sp/pinjaman"
-          onClick={() => navigate({ to: "/unit/sp/pinjaman" })}
+          onClick={() => navigate({ to: ("/unit/sp/pinjaman" })}
         />
         <ModuleCard
           title="Kelola Simpanan"
           description="Lihat rekening simpanan anggota"
           icon={<PiggyBank className="h-5 w-5" />}
           href="/unit/sp/simpanan"
-          onClick={() => navigate({ to: "/unit/sp/simpanan" })}
+          onClick={() => navigate({ to: ("/unit/sp/simpanan" })}
         />
         <ModuleCard
           title="Laporan Keuangan"
           description="Analisis kesehatan finansial unit"
           icon={<BarChart3 className="h-5 w-5" />}
           href="/unit/sp/laporan"
-          onClick={() => navigate({ to: "/unit/sp/laporan" })}
+          onClick={() => navigate({ to: ("/unit/sp/laporan" })}
         />
         <ModuleCard
           title="Kelola Jurnal"
           description="Edit jurnal dan posting transaksi"
           icon={<FileText className="h-5 w-5" />}
           href="/unit/sp/jurnal"
-          onClick={() => navigate({ to: "/unit/sp/jurnal" })}
+          onClick={() => navigate({ to: ("/unit/sp/jurnal" })}
         />
         <ModuleCard
           title="Transfer Modal"
           description="Lakukan transfer ke unit pusat"
           icon={<ArrowRightLeft className="h-5 w-5" />}
           href="/unit/sp/transfer"
-          onClick={() => navigate({ to: "/unit/sp/transfer" })}
+          onClick={() => navigate({ to: ("/unit/sp/transfer" })}
         />
       </div>
     </UnitLayout>

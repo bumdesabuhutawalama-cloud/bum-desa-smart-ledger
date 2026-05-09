@@ -124,7 +124,7 @@ function JurnalPangan() {
                       <h3 className="font-semibold">{journal.keterangan}</h3>
                       <p className="text-sm text-muted-foreground">
                         {new Date(journal.tanggal).toLocaleDateString('id-ID')} •
-                        {journal.jenis_transaksi}
+                        {(journal.source || "JURNAL")}
                       </p>
                     </div>
                     <Badge variant="outline">{journal.status}</Badge>

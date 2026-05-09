@@ -44,7 +44,7 @@ function PembelianDagang() {
     const thisMonth = new Date().getMonth()
     const itemMonth = new Date(item.tanggal).getMonth()
     if (itemMonth === thisMonth) {
-      return sum + (item.total || 0)
+      return sum + (((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) || 0)
     }
     return sum
   }, 0) || 0
@@ -147,7 +147,7 @@ function PembelianDagang() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
-                        Rp {(item.total || 0).toLocaleString('id-ID')}
+                        Rp {(((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) || 0).toLocaleString('id-ID')}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {item.status || 'Lunas'}

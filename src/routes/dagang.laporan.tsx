@@ -82,13 +82,13 @@ function LaporanDagang() {
         const amount = entry.debet || entry.kredit || 0
 
         // Kategorisasi berdasarkan jenis transaksi dan account
-        if (journal.jenis_transaksi === 'PENJUALAN') {
+        if ((journal.source || "JURNAL") === 'PENJUALAN') {
           penjualan += amount
           penerimaan += amount
-        } else if (journal.jenis_transaksi === 'PEMBELIAN') {
+        } else if ((journal.source || "JURNAL") === 'PEMBELIAN') {
           pembelian += amount
           pengeluaran += amount
-        } else if (journal.jenis_transaksi === 'BIAYA') {
+        } else if ((journal.source || "JURNAL") === 'BIAYA') {
           biaya += amount
           pengeluaran += amount
         } else if (entry.accounts?.kategori === 'penerimaan') {
@@ -257,19 +257,19 @@ function LaporanDagang() {
               <div className="flex justify-between items-center py-2">
                 <span>Transaksi Penjualan</span>
                 <span className="font-medium">
-                  {laporanData?.filter(j => j.jenis_transaksi === 'PENJUALAN').length || 0}
+                  {laporanData?.filter(j => (j.source || "JURNAL") === 'PENJUALAN').length || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span>Transaksi Pembelian</span>
                 <span className="font-medium">
-                  {laporanData?.filter(j => j.jenis_transaksi === 'PEMBELIAN').length || 0}
+                  {laporanData?.filter(j => (j.source || "JURNAL") === 'PEMBELIAN').length || 0}
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
                 <span>Transaksi Biaya</span>
                 <span className="font-medium">
-                  {laporanData?.filter(j => j.jenis_transaksi === 'BIAYA').length || 0}
+                  {laporanData?.filter(j => (j.source || "JURNAL") === 'BIAYA').length || 0}
                 </span>
               </div>
             </CardContent>

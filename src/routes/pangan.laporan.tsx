@@ -185,8 +185,8 @@ function LaporanPangan() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">Rp {journal.total?.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">{journal.jenis_transaksi}</p>
+                      <p className="font-semibold">Rp {((journal.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0))?.toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground">{(journal.source || "JURNAL")}</p>
                     </div>
                   </div>
                 ))}

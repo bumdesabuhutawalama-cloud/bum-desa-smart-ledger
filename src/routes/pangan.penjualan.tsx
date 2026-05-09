@@ -44,7 +44,7 @@ function PenjualanPangan() {
     const today = new Date().toDateString()
     const itemDate = new Date(item.tanggal).toDateString()
     if (itemDate === today) {
-      return sum + (item.total || 0)
+      return sum + (((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) || 0)
     }
     return sum
   }, 0) || 0
@@ -148,7 +148,7 @@ function PenjualanPangan() {
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
-                        Rp {(item.total || 0).toLocaleString('id-ID')}
+                        Rp {(((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) || 0).toLocaleString('id-ID')}
                       </p>
                       <p className="text-sm text-muted-foreground">
                         {item.status || 'Lunas'}

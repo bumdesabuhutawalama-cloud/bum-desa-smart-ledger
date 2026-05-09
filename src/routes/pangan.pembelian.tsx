@@ -45,7 +45,7 @@ function PembelianPangan() {
     const thisYear = new Date().getFullYear()
     const itemDate = new Date(item.tanggal)
     if (itemDate.getMonth() === thisMonth && itemDate.getFullYear() === thisYear) {
-      return sum + (item.total || 0)
+      return sum + (((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)) || 0)
     }
     return sum
   }, 0) || 0
@@ -109,8 +109,8 @@ function PembelianPangan() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">Rp {item.total?.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">{item.jenis_transaksi}</p>
+                    <p className="font-semibold">Rp {((item.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0))?.toLocaleString()}</p>
+                    <p className="text-sm text-muted-foreground">{(item.source || "JURNAL")}</p>
                   </div>
                 </div>
               ))}

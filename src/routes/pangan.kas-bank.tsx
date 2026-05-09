@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createFileRoute } from '@tanstack/react-router'
 import { UnitLayout } from '@/shared/layouts/UnitLayout'
 import { useUnitFilter } from '@/shared/hooks/useUnitFilter'

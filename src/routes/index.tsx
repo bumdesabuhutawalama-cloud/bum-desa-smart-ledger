@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Building2, ShoppingCart, Leaf, Briefcase, PiggyBank } from "lucide-react";
+import { Building2, ShoppingCart, Leaf, Briefcase, PiggyBank, Landmark } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/")({
@@ -52,6 +52,16 @@ const units = [
     cardBg: "bg-orange-50/60 border-orange-200",
     btnBg: "bg-orange-600 hover:bg-orange-700",
     titleColor: "text-orange-700",
+  },
+  {
+    to: "/auth",
+    title: "Unit Pusat",
+    desc: "Konsolidasi & supervisi seluruh unit usaha BUM Desa",
+    icon: Landmark,
+    iconBg: "bg-slate-700",
+    cardBg: "bg-slate-50/60 border-slate-200",
+    btnBg: "bg-slate-800 hover:bg-slate-900",
+    titleColor: "text-slate-800",
   },
 ] as const;
 

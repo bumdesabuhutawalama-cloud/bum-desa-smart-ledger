@@ -1,128 +1,106 @@
-## Rencana: AI Bisa Tambah COA + Database Jenis Usaha
+# Refaktor Multi-Tenant per Unit Usaha
 
-### Konteks Alur (hasil pengecekan)
+Refactor arsitektur dari single-login menjadi multi-tenant: setiap Unit Usaha (Jasa, Perdagangan, Simpan Pinjam, Pangan, Pusat) punya login sendiri dan data terisolasi. Unit Pusat (super_admin) bisa lihat konsolidasi semua unit.
 
-Alur akun saat ini terhubung di banyak titik:
+## 1. Database — Multi-Tenant Foundation
 
-1. **Tabel `accounts`** (Bagan Akun / COA) — sumber kebenaran. Kolom: `kode_akun`, `nama_akun`, `tipe_akun` (enum: ASET, KEWAJIBAN, EKUITAS, PENDAPATAN, BEBAN, HPP, PENDAPATAN_LAIN, BEBAN_LAIN), `normal_balance` (DEBIT/KREDIT), `is_header`, `level`, `parent_id`, `is_active`. Format kode hierarkis 4 segmen: `1.1.01.01`.
-2. **Catat Kegiatan** (`_app.catat-kegiatan.tsx`) — load akun aktif → kirim ke `buildJournal()` → resolve via `account-resolver.ts` (lookup symbol KAS, BANK, PIUTANG_USAHA, dll berdasarkan **prefix kode akun**) → bentuk baris jurnal double-entry → insert ke `journals` + `journal_lines` + `activity_entries`.
-3. **AI Asisten** (`_app.ai-asisten.tsx` + `functions/ai-asisten/index.ts`) — menerima kode akun, mencari `accounts.find(a => a.kode_akun === kode)` untuk `draft_jurnal_manual`. Untuk `draft_kegiatan` pakai engine sama dengan Catat Kegiatan.
-4. **Jurnal Manual** (`_app.jurnal.baru.tsx`) — pilih akun via dropdown.
+### Tabel `business_units` (sudah ada)
+Tambah kolom yang belum ada:
+- `is_head_office BOOLEAN DEFAULT false` — true hanya untuk Unit Pusat
 
-**Implikasi**: akun baru otomatis muncul di seluruh modul **asalkan** kode_akun mengikuti pola prefix yang sudah dipakai resolver (mis. kas baru harus berawalan `1.1.01.` agar lookup KAS bekerja). Kalau tidak, akun tetap bisa dipakai manual tapi tidak di-pick template otomatis.
+Pastikan ada baris untuk: PUSAT, DAGANG, JASA, SP, PANGAN.
 
-### 1. Database — Tabel `business_unit_types` (Jenis Usaha)
+### Enum role baru
+Tambah role baru ke `app_role`:
+- `super_admin` — Unit Pusat, full access
+- `admin_unit` — admin dari satu unit
+- `staff_unit` — staff dari satu unit
 
-Saat ini `jenis` di `business_units` hanya kolom text bebas + dropdown hardcoded di UI. Akan dibuat tabel:
+(role lama `admin`, `bendahara`, `auditor` tetap dipertahankan untuk backward-compat)
 
+### Tabel `user_business_units` (baru)
+Mapping user → unit (1 user = 1 unit, kecuali super_admin):
+- `user_id UUID` (FK ke auth.users)
+- `business_unit_id UUID` (FK ke business_units, nullable untuk super_admin)
+- `role app_role`
+- UNIQUE(user_id)
+
+### Function helper baru
 ```sql
-CREATE TABLE business_unit_types (
-  id uuid PK,
-  kode text UNIQUE NOT NULL,        -- 'simpan_pinjam', 'air_bersih', dll
-  nama text NOT NULL,                -- 'Simpan Pinjam'
-  deskripsi text,
-  icon text DEFAULT 'Briefcase',
-  is_active boolean DEFAULT true,
-  is_system boolean DEFAULT false,   -- jenis bawaan tidak bisa dihapus
-  sort_order int DEFAULT 0,
-  created_at, updated_at
-);
+public.get_user_business_unit(_user_id) RETURNS uuid
+public.is_super_admin(_user_id) RETURNS boolean
+public.can_access_unit(_user_id, _unit_id) RETURNS boolean
 ```
+Semua SECURITY DEFINER, untuk dipakai di RLS policies.
 
-Seed dengan 6 jenis existing: `umum`, `simpan_pinjam`, `perdagangan`, `jasa`, `air_bersih`, `aset_modal`. RLS: read all authenticated, manage admin only. Kolom `business_units.jenis` tetap text (FK soft via kode) supaya backward-compatible — tidak migrasi data.
+### Update RLS policies untuk SEMUA tabel transaksi
+Tabel: `journals`, `journal_lines`, `accounts`, `assets`, `inventory_items`, `inventory_movements`, `payables`, `receivables`, `purchase_orders`, `purchase_order_items`, `goods_receipts`, `sales_orders`, `sales_order_items`, `activity_entries`, `usp_loans`, `usp_loan_installments`, `usp_members`, `suppliers`.
 
-UI: halaman `/jenis-usaha` (admin) untuk CRUD; halaman `/unit-usaha` ganti dropdown jenis dari hardcoded → load dari tabel.
+Policy baru (replace existing manage/read policies):
+- **SELECT**: `is_super_admin(auth.uid()) OR business_unit_id = get_user_business_unit(auth.uid())`
+- **INSERT/UPDATE/DELETE**: sama + cek role admin/bendahara
 
-### 2. Halaman COA Manual (Tambah/Edit Akun)
+Untuk `journal_lines`, `purchase_order_items`, `sales_order_items` (tidak punya `business_unit_id` langsung): join via parent.
 
-Upgrade `_app.akun.tsx` (sekarang read-only) jadi bisa CRUD untuk admin/bendahara:
-- Tombol **Tambah Akun** → dialog dengan field: kode_akun, nama_akun, tipe_akun (select enum), normal_balance (auto dari tipe, override-able), parent_id (pilih dari akun header), level (auto dari jumlah segmen kode), is_header, is_active, deskripsi.
-- Validasi: kode unik, format `\d+(\.\d+){0,3}`, parent_id konsisten (kode anak harus diawali kode parent + ".").
-- Tombol Edit per baris (non-system).
+## 2. Auth & State Global
 
-### 3. Tool AI: `tambah_akun` (Draft → Konfirmasi)
+### Update `auth-context.tsx`
+- Saat login, fetch `user_business_units` row
+- Expose: `currentBusinessUnit`, `isSuperAdmin`, `isHeadOffice`
+- Hapus dependency ke role lama untuk gating unit
 
-Tambah tool ke edge function `ai-asisten`:
+### Update `unit-context.tsx`
+- Untuk user non-super-admin: `currentUnitId` LOCKED ke `user.business_unit_id`, tidak bisa diubah
+- Untuk super_admin: dropdown switch antar unit + opsi "Konsolidasi"
+- Persist hanya untuk super_admin
 
-```ts
-{
-  name: "draft_tambah_akun",
-  parameters: {
-    kode_akun: string,           // mis "1.1.01.06"
-    nama_akun: string,           // mis "Kas di Bank Jago"
-    tipe_akun: enum,             // ASET | KEWAJIBAN | ...
-    normal_balance?: enum,       // opsional, AI bisa infer dari tipe
-    parent_kode?: string,        // mis "1.1.01.00"
-    is_header?: boolean,
-    deskripsi?: string,
-    ringkasan: string
-  }
-}
-```
+### Middleware route guard
+- `_app.tsx`: jika user bukan super_admin dan url unit ≠ unit user → redirect ke unit-nya
+- Login per-unit (`/dagang/login`, `/jasa/login`, dst): setelah login cek user.business_unit, redirect ke dashboard unit yang sesuai
 
-System prompt diperluas:
-- AI diberi daftar tipe_akun + aturan saldo normal (ASET/BEBAN/HPP=DEBIT; KEWAJIBAN/EKUITAS/PENDAPATAN=KREDIT).
-- AI diberi konvensi kode 4-segmen hierarkis dan contoh prefix penting (1.1.01=Kas, 1.1.03=Piutang, 4=Pendapatan, 5=Beban).
-- Aturan: "Bila user minta tambah akun, gunakan `draft_tambah_akun`. Bila user mau pakai akun untuk transaksi tapi belum ada, sarankan tambah dulu via `answer` dengan `perlu_klarifikasi=true` ATAU langsung buat draft dua langkah (tambah akun → minta user posting → minta lagi untuk transaksinya)."
-- AI **wajib** sarankan kode berikutnya yang belum dipakai dalam grup parent.
+## 3. UI Changes
 
-UI Chat: `DraftPreview` dapat varian baru `draft_tambah_akun` → tampilkan kartu preview akun (kode, nama, tipe, saldo normal, parent), tombol **Tambah Akun**. Setelah berhasil, refresh `accounts` cache supaya akun baru langsung tersedia untuk perintah selanjutnya di session yang sama.
+### `UnitSelector.tsx`
+- Tampilkan HANYA jika `isSuperAdmin === true`
+- Untuk user biasa: tampilkan label statis "Unit: [nama unit]" (read-only)
 
-### 4. Validasi Konsistensi (Penting)
+### Dashboard
+- Dashboard unit (existing per-unit dashboard): tampil untuk user unit tsb
+- Dashboard pusat (`_app.dashboard.tsx`): konsolidasi, hanya super_admin
 
-Sebelum insert (baik dari halaman manual maupun dari AI):
-- Cek kode unik (case-sensitive di DB).
-- Validasi format kode regex `^\d+(\.\d+){1,3}$`.
-- Hitung `level` dari jumlah segmen.
-- Bila `parent_kode` diisi: cari `parent_id`, pastikan `is_header=true`, dan kode anak harus berawalan `parent.kode_akun.replace(/\.00+$/, "") + "."`.
-- `normal_balance` default mengikuti tipe (ASET/BEBAN/HPP→DEBIT; KEWAJIBAN/EKUITAS/PENDAPATAN/PENDAPATAN_LAIN→KREDIT; BEBAN_LAIN→DEBIT). Bisa override (untuk akun kontra seperti penyisihan piutang yang tipe=ASET tapi normal=KREDIT).
-- `is_header=true` → akun tidak bisa dipakai di journal_lines (sudah dijaga di resolver via filter `!a.is_header`).
+### Halaman admin user (baru)
+`/_app/users` — super_admin assign user ke unit + role.
 
-### 5. Dampak ke Modul Lain
+## 4. Query Refactor
 
-- **Catat Kegiatan**: tidak berubah — load `accounts.is_active=true` tetap menarik akun baru. Bila akun baru kode-nya cocok dengan prefix lookup (mis. `1.1.01.06`), template kas otomatis bisa pakai.
-- **Jurnal Manual**: dropdown akun otomatis menampilkan akun baru.
-- **AI Asisten draft_jurnal_manual**: setelah akun di-insert, refresh state `accounts` di halaman → AI di pesan berikutnya sudah lihat akun baru di context.
-- **Laporan/Buku Besar**: query agregasi via `journal_lines.account_id` → otomatis ikut.
-- **Resolver lookup**: tidak ada perubahan kode. Bila user tambah jenis akun baru di luar prefix yang dikenal (mis. dompet digital di `1.1.08.xx`), template lama tidak otomatis pick — itu desain (resolver berbasis aturan tetap, bukan auto-discovery). Tidak ada risiko regresi.
+Semua query Supabase yang sebelumnya pakai `useUnit().currentUnitId` sudah otomatis ter-filter via RLS. Tetap pertahankan filter eksplisit `business_unit_id` untuk performa, tapi RLS jadi pengaman utama.
 
-### 6. Migrasi Database
+## 5. Yang TIDAK Diubah
 
-Satu migration:
-```sql
--- Tabel jenis usaha + seed + RLS
-CREATE TABLE business_unit_types (...);
-INSERT INTO business_unit_types(kode,nama,is_system,sort_order) VALUES (...) x6;
-ALTER TABLE business_unit_types ENABLE RLS;
-CREATE POLICY ... USING (true) FOR SELECT;
-CREATE POLICY ... USING (has_role(auth.uid(),'admin')) FOR ALL;
-```
+- Struktur COA dan logika jurnal
+- Logika konsolidasi laporan & RK antar unit
+- Modul-modul existing (pembelian, penjualan, dll) — hanya diuntungkan dari RLS baru
 
-Tidak ada perubahan tabel `accounts` (struktur sudah memadai).
+## Urutan Eksekusi
 
-### 7. File yang Diubah / Dibuat
+1. **Migrasi DB**: tambah kolom, enum, tabel mapping, functions, update SEMUA RLS policies (1 migration besar)
+2. **Seed**: buat 1 super_admin dari user existing yang punya role `admin`
+3. **Refactor auth-context** + unit-context
+4. **Update UnitSelector** + route guards
+5. **Halaman manajemen user** (super_admin only)
+6. **Test**: 4 skenario login (per unit + pusat)
 
-Baru:
-- `supabase/migrations/<ts>_business_unit_types.sql`
-- `src/routes/_app.jenis-usaha.tsx` — CRUD jenis usaha (admin)
-- `src/lib/account-utils.ts` — helper validasi & inferensi (level, normal_balance default, kode berikutnya)
+## Catatan Teknis
 
-Diubah:
-- `src/routes/_app.akun.tsx` — tambah Tambah/Edit dialog
-- `src/routes/_app.unit-usaha.tsx` — load `JENIS_OPTIONS` dari DB
-- `src/components/AppSidebar.tsx` — menu "Jenis Usaha" (admin)
-- `supabase/functions/ai-asisten/index.ts` — tambah tool `draft_tambah_akun` + perluas system prompt (sertakan enum tipe_akun, aturan kode, daftar parent header)
-- `src/routes/_app.ai-asisten.tsx` — tipe `AnyDraft` tambah varian akun, render kartu preview akun + handler insert + reload accounts setelah sukses
+- User existing: harus dipetakan manual ke unit. Buat halaman one-time setup untuk super_admin assign user.
+- Edge function `ai-asisten`: perlu diupdate agar context unit user dikirim sebagai parameter.
+- File `business-unit-context.tsx` lama: deprecate, alias ke `unit-context`.
+- Migrasi DB satu kali besar agar konsisten — RLS lama di-drop dulu, lalu di-replace.
 
-### 8. Yang TIDAK Saya Ubah (Justifikasi Aman)
+## Pertanyaan untuk Anda Sebelum Mulai
 
-- Engine `activity-engine.ts` & `account-resolver.ts` — sudah tahan akun baru karena dasar prefix.
-- Schema `accounts` & `business_units` — backward-compatible.
-- Semua route laporan & buku besar — query tidak terpengaruh.
+1. **User existing**: apakah ada user yang sudah dibuat dan harus di-mapping ke unit tertentu? Atau OK kalau saya buat semua user existing jadi `super_admin` Pusat sementara, lalu Anda re-assign manual lewat UI?
+2. **Login per-unit**: apakah halaman `/dagang/login`, `/jasa/login`, dst tetap dipertahankan sebagai entry point terpisah, atau cukup 1 halaman login universal yang otomatis redirect ke unit user?
+3. **Self-signup**: apakah user baru bisa register sendiri, atau hanya super_admin yang bisa create user baru?
 
-### Ringkasan Manfaat
-
-- AI bisa tambah akun via percakapan (mis. *"tambahkan akun Kas di Bank Jago"*) → preview → user posting.
-- Admin bisa tambah akun manual via halaman Bagan Akun (sebelumnya read-only).
-- Jenis usaha jadi data terkelola, bisa ditambah tanpa edit kode.
-- Tidak ada perubahan breaking pada modul Catat Kegiatan, Jurnal, atau Laporan.
+Setelah Anda jawab 3 hal ini, saya langsung eksekusi migrasi DB + refactor code dalam satu rangkaian.

@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,9 +29,26 @@ function SPLogin() {
     setError(null);
 
     try {
-      await signIn(email, password);
-      // Auto set unit ke SP setelah login
-      setCurrentUnitKode("SP");
+            await signIn(email, password);
+      // Verifikasi akses unit
+      const { data: { user: u } } = await supabase.auth.getUser();
+      if (u) {
+        const { data: ubu } = await (supabase as any)
+          .from("user_business_units")
+          .select("role, business_units(kode, is_head_office)")
+          .eq("user_id", u.id)
+          .maybeSingle();
+        const isSuper = ubu?.role === "super_admin" || ubu?.business_units?.is_head_office === true;
+        const userKode = ubu?.business_units?.kode;
+        if (!isSuper && userKode && userKode !== "SP") {
+          await supabase.auth.signOut();
+          throw new Error(`Akun Anda terdaftar di unit ${userKode}, bukan SP. Silakan login lewat halaman unit Anda.`);
+        }
+        if (!isSuper && !userKode) {
+          await supabase.auth.signOut();
+          throw new Error("Akun Anda belum terhubung ke unit usaha. Hubungi admin Pusat.");
+        }
+      }
       nav({ to: "/sp/dashboard" });
     } catch (err: any) {
       setError(err.message || "Login gagal");

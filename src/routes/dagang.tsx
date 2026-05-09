@@ -5,6 +5,12 @@ import { UnitProvider } from "@/lib/unit-context";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { UnitSelector } from "@/components/UnitSelector";
+import { useUnitAccessGuard } from "@/lib/use-unit-access-guard";
+
+function GuardedOutlet({ kode }: { kode: "DAGANG" | "JASA" | "PANGAN" | "SP" }) {
+  useUnitAccessGuard(kode);
+  return <Outlet />;
+}
 
 export const Route = createFileRoute("/dagang")({
   component: DagangLayout,
@@ -42,7 +48,7 @@ function DagangLayout() {
             <UnitSelector />
           </header>
           <div className="max-w-7xl mx-auto p-4 md:p-8">
-            <Outlet />
+            <GuardedOutlet kode="DAGANG" />
           </div>
         </main>
         <MobileNav />

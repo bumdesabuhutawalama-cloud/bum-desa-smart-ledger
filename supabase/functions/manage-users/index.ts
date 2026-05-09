@@ -91,6 +91,34 @@ Deno.serve(async (req) => {
       return json({ ok: true, user_id: newId });
     }
 
+    if (action === "invite") {
+      const { email, full_name, business_unit_id, role, redirect_to } = body;
+      if (!email || !business_unit_id || !role) {
+        return json({ error: "email, business_unit_id, role wajib diisi" }, 400);
+      }
+      const { data: invited, error: e1 } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { full_name },
+        redirectTo: redirect_to,
+      });
+      if (e1) throw e1;
+      const newId = invited.user!.id;
+      await admin.from("user_business_units").delete().eq("user_id", newId);
+      const { error: e2 } = await admin
+        .from("user_business_units")
+        .insert({ user_id: newId, business_unit_id, role, is_suspended: false });
+      if (e2) throw e2;
+      if (full_name) await admin.from("profiles").update({ full_name }).eq("id", newId);
+      return json({ ok: true, user_id: newId, invited: true });
+    }
+
+    if (action === "resend_invite") {
+      const { email, redirect_to } = body;
+      if (!email) return json({ error: "email wajib" }, 400);
+      const { error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: redirect_to });
+      if (error) throw error;
+      return json({ ok: true });
+    }
+
     if (action === "update") {
       const { user_id, email, password, full_name, business_unit_id, role, is_suspended } = body;
       if (!user_id) return json({ error: "user_id wajib" }, 400);

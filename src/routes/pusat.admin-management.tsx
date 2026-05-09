@@ -22,7 +22,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, UserPlus, Pencil, Trash2, Ban, CheckCircle2, Users } from "lucide-react";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/pusat/admin-management")({
   head: () => ({ meta: [{ title: "Manajemen Admin Unit — Unit Pusat" }] }),

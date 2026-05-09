@@ -116,7 +116,7 @@ function KasBankPangan() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rp {((balances.journal_entries||[]).reduce((a,e)=>a+Number(e.debit||0),0)).toLocaleString()}
+              Rp {balances.total.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">Kas + Bank</p>
           </CardContent>

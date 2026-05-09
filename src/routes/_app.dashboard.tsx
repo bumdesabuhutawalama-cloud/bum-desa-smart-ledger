@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { formatRp } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 
 export const Route = createFileRoute("/_app/dashboard")({ component: Dashboard });
 

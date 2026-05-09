@@ -19,7 +19,7 @@ import { formatRp, todayISO } from "@/lib/format";
 import { toast } from "sonner";
 import { Trash2, Plus, ArrowLeft, Check, ChevronsUpDown, Loader2, Sparkles, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 
 type Acc = {
   id: string;

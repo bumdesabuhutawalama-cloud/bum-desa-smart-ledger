@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 import { postJournal } from "@/lib/trade-utils";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

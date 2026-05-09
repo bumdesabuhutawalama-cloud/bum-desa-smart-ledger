@@ -44,7 +44,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 import { toast } from "sonner";
 import { formatRp, todayISO } from "@/lib/format";
 import { AccountLite, filterAccountsForField } from "@/lib/account-resolver";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 import {
   ActivityTemplate,
   buildJournal,

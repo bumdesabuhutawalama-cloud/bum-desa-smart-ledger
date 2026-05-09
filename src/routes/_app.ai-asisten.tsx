@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, Send, Loader2, CheckCircle2, XCircle, User2, Bot, ListTree } from "lucide-react";
 import { toast } from "sonner";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 import { AccountLite } from "@/lib/account-resolver";
 import {
   ACCOUNT_TYPES, AccountType, NormalBalance,

@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { ArrowRightLeft, Loader2, ArrowLeft } from "lucide-react";
 import { formatRp, todayISO } from "@/lib/format";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 import { generateNomorJurnal } from "@/lib/activity-engine";
 import { useAuth } from "@/lib/auth-context";
 

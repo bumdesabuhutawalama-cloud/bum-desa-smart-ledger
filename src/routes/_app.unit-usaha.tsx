@@ -33,7 +33,7 @@ import {
 import { Plus, Loader2, Star, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
-import { useBusinessUnit } from "@/lib/business-unit-context";
+import { useBusinessUnit } from "@/lib/unit-context";
 
 export const Route = createFileRoute("/_app/unit-usaha")({ component: UnitUsahaPage });
 

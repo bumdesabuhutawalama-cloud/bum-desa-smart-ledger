@@ -165,7 +165,7 @@ export function AppSidebar() {
         <button
           onClick={async () => {
             await signOut();
-            nav({ to: "/auth" });
+            nav({ to: "/" });
           }}
           className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >

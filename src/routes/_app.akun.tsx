@@ -238,6 +238,13 @@ function AkunPage() {
             onChange={(e) => setQ(e.target.value)}
             className="max-w-sm"
           />
+          <Button
+            variant="outline"
+            onClick={() => generateCoaPdf(filtered)}
+            disabled={filtered.length === 0}
+          >
+            <FileDown className="h-4 w-4" /> Cetak PDF
+          </Button>
           {canEdit && (
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>

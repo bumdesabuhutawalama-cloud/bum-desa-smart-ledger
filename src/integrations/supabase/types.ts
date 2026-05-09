@@ -992,6 +992,41 @@ export type Database = {
           },
         ]
       }
+      user_business_units: {
+        Row: {
+          business_unit_id: string | null
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business_unit_id?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business_unit_id?: string | null
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_business_units_business_unit_id_fkey"
+            columns: ["business_unit_id"]
+            isOneToOne: false
+            referencedRelation: "business_units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1176,7 +1211,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_unit: {
+        Args: { _unit_id: string; _user_id: string }
+        Returns: boolean
+      }
       generate_kode_akun: { Args: { p_parent_id: string }; Returns: string }
+      get_user_business_unit: { Args: { _user_id: string }; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -1208,6 +1248,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      user_can_edit: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       account_type:

@@ -9,13 +9,20 @@ import { UnitSelector } from "@/components/UnitSelector";
 export const Route = createFileRoute("/_app")({ component: AppLayout });
 
 function AppLayout() {
-  const { user, loading } = useAuth();
+  const { user, loading, isSuperAdmin, userUnit } = useAuth();
   const nav = useNavigate();
   useEffect(() => {
-    if (!loading && !user) nav({ to: "/auth" });
-  }, [loading, user, nav]);
+    if (loading) return;
+    if (!user) { nav({ to: "/auth" }); return; }
+    // Area konsolidasi hanya untuk super admin Pusat
+    if (!isSuperAdmin) {
+      const kode = userUnit?.unit_kode?.toLowerCase();
+      if (kode) nav({ to: `/${kode}/dashboard` as any });
+      else nav({ to: "/auth" });
+    }
+  }, [loading, user, isSuperAdmin, userUnit, nav]);
 
-  if (loading || !user) {
+  if (loading || !user || !isSuperAdmin) {
     return <div className="min-h-screen grid place-items-center text-muted-foreground">Memuat…</div>;
   }
 

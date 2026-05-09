@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpRouteImport } from './routes/sp'
+import { Route as PusatRouteImport } from './routes/pusat'
 import { Route as PanganRouteImport } from './routes/pangan'
 import { Route as JasaRouteImport } from './routes/jasa'
 import { Route as DagangRouteImport } from './routes/dagang'
@@ -25,6 +26,7 @@ import { Route as SpPinjamanRouteImport } from './routes/sp.pinjaman'
 import { Route as SpLoginRouteImport } from './routes/sp.login'
 import { Route as SpDashboardRouteImport } from './routes/sp.dashboard'
 import { Route as PusatLoginRouteImport } from './routes/pusat.login'
+import { Route as PusatDashboardRouteImport } from './routes/pusat.dashboard'
 import { Route as PanganPersediaanRouteImport } from './routes/pangan.persediaan'
 import { Route as PanganPenjualanRouteImport } from './routes/pangan.penjualan'
 import { Route as PanganPembelianRouteImport } from './routes/pangan.pembelian'
@@ -84,6 +86,11 @@ import { Route as AppUnitJasaDashboardRouteImport } from './routes/_app.unit.jas
 const SpRoute = SpRouteImport.update({
   id: '/sp',
   path: '/sp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PusatRoute = PusatRouteImport.update({
+  id: '/pusat',
+  path: '/pusat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PanganRoute = PanganRouteImport.update({
@@ -156,9 +163,14 @@ const SpDashboardRoute = SpDashboardRouteImport.update({
   getParentRoute: () => SpRoute,
 } as any)
 const PusatLoginRoute = PusatLoginRouteImport.update({
-  id: '/pusat/login',
-  path: '/pusat/login',
-  getParentRoute: () => rootRouteImport,
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => PusatRoute,
+} as any)
+const PusatDashboardRoute = PusatDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => PusatRoute,
 } as any)
 const PanganPersediaanRoute = PanganPersediaanRouteImport.update({
   id: '/persediaan',
@@ -443,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/dagang': typeof DagangRouteWithChildren
   '/jasa': typeof JasaRouteWithChildren
   '/pangan': typeof PanganRouteWithChildren
+  '/pusat': typeof PusatRouteWithChildren
   '/sp': typeof SpRouteWithChildren
   '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
@@ -483,6 +496,7 @@ export interface FileRoutesByFullPath {
   '/pangan/pembelian': typeof PanganPembelianRoute
   '/pangan/penjualan': typeof PanganPenjualanRoute
   '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/pusat/dashboard': typeof PusatDashboardRoute
   '/pusat/login': typeof PusatLoginRoute
   '/sp/dashboard': typeof SpDashboardRoute
   '/sp/login': typeof SpLoginRoute
@@ -512,6 +526,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/pusat': typeof PusatRouteWithChildren
   '/ai-asisten': typeof AppAiAsistenRoute
   '/akun': typeof AppAkunRoute
   '/aset': typeof AppAsetRoute
@@ -551,6 +566,7 @@ export interface FileRoutesByTo {
   '/pangan/pembelian': typeof PanganPembelianRoute
   '/pangan/penjualan': typeof PanganPenjualanRoute
   '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/pusat/dashboard': typeof PusatDashboardRoute
   '/pusat/login': typeof PusatLoginRoute
   '/sp/dashboard': typeof SpDashboardRoute
   '/sp/login': typeof SpLoginRoute
@@ -585,6 +601,7 @@ export interface FileRoutesById {
   '/dagang': typeof DagangRouteWithChildren
   '/jasa': typeof JasaRouteWithChildren
   '/pangan': typeof PanganRouteWithChildren
+  '/pusat': typeof PusatRouteWithChildren
   '/sp': typeof SpRouteWithChildren
   '/_app/ai-asisten': typeof AppAiAsistenRoute
   '/_app/akun': typeof AppAkunRoute
@@ -625,6 +642,7 @@ export interface FileRoutesById {
   '/pangan/pembelian': typeof PanganPembelianRoute
   '/pangan/penjualan': typeof PanganPenjualanRoute
   '/pangan/persediaan': typeof PanganPersediaanRoute
+  '/pusat/dashboard': typeof PusatDashboardRoute
   '/pusat/login': typeof PusatLoginRoute
   '/sp/dashboard': typeof SpDashboardRoute
   '/sp/login': typeof SpLoginRoute
@@ -659,6 +677,7 @@ export interface FileRouteTypes {
     | '/dagang'
     | '/jasa'
     | '/pangan'
+    | '/pusat'
     | '/sp'
     | '/ai-asisten'
     | '/akun'
@@ -699,6 +718,7 @@ export interface FileRouteTypes {
     | '/pangan/pembelian'
     | '/pangan/penjualan'
     | '/pangan/persediaan'
+    | '/pusat/dashboard'
     | '/pusat/login'
     | '/sp/dashboard'
     | '/sp/login'
@@ -728,6 +748,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/pusat'
     | '/ai-asisten'
     | '/akun'
     | '/aset'
@@ -767,6 +788,7 @@ export interface FileRouteTypes {
     | '/pangan/pembelian'
     | '/pangan/penjualan'
     | '/pangan/persediaan'
+    | '/pusat/dashboard'
     | '/pusat/login'
     | '/sp/dashboard'
     | '/sp/login'
@@ -800,6 +822,7 @@ export interface FileRouteTypes {
     | '/dagang'
     | '/jasa'
     | '/pangan'
+    | '/pusat'
     | '/sp'
     | '/_app/ai-asisten'
     | '/_app/akun'
@@ -840,6 +863,7 @@ export interface FileRouteTypes {
     | '/pangan/pembelian'
     | '/pangan/penjualan'
     | '/pangan/persediaan'
+    | '/pusat/dashboard'
     | '/pusat/login'
     | '/sp/dashboard'
     | '/sp/login'
@@ -874,8 +898,8 @@ export interface RootRouteChildren {
   DagangRoute: typeof DagangRouteWithChildren
   JasaRoute: typeof JasaRouteWithChildren
   PanganRoute: typeof PanganRouteWithChildren
+  PusatRoute: typeof PusatRouteWithChildren
   SpRoute: typeof SpRouteWithChildren
-  PusatLoginRoute: typeof PusatLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -885,6 +909,13 @@ declare module '@tanstack/react-router' {
       path: '/sp'
       fullPath: '/sp'
       preLoaderRoute: typeof SpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pusat': {
+      id: '/pusat'
+      path: '/pusat'
+      fullPath: '/pusat'
+      preLoaderRoute: typeof PusatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pangan': {
@@ -987,10 +1018,17 @@ declare module '@tanstack/react-router' {
     }
     '/pusat/login': {
       id: '/pusat/login'
-      path: '/pusat/login'
+      path: '/login'
       fullPath: '/pusat/login'
       preLoaderRoute: typeof PusatLoginRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof PusatRoute
+    }
+    '/pusat/dashboard': {
+      id: '/pusat/dashboard'
+      path: '/dashboard'
+      fullPath: '/pusat/dashboard'
+      preLoaderRoute: typeof PusatDashboardRouteImport
+      parentRoute: typeof PusatRoute
     }
     '/pangan/persediaan': {
       id: '/pangan/persediaan'
@@ -1579,6 +1617,18 @@ const PanganRouteChildren: PanganRouteChildren = {
 const PanganRouteWithChildren =
   PanganRoute._addFileChildren(PanganRouteChildren)
 
+interface PusatRouteChildren {
+  PusatDashboardRoute: typeof PusatDashboardRoute
+  PusatLoginRoute: typeof PusatLoginRoute
+}
+
+const PusatRouteChildren: PusatRouteChildren = {
+  PusatDashboardRoute: PusatDashboardRoute,
+  PusatLoginRoute: PusatLoginRoute,
+}
+
+const PusatRouteWithChildren = PusatRoute._addFileChildren(PusatRouteChildren)
+
 interface SpRouteChildren {
   SpDashboardRoute: typeof SpDashboardRoute
   SpLoginRoute: typeof SpLoginRoute
@@ -1604,8 +1654,8 @@ const rootRouteChildren: RootRouteChildren = {
   DagangRoute: DagangRouteWithChildren,
   JasaRoute: JasaRouteWithChildren,
   PanganRoute: PanganRouteWithChildren,
+  PusatRoute: PusatRouteWithChildren,
   SpRoute: SpRouteWithChildren,
-  PusatLoginRoute: PusatLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -41,7 +41,7 @@ function PusatLogin() {
           throw new Error("Akun Anda bukan Super Admin / Unit Pusat. Silakan login lewat halaman unit Anda.");
         }
       }
-      nav({ to: "/dashboard" });
+      nav({ to: "/pusat/dashboard" });
     } catch (err: any) {
       setError(err.message || "Login gagal");
     } finally {

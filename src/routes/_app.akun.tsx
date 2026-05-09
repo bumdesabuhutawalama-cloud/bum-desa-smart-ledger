@@ -13,7 +13,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Plus, Pencil, Loader2 } from "lucide-react";
+import { Plus, Pencil, Loader2, FileDown } from "lucide-react";
+import { generateCoaPdf } from "@/lib/coa-pdf";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth-context";
 import {

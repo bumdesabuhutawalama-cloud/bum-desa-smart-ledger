@@ -173,6 +173,45 @@ function AdminManagement() {
     }
   };
 
+  const openInvite = () => {
+    setInviteForm({ email: "", full_name: "", business_unit_id: units[0]?.id ?? "", role: "admin_unit" });
+    setInviteOpen(true);
+  };
+
+  const sendInvite = async () => {
+    if (!inviteForm.email || !inviteForm.business_unit_id) {
+      toast.error("Email dan unit wajib diisi");
+      return;
+    }
+    setInviting(true);
+    try {
+      const { error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "invite", ...inviteForm, redirect_to: inviteRedirect },
+      });
+      if (error) throw error;
+      toast.success(`Undangan terkirim ke ${inviteForm.email}`);
+      setInviteOpen(false);
+      await reload();
+    } catch (e: any) {
+      toast.error("Gagal mengundang: " + (e?.message ?? e));
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const resendInvite = async (u: UserRow) => {
+    if (!u.email) return;
+    try {
+      const { error } = await supabase.functions.invoke("manage-users", {
+        body: { action: "resend_invite", email: u.email, redirect_to: inviteRedirect },
+      });
+      if (error) throw error;
+      toast.success("Undangan dikirim ulang ke " + u.email);
+    } catch (e: any) {
+      toast.error("Gagal: " + (e?.message ?? e));
+    }
+  };
+
   if (authLoading || !isSuperAdmin) return null;
 
   return (

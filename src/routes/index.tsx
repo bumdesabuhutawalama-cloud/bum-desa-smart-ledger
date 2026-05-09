@@ -70,24 +70,31 @@ function LandingPage() {
           </p>
         </div>
 
-        {/* Grid 4 unit */}
+        {/* Grid 4 unit — seluruh card clickable */}
         <div className="grid sm:grid-cols-2 gap-5">
           {units.map((u) => {
             const Icon = u.icon;
             return (
-              <Card key={u.to} className={`${u.cardBg} border p-6 flex flex-col items-center text-center`}>
-                <div className={`h-12 w-12 rounded-lg ${u.iconBg} grid place-items-center mb-4`}>
-                  <Icon className="h-6 w-6 text-white" />
-                </div>
-                <h2 className={`text-lg font-semibold ${u.titleColor}`}>{u.title}</h2>
-                <p className="mt-1 text-sm text-slate-600 min-h-[2.5rem]">{u.desc}</p>
-                <Link
-                  to={u.to}
-                  className={`mt-5 w-full rounded-md ${u.btnBg} text-white text-sm font-medium py-2.5 transition-colors`}
+              <Link
+                key={u.to}
+                to={u.to}
+                className="group block focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-400 rounded-xl"
+              >
+                <Card
+                  className={`${u.cardBg} border p-6 flex flex-col items-center text-center cursor-pointer transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-lg`}
                 >
-                  Masuk ke {u.title}
-                </Link>
-              </Card>
+                  <div className={`h-12 w-12 rounded-lg ${u.iconBg} grid place-items-center mb-4 transition-transform group-hover:scale-110`}>
+                    <Icon className="h-6 w-6 text-white" />
+                  </div>
+                  <h2 className={`text-lg font-semibold ${u.titleColor}`}>{u.title}</h2>
+                  <p className="mt-1 text-sm text-slate-600 min-h-[2.5rem]">{u.desc}</p>
+                  <span
+                    className={`mt-5 w-full rounded-md ${u.btnBg} text-white text-sm font-medium py-2.5 transition-colors inline-block`}
+                  >
+                    Masuk ke {u.title}
+                  </span>
+                </Card>
+              </Link>
             );
           })}
         </div>

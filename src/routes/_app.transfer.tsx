@@ -20,11 +20,14 @@ type Acc = {
   id: string;
   kode_akun: string;
   nama_akun: string;
+  tipe_akun?: string;
   is_header: boolean;
   is_active: boolean;
   is_system_account?: boolean;
+  is_inter_unit_account?: boolean;
   is_manual_input?: boolean;
   business_unit_id?: string | null;
+  unit_pair_id?: string | null;
 };
 
 type Mode = "PENYERTAAN_TO_PUSAT" | "UNIT_TO_PUSAT" | "PUSAT_TO_UNIT" | "UNIT_TO_UNIT";
@@ -61,7 +64,7 @@ function TransferPage() {
     (async () => {
       const { data } = await supabase
         .from("accounts")
-        .select("id,kode_akun,nama_akun,is_header,is_active,is_system_account,is_manual_input,business_unit_id")
+        .select("*")
         .eq("is_active", true)
         .order("kode_akun");
       setAccounts((data as any) ?? []);
@@ -77,16 +80,102 @@ function TransferPage() {
   const rkPusat = useMemo(
     () =>
       accounts.find(
-        (a) => !a.is_header && RK_PUSAT_PREFIXES.some((p) => a.kode_akun.startsWith(p)),
+        (a) =>
+          !a.is_header && a.is_system_account && a.is_inter_unit_account &&
+          RK_PUSAT_PREFIXES.some((p) => a.kode_akun.startsWith(p)),
       ) ?? null,
     [accounts],
   );
 
-  // Find RK Unit account for a given unit (di KEWAJIBAN)
-  const findRkUnit = (unitId: string): Acc | null => {
+  const findRekeningAntarUnit = (
+    unitPemilik: string,
+    unitLawan: string,
+    posisi: "ASET" | "KEWAJIBAN"
+  ): Acc | null => {
+    const exact = accounts.find(
+      (a) =>
+        !a.is_header &&
+        a.is_system_account &&
+        a.is_inter_unit_account &&
+        a.business_unit_id === unitPemilik &&
+        a.unit_pair_id === unitLawan &&
+        a.tipe_akun === posisi,
+    );
+    if (exact) return exact;
+
+    // Fallback legacy lookup for existing RK accounts when unit_pair_id is not yet set.
+    if (posisi === "ASET") {
+      return accounts.find(
+        (a) =>
+          !a.is_header &&
+          a.is_system_account &&
+          a.kode_akun.startsWith("1.1.99.") &&
+          a.business_unit_id === unitPemilik,
+      ) ?? null;
+    }
+
     return accounts.find(
-      (a) => !a.is_header && a.kode_akun.startsWith(RK_UNIT_PREFIX) && a.business_unit_id === unitId,
+      (a) =>
+        !a.is_header &&
+        a.is_system_account &&
+        a.kode_akun.startsWith("3.8.01.") &&
+        a.business_unit_id === unitPemilik,
     ) ?? null;
+  };
+
+  const ensureRekeningAntarUnit = async (
+    unitPemilik: string,
+    unitLawan: string,
+    posisi: "ASET" | "KEWAJIBAN"
+  ): Promise<Acc> => {
+    const existing = findRekeningAntarUnit(unitPemilik, unitLawan, posisi);
+    if (existing) return existing;
+
+    const unitPemilikObj = units.find((u) => u.id === unitPemilik);
+    const unitLawanObj = units.find((u) => u.id === unitLawan);
+    if (!unitPemilikObj || !unitLawanObj) {
+      throw new Error("Unit pemilik atau unit lawan tidak ditemukan");
+    }
+
+    const prefix = posisi === "ASET" ? "1.1.99." : "3.8.01.";
+    const parentCode = posisi === "ASET" ? "1.1.99.00" : "3.8.01.00";
+    const parent = accounts.find((a) => a.kode_akun === parentCode);
+    const existingCodes = accounts
+      .filter((a) => a.kode_akun.startsWith(prefix))
+      .map((a) => Number(a.kode_akun.slice(prefix.length)))
+      .filter((n) => !Number.isNaN(n));
+    const nextNumber = existingCodes.length > 0 ? Math.max(...existingCodes) + 1 : 1;
+    const newKode = `${prefix}${String(nextNumber).padStart(2, "0")}`;
+
+    const nama = `RK ${unitLawanObj.kode}`;
+    const description = `Rekening Antar Unit dari ${unitPemilikObj.kode} ke ${unitLawanObj.kode}`;
+
+    const { data: created, error } = await supabase
+      .from("accounts")
+      .insert({
+        kode_akun: newKode,
+        nama_akun: nama,
+        tipe_akun: posisi,
+        normal_balance: posisi === "ASET" ? "DEBIT" : "KREDIT",
+        is_header: false,
+        level: 4,
+        parent_id: parent?.id ?? null,
+        is_active: true,
+        is_system_account: true,
+        is_inter_unit_account: true,
+        is_manual_input: false,
+        business_unit_id: unitPemilik,
+        unit_pair_id: unitLawan,
+        description,
+      } as any)
+      .select()
+      .single();
+    if (error || !created) {
+      throw error ?? new Error("Gagal membuat akun RK");
+    }
+
+    setAccounts((prev) => [...prev, created as Acc]);
+    return created as Acc;
   };
 
   const reset = () => {
@@ -113,19 +202,14 @@ function TransferPage() {
       if (!penyertaanAccount) return "Akun Modal Penyertaan tidak ditemukan di Bagan Akun";
     } else {
       if (!kasAsalId || !kasTujuanId) return "Akun kas asal & tujuan wajib dipilih";
-      if (!rkPusat) return "Akun RK Pusat tidak ditemukan di Bagan Akun";
 
       if (mode === "UNIT_TO_PUSAT") {
         if (!sourceUnitId) return "Unit asal wajib dipilih";
-        if (!findRkUnit(sourceUnitId)) return "Akun RK untuk unit asal belum dibuat";
       } else if (mode === "PUSAT_TO_UNIT") {
         if (!targetUnitId) return "Unit tujuan wajib dipilih";
-        if (!findRkUnit(targetUnitId)) return "Akun RK untuk unit tujuan belum dibuat";
       } else {
         if (!sourceUnitId || !targetUnitId) return "Unit asal & tujuan wajib dipilih";
         if (sourceUnitId === targetUnitId) return "Unit asal & tujuan tidak boleh sama";
-        if (!findRkUnit(sourceUnitId) || !findRkUnit(targetUnitId))
-          return "Akun RK untuk salah satu unit belum dibuat";
       }
     }
     return null;
@@ -138,7 +222,12 @@ function TransferPage() {
     keterangan: string;
   };
 
-  const buildJournals = (): J[] => {
+  const buildJournals = (rkAccounts: {
+    rkSource?: Acc;
+    rkTarget?: Acc;
+    rkPusat?: Acc;
+    rkUnit?: Acc;
+  }): J[] => {
     const amt = jumlah;
     if (mode === "PENYERTAAN_TO_PUSAT") {
       const penyertaanAccount = accounts.find((a) => a.kode_akun === '3.1.04.01');
@@ -156,14 +245,16 @@ function TransferPage() {
       ];
     }
     if (mode === "UNIT_TO_PUSAT") {
-      const rkUnit = findRkUnit(sourceUnitId)!;
+      const rkUnit = rkAccounts.rkUnit ?? findRekeningAntarUnit(sourceUnitId, pusat!.id, "ASET");
+      const rkPusatAccount = rkAccounts.rkPusat ?? findRekeningAntarUnit(pusat!.id, sourceUnitId, "KEWAJIBAN");
+      if (!rkUnit || !rkPusatAccount) throw new Error("Akun RK tidak tersedia untuk transfer");
       const ket = keterangan || `Transfer dari ${units.find((u) => u.id === sourceUnitId)?.nama} ke Pusat`;
       return [
         {
           unit_id: sourceUnitId,
           keterangan: ket,
           lines: [
-            { account_id: rkPusat!.id, debit: amt, kredit: 0, keterangan: ket },
+            { account_id: rkPusatAccount.id, debit: amt, kredit: 0, keterangan: ket },
             { account_id: kasAsalId, debit: 0, kredit: amt, keterangan: ket },
           ],
         },
@@ -178,7 +269,9 @@ function TransferPage() {
       ];
     }
     if (mode === "PUSAT_TO_UNIT") {
-      const rkUnit = findRkUnit(targetUnitId)!;
+      const rkUnit = rkAccounts.rkUnit ?? findRekeningAntarUnit(targetUnitId, pusat!.id, "ASET");
+      const rkPusatAccount = rkAccounts.rkPusat ?? findRekeningAntarUnit(pusat!.id, targetUnitId, "KEWAJIBAN");
+      if (!rkUnit || !rkPusatAccount) throw new Error("Akun RK tidak tersedia untuk transfer");
       const ket = keterangan || `Transfer dari Pusat ke ${units.find((u) => u.id === targetUnitId)?.nama}`;
       return [
         {
@@ -194,14 +287,15 @@ function TransferPage() {
           keterangan: ket,
           lines: [
             { account_id: kasTujuanId, debit: amt, kredit: 0, keterangan: ket },
-            { account_id: rkPusat!.id, debit: 0, kredit: amt, keterangan: ket },
+            { account_id: rkPusatAccount.id, debit: 0, kredit: amt, keterangan: ket },
           ],
         },
       ];
     }
     // UNIT_TO_UNIT
-    const rkSource = findRkUnit(sourceUnitId)!;
-    const rkTarget = findRkUnit(targetUnitId)!;
+    const rkSource = rkAccounts.rkSource ?? findRekeningAntarUnit(sourceUnitId, targetUnitId, "ASET");
+    const rkTarget = rkAccounts.rkTarget ?? findRekeningAntarUnit(targetUnitId, sourceUnitId, "KEWAJIBAN");
+    if (!rkSource || !rkTarget) throw new Error("Akun RK tidak tersedia untuk transfer");
     const ket =
       keterangan ||
       `Transfer dari ${units.find((u) => u.id === sourceUnitId)?.nama} ke ${units.find((u) => u.id === targetUnitId)?.nama}`;
@@ -233,7 +327,31 @@ function TransferPage() {
     }
     setSaving(true);
     try {
-      const journals = buildJournals();
+      let rkAccounts: {
+        rkSource?: Acc;
+        rkTarget?: Acc;
+        rkPusat?: Acc;
+        rkUnit?: Acc;
+      } = {};
+
+      if (mode === "UNIT_TO_PUSAT") {
+        rkAccounts.rkUnit = await ensureRekeningAntarUnit(sourceUnitId, pusat!.id, "ASET");
+        rkAccounts.rkPusat = await ensureRekeningAntarUnit(pusat!.id, sourceUnitId, "KEWAJIBAN");
+        console.log("RK ASAL:", rkAccounts.rkUnit?.id, rkAccounts.rkUnit?.kode_akun);
+        console.log("RK TUJUAN:", rkAccounts.rkPusat?.id, rkAccounts.rkPusat?.kode_akun);
+      } else if (mode === "PUSAT_TO_UNIT") {
+        rkAccounts.rkUnit = await ensureRekeningAntarUnit(targetUnitId, pusat!.id, "ASET");
+        rkAccounts.rkPusat = await ensureRekeningAntarUnit(pusat!.id, targetUnitId, "KEWAJIBAN");
+        console.log("RK ASAL:", rkAccounts.rkUnit?.id, rkAccounts.rkUnit?.kode_akun);
+        console.log("RK TUJUAN:", rkAccounts.rkPusat?.id, rkAccounts.rkPusat?.kode_akun);
+      } else if (mode === "UNIT_TO_UNIT") {
+        rkAccounts.rkSource = await ensureRekeningAntarUnit(sourceUnitId, targetUnitId, "ASET");
+        rkAccounts.rkTarget = await ensureRekeningAntarUnit(targetUnitId, sourceUnitId, "KEWAJIBAN");
+        console.log("RK ASAL:", rkAccounts.rkSource?.id, rkAccounts.rkSource?.kode_akun);
+        console.log("RK TUJUAN:", rkAccounts.rkTarget?.id, rkAccounts.rkTarget?.kode_akun);
+      }
+
+      const journals = buildJournals(rkAccounts);
       const groupId = (crypto as any).randomUUID
         ? (crypto as any).randomUUID()
         : `${Date.now()}-${Math.random()}`;
@@ -292,7 +410,7 @@ function TransferPage() {
     if (jumlah <= 0) return null;
     const err = validate();
     if (err) return null;
-    return buildJournals();
+    return buildJournals({});
   }, [mode, sourceUnitId, targetUnitId, kasAsalId, kasTujuanId, jumlah, keterangan, accounts]);
 
   const accName = (id: string) => {

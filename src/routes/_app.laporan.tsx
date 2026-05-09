@@ -26,6 +26,7 @@ type Acc = {
     | "PENDAPATAN_LAIN"
     | "BEBAN_LAIN";
   normal_balance: "DEBIT" | "KREDIT";
+  business_unit_id?: string | null;
 };
 
 type Line = {

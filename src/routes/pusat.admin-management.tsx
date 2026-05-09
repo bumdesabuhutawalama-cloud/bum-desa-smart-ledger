@@ -21,7 +21,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, UserPlus, Pencil, Trash2, Ban, CheckCircle2, Users } from "lucide-react";
+import { ArrowLeft, UserPlus, Pencil, Trash2, Ban, CheckCircle2, Users, Mail, Send } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/pusat/admin-management")({
